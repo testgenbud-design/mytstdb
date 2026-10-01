@@ -42,7 +42,6 @@
   ul.reasons { margin:6px 0 0; padding-left:20px; font-size:13px; color:var(--amber); }
   .hint { margin-top:18px; font-size:12.5px; color:var(--muted); line-height:1.6; }
   .hint code { background:#0f172a; padding:1px 6px; border-radius:6px; font-size:12px; color:#cbd5e1; }
-  details.cfg { margin-top:16px; }
   @media (max-width:520px){ .grid{grid-template-columns:repeat(2,1fr);} }
 </style>
 </head>
@@ -83,15 +82,6 @@
       </div>
     </div>
 
-    <details class="cfg">
-      <summary>⚙️ Connection settings</summary>
-      <label for="cfg-url">n8n webhook URL</label>
-      <input type="text" id="cfg-url" placeholder="https://your-n8n-domain/webhook/mytst-upload">
-      <label for="cfg-key">Upload key</label>
-      <input type="password" id="cfg-key" placeholder="shared secret key">
-      <p class="hint">These come pre-filled by whoever shared this page. Only change them if asked to.</p>
-    </details>
-
     <p class="hint">
       <b>What counts as a duplicate?</b> Same <code>Full Question ID</code> as a row already in the database → skipped and listed above.<br>
       <b>Rejected?</b> Rows missing <code>Question ID</code> or <code>Question</code> — fix them and re-upload (only new rows get added).<br>
@@ -102,7 +92,8 @@
 
 <script>
 /* ================================================================
-   ★★★  EDIT THESE TWO LINES BEFORE SHARING WITH YOUR PARTNER  ★★★
+   ★  SET YOUR WEBHOOK URL BELOW  ★   (upload key is pre-filled)
+   Redeploy after editing.
    ================================================================ */
 var N8N_WEBHOOK_URL = "https://n8n.mytst.cloud/webhook/mytst-upload";
 var UPLOAD_KEY = "36217ca2974624a842cdf4a85717e860ed1e09926ec99ee5"; // pre-filled — do not share this file publicly
@@ -117,12 +108,7 @@ var UPLOAD_KEY = "36217ca2974624a842cdf4a85717e860ed1e09926ec99ee5"; // pre-fill
   var btn = document.getElementById('upload');
   var status = document.getElementById('status');
   var result = document.getElementById('result');
-  var cfgUrl = document.getElementById('cfg-url');
-  var cfgKey = document.getElementById('cfg-key');
   var chosen = null;
-
-  cfgUrl.value = N8N_WEBHOOK_URL;
-  cfgKey.value = UPLOAD_KEY;
 
   function fmtBytes(n) {
     if (n < 1024) return n + ' B';
@@ -194,13 +180,13 @@ var UPLOAD_KEY = "36217ca2974624a842cdf4a85717e860ed1e09926ec99ee5"; // pre-fill
 
   btn.addEventListener('click', function () {
     result.style.display = 'none';
-    var url = cfgUrl.value.trim().replace(/\/$/, '');
-    var key = cfgKey.value.trim();
+    var url = N8N_WEBHOOK_URL.replace(/\/$/, '');
+    var key = UPLOAD_KEY;
     var who = document.getElementById('uploader').value.trim() || 'partner';
     if (!chosen) { showError('Please choose a .csv or .xlsx file first.'); return; }
     if (!/\.(csv|xlsx|xls)$/i.test(chosen.name)) { showError('Only .csv or .xlsx files are supported.'); return; }
     if (url.indexOf('REPLACE') !== -1 || key.indexOf('REPLACE') !== -1 || !url || !key) {
-      showError('This page is not configured yet (webhook URL / upload key missing). Ask the admin to fill in the two lines at the top of the page source.');
+      showError('This page is not configured yet (webhook URL missing). Ask the admin to set N8N_WEBHOOK_URL in the page and redeploy.');
       return;
     }
     var ctrl = new AbortController();
@@ -245,6 +231,5 @@ var UPLOAD_KEY = "36217ca2974624a842cdf4a85717e860ed1e09926ec99ee5"; // pre-fill
   });
 })();
 </script>
-<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v31edd6df95cf4e85bb4c19e7a9bdbcba1788362987495" integrity="sha512-iIg7k2xntmwu6/uSb5tpc/hySgZc4eoL31yB29W6tJFo2akwjPWcEqnCEdJvGexCL0KEQwVYv5BlowfhVz26hg==" data-cf-beacon='{"version":"2024.11.0","token":"1954b47c125f43f8b4338b3c4f804e4f","spa":2}' crossorigin="anonymous"></script>
-<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a439b3490f8c556f',t:'MTc5MDgzOTE3OQ=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a439c3ed7db1a89b',t:'MTc5MDgzOTg2MQ=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
