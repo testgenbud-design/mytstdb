@@ -31,6 +31,11 @@
   .msg { padding:12px 14px; border-radius:10px; font-size:15px; margin-bottom:12px; }
   .msg.ok { background:rgba(52,211,153,.12); border:1px solid var(--green); }
   .msg.err { background:rgba(248,113,113,.12); border:1px solid var(--red); }
+  #qualitybox { margin-top:10px; }
+  #qualitybox summary { color:var(--amber); }
+  ul.qualitylist { margin:6px 0 0; padding-left:20px; font-size:13px; color:#fde68a; }
+  ul.qualitylist li { margin:0 0 8px; }
+  .excerpt { display:block; margin-top:3px; color:var(--muted); font-size:12px; }
   .grid { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; }
   .stat { background:#0f172a; border:1px solid #334155; border-radius:10px; padding:10px 6px; text-align:center; }
   .stat .n { font-size:22px; font-weight:800; }
@@ -49,7 +54,7 @@
 <div class="wrap">
   <div class="card">
     <h1>📤 MyTST <span>Question Upload</span></h1>
-    <p class="sub">Upload a <b>.csv</b> or <b>.xlsx</b> file — it goes straight into Postgres via n8n. Duplicates are skipped (not double-inserted) and reported below.</p>
+    <p class="sub">Upload a <b>.csv</b> or <b>.xlsx</b> question bank — n8n validates the metadata and structured-question fields before inserting into Postgres. Duplicates are skipped and reported below.</p>
 
     <label for="uploader">Your name (for the upload log)</label>
     <input type="text" id="uploader" placeholder="e.g. Partner" autocomplete="name">
@@ -80,11 +85,17 @@
       <div id="rejbox" style="display:none">
         <ul class="reasons" id="rejlist"></ul>
       </div>
+      <details id="qualitybox" style="display:none">
+        <summary id="qualitysum"></summary>
+        <ul class="qualitylist" id="qualitylist"></ul>
+      </details>
     </div>
 
     <p class="hint">
       <b>What counts as a duplicate?</b> Same <code>Full Question ID</code> as a row already in the database → skipped and listed above.<br>
-      <b>Rejected?</b> Rows missing <code>Question ID</code> or <code>Question</code> — fix them and re-upload (only new rows get added).<br>
+      <b>Rejected?</b> Rows missing required metadata (<code>Question ID</code>, <code>Question</code>, positive <code>Marks</code>, <code>Board</code>, <code>Class</code>, <code>Subject</code>, <code>Chapter</code>, <code>Topic</code>, valid <code>Difficulty</code>, <code>Question Type</code>, <code>Answer</code>, or <code>Source Paper</code>) are not added to the question bank. Clear encoding corruption and malformed multipart data are rejected with a reason; fix them and re-upload.<br>
+      <b>Text review:</b> weaker truncation signals (such as an ending ellipsis, unmatched brackets/quotes, or a dangling ending) are inserted but flagged by question ID below. Strong signals such as a cell reaching Excel's 32,767-character limit are rejected. Legitimate symbols (→, ≤, Greek letters, and scientific notation) are preserved.<br>
+      <b>Structured questions:</b> <code>content_features</code> values such as <code>DIAGRAM;GRAPH</code> are stored as a PostgreSQL array, and <code>structure_data</code> must be valid JSON. Multipart labels/marks are checked; invalid structure is rejected. Accepted rows get a validation status, and review flags are stored in the database.<br>
       <b>Excel tip:</b> only the <b>first sheet</b> is read. Column names are flexible (<code>QID</code>, <code>Question Text</code>, <code>Type</code>… all work).
     </p>
   </div>
@@ -167,6 +178,28 @@ var UPLOAD_KEY = "36217ca2974624a842cdf4a85717e860ed1e09926ec99ee5"; // pre-fill
         ul.appendChild(li);
       });
     } else { rejbox.style.display = 'none'; }
+
+    var qualitybox = document.getElementById('qualitybox');
+    var qualityRows = Array.isArray(data.quality_warnings) ? data.quality_warnings : [];
+    if ((data.quality_flagged_rows || qualityRows.length) > 0) {
+      qualitybox.style.display = 'block';
+      document.getElementById('qualitysum').textContent =
+        '🟡 ' + (data.quality_flagged_rows || qualityRows.length) + ' inserted row(s) flagged for text review (possible truncation); click to inspect';
+      var qlist = document.getElementById('qualitylist');
+      qlist.innerHTML = '';
+      qualityRows.forEach(function (item) {
+        var li = document.createElement('li');
+        var warnings = Array.isArray(item.warnings) ? item.warnings : [];
+        li.appendChild(document.createTextNode((item.full_question_id || 'Question') + ': ' + warnings.join('; ')));
+        if (item.question_excerpt) {
+          var excerpt = document.createElement('span');
+          excerpt.className = 'excerpt';
+          excerpt.textContent = item.question_excerpt;
+          li.appendChild(excerpt);
+        }
+        qlist.appendChild(li);
+      });
+    } else { qualitybox.style.display = 'none'; }
   }
 
   function showError(text) {
@@ -176,6 +209,7 @@ var UPLOAD_KEY = "36217ca2974624a842cdf4a85717e860ed1e09926ec99ee5"; // pre-fill
     msg.textContent = '❌ ' + text;
     document.getElementById('dupbox').style.display = 'none';
     document.getElementById('rejbox').style.display = 'none';
+    document.getElementById('qualitybox').style.display = 'none';
   }
 
   btn.addEventListener('click', function () {
@@ -231,5 +265,5 @@ var UPLOAD_KEY = "36217ca2974624a842cdf4a85717e860ed1e09926ec99ee5"; // pre-fill
   });
 })();
 </script>
-<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a439c3ed7db1a89b',t:'MTc5MDgzOTg2MQ=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a47d35e56b2038b4',t:'MTc5MTU0NzA3NQ=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
