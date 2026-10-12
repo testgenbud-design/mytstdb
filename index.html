@@ -100,6 +100,28 @@
     <div id="blueprint-options" class="blueprint-panel" style="display:none">
       <h2>Blueprint upload options</h2>
       <p class="bp-muted">The original file is uploaded once. n8n parses and validates it, checks conflicts and version rules, commits atomically, then reads the saved record back before reporting success.</p>
+      <h3>Blueprint identity</h3>
+      <p class="bp-muted">Enter identity values only when the workbook does not contain them. These form values fill blanks; they do not overwrite metadata already in the file. Do not reuse the reserved complete-paper ID for a production matrix.</p>
+      <label for="bp-blueprint-id">Blueprint ID</label>
+      <input type="text" id="bp-blueprint-id" placeholder="Distinct, versioned ID when absent from the file">
+      <label for="bp-blueprint-name">Blueprint name</label>
+      <input type="text" id="bp-blueprint-name" placeholder="Name when absent from the file">
+      <label for="bp-board">Board</label>
+      <input type="text" id="bp-board" placeholder="Board when absent from the file">
+      <label for="bp-class">Class (number or Roman numeral)</label>
+      <input type="text" id="bp-class" placeholder="e.g. 12 or XII">
+      <label for="bp-subject">Subject</label>
+      <input type="text" id="bp-subject" placeholder="Subject when absent from the file">
+      <label for="bp-subject-code">Subject code</label>
+      <input type="text" id="bp-subject-code" placeholder="Subject code when absent from the file">
+      <label for="bp-stable-id">Stable blueprint identity (optional)</label>
+      <input type="text" id="bp-stable-id" placeholder="Derived from the versioned Blueprint ID when omitted">
+      <label for="bp-version">Blueprint version (optional)</label>
+      <input type="text" id="bp-version" placeholder="Derived from a -vN ID suffix when omitted">
+      <label class="bp-check">
+        <input type="checkbox" id="bp-complete-paper">
+        <span>Declare this as the reserved complete paper only if it is the full 38-slot, 13-chapter, 80-mark scheme. This enables strict master-paper checks; leave unchecked for production matrices, which must use a distinct ID.</span>
+      </label>
       <label for="bp-lifecycle">Lifecycle (required)</label>
       <select id="bp-lifecycle">
         <option value="">Select lifecycle…</option>
@@ -204,6 +226,8 @@ var UPLOAD_KEY = "36217ca2974624a842cdf4a85717e860ed1e09926ec99ee5"; // do not s
       blueprintResult.style.display = 'none';
       bpLifecycle.value = ''; bpRetireId.value = ''; bpReplaceConfirm.checked = false;
       bpRetireOptions.style.display = 'none';
+      ['bp-blueprint-id','bp-blueprint-name','bp-board','bp-class','bp-subject','bp-subject-code','bp-stable-id','bp-version'].forEach(function (id) { document.getElementById(id).value = ''; });
+      document.getElementById('bp-complete-paper').checked = false;
     }
     chosen = f;
     if (!f) { fileinfo.style.display = 'none'; return; }
@@ -347,6 +371,15 @@ var UPLOAD_KEY = "36217ca2974624a842cdf4a85717e860ed1e09926ec99ee5"; // do not s
       lifecycle_status: lifecycle,
       replace_published_confirmed: bpReplaceConfirm.checked === true
     };
+    [
+      ['blueprint_id','bp-blueprint-id'], ['name','bp-blueprint-name'], ['board','bp-board'],
+      ['class','bp-class'], ['subject','bp-subject'], ['subject_code','bp-subject-code'],
+      ['stable_blueprint_id','bp-stable-id'], ['blueprint_version','bp-version']
+    ].forEach(function (pair) {
+      var value = document.getElementById(pair[1]).value.trim();
+      if (value) body[pair[0]] = value;
+    });
+    if (document.getElementById('bp-complete-paper').checked) body.complete_paper = true;
     if (bpReplaceConfirm.checked) body.replace_existing_published_id = retireId;
     fetchBlueprint(body).then(function (data) {
       if (data.status !== 'success' || data.transaction_committed !== true || data.readback_verified !== true) {
@@ -507,5 +540,5 @@ var UPLOAD_KEY = "36217ca2974624a842cdf4a85717e860ed1e09926ec99ee5"; // do not s
   });
 })();
 </script>
-<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a48f586cb9b858bb',t:'MTc5MTczNzIzMw=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a4930467695c0997',t:'MTc5MTc3NTczNA=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
