@@ -1,641 +1,145 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>MyTST — Upload Questions &amp; Blueprints</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark">
+<title>MyTST | Unified Uploader</title>
 <style>
-  :root { --bg:#0f172a; --card:#1e293b; --accent:#38bdf8; --green:#34d399; --amber:#fbbf24; --red:#f87171; --muted:#94a3b8; }
-  * { box-sizing:border-box; }
-  body { margin:0; font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif; background:linear-gradient(135deg,#0f172a,#1e1b4b); color:#e2e8f0; min-height:100vh; display:flex; justify-content:center; padding:24px; }
-  .wrap { width:100%; max-width:1040px; }
-  .card { background:rgba(30,41,59,.9); border:1px solid #334155; border-radius:16px; padding:28px; box-shadow:0 20px 60px rgba(0,0,0,.4); }
-  h1 { margin:0 0 4px; font-size:22px; }
-  h1 span { color:var(--accent); }
-  p.sub { margin:0 0 20px; color:var(--muted); font-size:14px; }
-  .auth-panel { margin:0 0 18px; padding:14px; border:1px solid #334155; border-radius:12px; background:rgba(15,23,42,.7); }
-  .auth-panel h2 { margin:0 0 6px; font-size:16px; color:#bae6fd; }
-  .auth-panel p { margin:0; color:var(--muted); font-size:12px; line-height:1.5; }
-  .auth-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
-  label { display:block; font-size:13px; color:var(--muted); margin:14px 0 6px; }
-  input[type=text], input[type=password] { width:100%; padding:11px 12px; border-radius:10px; border:1px solid #334155; background:#0f172a; color:#e2e8f0; font-size:15px; }
-  input:focus { outline:2px solid var(--accent); border-color:var(--accent); }
-  #drop { margin-top:6px; border:2px dashed #475569; border-radius:14px; padding:34px 18px; text-align:center; cursor:pointer; transition:.2s; }
-  #drop:hover, #drop.over { border-color:var(--accent); background:rgba(56,189,248,.07); }
-  #drop .big { font-size:40px; }
-  #drop p { margin:8px 0 0; color:var(--muted); font-size:14px; }
-  #fileinfo { display:none; margin-top:10px; font-size:14px; background:#0f172a; border:1px solid #334155; padding:10px 12px; border-radius:10px; }
-  #fileinfo b { color:var(--accent); }
-  button#upload { width:100%; margin-top:18px; padding:14px; font-size:16px; font-weight:700; border:0; border-radius:12px; cursor:pointer; color:#06202e; background:linear-gradient(90deg,#38bdf8,#818cf8); }
-  button#upload:disabled { opacity:.55; cursor:wait; }
-  #status { margin-top:16px; font-size:14px; min-height:22px; color:var(--muted); }
-  .spinner { display:inline-block; width:14px; height:14px; border:2px solid #475569; border-top-color:var(--accent); border-radius:50%; animation:spin 0.8s linear infinite; vertical-align:-2px; margin-right:6px; }
-  @keyframes spin { to { transform:rotate(360deg); } }
-  #result { display:none; margin-top:14px; }
-  .msg { padding:12px 14px; border-radius:10px; font-size:15px; margin-bottom:12px; }
-  .msg.ok { background:rgba(52,211,153,.12); border:1px solid var(--green); }
-  .msg.err { background:rgba(248,113,113,.12); border:1px solid var(--red); }
-  #truncbox { margin-top:10px; border:1px solid rgba(248,113,113,.4); border-radius:10px; padding:8px 10px; background:rgba(248,113,113,.08); }
-  #truncbox summary { color:#fca5a5; font-weight:700; }
-  ul.trunclist { margin:6px 0 0; padding-left:20px; font-size:13px; color:#fecaca; }
-  ul.trunclist li { margin:0 0 8px; }
-  .excerpt { display:block; margin-top:3px; color:var(--muted); font-size:12px; }
-  .grid { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; }
-  .stat { background:#0f172a; border:1px solid #334155; border-radius:10px; padding:10px 6px; text-align:center; }
-  .stat .n { font-size:22px; font-weight:800; }
-  .stat .l { font-size:11px; color:var(--muted); margin-top:2px; }
-  .stat.t .n { color:#e2e8f0; } .stat.i .n { color:var(--green); } .stat.d .n { color:var(--amber); } .stat.r .n { color:var(--red); }
-  details { margin-top:12px; font-size:13px; }
-  summary { cursor:pointer; color:var(--accent); }
-  .idlist { max-height:180px; overflow:auto; background:#0f172a; border:1px solid #334155; border-radius:8px; padding:8px 10px; margin-top:6px; font-family:ui-monospace,monospace; font-size:12px; white-space:pre-wrap; }
-  ul.reasons { margin:6px 0 0; padding-left:20px; font-size:13px; color:var(--amber); }
-  ul.rowerrors { max-height:360px; overflow:auto; background:#0f172a; border:1px solid #334155; border-radius:8px; padding:10px 12px 10px 30px; margin:8px 0; font-size:12px; color:#fecaca; }
-  ul.rowerrors li { margin:0 0 10px; line-height:1.45; overflow-wrap:anywhere; }
-  .report-download { padding:8px 10px; border:1px solid #38bdf8; border-radius:8px; background:#0f172a; color:#bae6fd; cursor:pointer; font-weight:600; }
-  .reconcile { margin-top:10px; padding:9px 11px; border:1px solid #334155; border-radius:8px; color:#cbd5e1; background:#0f172a; font-size:12px; line-height:1.5; }
-  .hint { margin-top:18px; font-size:12.5px; color:var(--muted); line-height:1.6; }
-  .hint code { background:#0f172a; padding:1px 6px; border-radius:6px; font-size:12px; color:#cbd5e1; }
-  select, input[type=checkbox] { accent-color:#38bdf8; }
-  select { width:100%; padding:11px 12px; border-radius:10px; border:1px solid #334155; background:#0f172a; color:#e2e8f0; font-size:15px; }
-  .blueprint-panel { margin-top:16px; border:1px solid #334155; border-radius:12px; padding:16px; background:rgba(15,23,42,.65); }
-  .blueprint-panel h2 { margin:0 0 12px; font-size:18px; color:#bfdbfe; }
-  .blueprint-panel h3 { margin:18px 0 8px; font-size:15px; color:#cbd5e1; }
-  .bp-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:9px; }
-  .bp-stat { background:#111827; border:1px solid #334155; border-radius:9px; padding:10px; min-width:0; }
-  .bp-stat b { display:block; color:#38bdf8; font-size:12px; margin-bottom:4px; }
-  .bp-stat span { font-size:14px; overflow-wrap:anywhere; }
-  .bp-tablewrap { max-height:300px; overflow:auto; border:1px solid #334155; border-radius:8px; }
-  table.bp-table { width:100%; border-collapse:collapse; font-size:12px; background:#0f172a; }
-  .bp-table th,.bp-table td { text-align:left; padding:7px 8px; border-bottom:1px solid #25324a; vertical-align:top; }
-  .bp-table th { position:sticky; top:0; background:#1e293b; color:#bae6fd; z-index:1; }
-  .bp-list { margin:6px 0 0; padding-left:20px; line-height:1.55; font-size:13px; }
-  .bp-list.err { color:#fecaca; } .bp-list.warn { color:#fde68a; }
-  .bp-actions { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; margin-top:14px; }
-  .bp-actions button { padding:12px; border:0; border-radius:10px; font-weight:700; cursor:pointer; color:#06202e; background:linear-gradient(90deg,#38bdf8,#818cf8); }
-  .bp-actions button:disabled { opacity:.45; cursor:not-allowed; }
-  .bp-check { display:flex; align-items:flex-start; gap:8px; font-size:13px; line-height:1.5; color:#e2e8f0; margin-top:10px; }
-  .bp-note { border-left:3px solid #fbbf24; padding:8px 10px; background:rgba(251,191,36,.08); color:#fde68a; font-size:13px; margin-top:10px; }
-  .bp-note.ok { border-color:#34d399; background:rgba(52,211,153,.08); color:#bbf7d0; }
-  .bp-error { color:#fecaca; background:rgba(248,113,113,.08); border:1px solid rgba(248,113,113,.45); padding:9px 11px; border-radius:8px; margin:8px 0; font-size:13px; }
-  .bp-muted { color:var(--muted); font-size:12px; line-height:1.5; }
-  @media (max-width:720px){ .bp-grid{grid-template-columns:repeat(2,minmax(0,1fr));} }
-  @media (max-width:520px){ .grid{grid-template-columns:repeat(2,1fr);} .auth-grid,.bp-actions{grid-template-columns:1fr;} }
+  :root{font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;color:#e8edf7;background:#0b1220;font-synthesis:none;--panel:#121d30;--line:#26364e;--muted:#9baac0;--accent:#8bd5ff;--good:#7ee0b2;--warn:#ffd27c;--bad:#ff9caa}
+  *{box-sizing:border-box}body{margin:0;min-height:100vh;background:radial-gradient(ellipse at top,#162641 0%,#0b1220 60%);padding:32px 16px}
+  main{max-width:760px;margin:0 auto}.brand{font-size:12px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:var(--accent)}
+  h1{font-size:clamp(26px,4vw,36px);letter-spacing:-.035em;margin:10px 0 8px}p{color:var(--muted);line-height:1.6;margin:0}
+  .panel{margin-top:24px;background:rgba(18,29,48,.96);border:1px solid var(--line);border-radius:18px;padding:clamp(18px,4vw,28px);box-shadow:0 22px 60px #0003}
+  label{display:block;font-size:13px;font-weight:700;margin:0 0 9px;color:#d5deec}.field{margin-top:22px}
+  select,input[type=file]{width:100%;font:inherit;color:#e8edf7;background:#0b1424;border:1px solid #34465f;border-radius:11px;padding:13px}
+  select:focus-visible,input:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  .drop{border:1px dashed #4b6685;border-radius:14px;padding:25px 16px;text-align:center;background:#0d1728;cursor:pointer;transition:border-color .15s,background .15s}
+  .drop.drag{border-color:var(--accent);background:#13253a}.drop strong{display:block;font-size:16px}.drop small{display:block;color:var(--muted);margin-top:7px}
+  #file{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}.selected{display:none;margin-top:12px;padding:11px 13px;border:1px solid var(--line);border-radius:10px;color:#dbe6f5;font-size:13px;overflow-wrap:anywhere}
+  .help{font-size:12px;margin-top:9px}.button{width:100%;margin-top:22px;border:0;border-radius:11px;padding:14px 18px;background:linear-gradient(100deg,#8bd5ff,#b5b9ff);color:#0a1726;font:inherit;font-weight:800;cursor:pointer}.button:disabled{opacity:.55;cursor:wait}
+  .status{display:none;margin-top:16px;border:1px solid var(--line);border-radius:11px;padding:12px 14px;font-size:14px;line-height:1.5;overflow-wrap:anywhere}.status.info{display:block;color:#dbeafe;background:#10213a}.status.good{display:block;color:var(--good);background:#10271f;border-color:#285541}.status.warn{display:block;color:var(--warn);background:#2b2110;border-color:#594624}.status.bad{display:block;color:var(--bad);background:#2b151e;border-color:#60303d}
+  .report{display:none;margin-top:18px}.report h2{font-size:16px;margin:0 0 10px}.report pre{white-space:pre-wrap;overflow-wrap:anywhere;max-height:440px;overflow:auto;background:#08111e;border:1px solid var(--line);border-radius:10px;padding:14px;color:#dbe6f5;font:12px/1.55 ui-monospace,SFMono-Regular,Consolas,monospace}
+  .foot{font-size:12px;margin-top:18px}.spinner{display:inline-block;width:13px;height:13px;border:2px solid #526781;border-top-color:var(--accent);border-radius:50%;vertical-align:-2px;margin-right:8px;animation:spin .8s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}
+  @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
 </style>
 </head>
 <body>
-<div class="wrap">
-  <div class="card">
-    <h1>📤 MyTST <span>Question &amp; Blueprint Upload</span></h1>
-    <p class="sub">One secure webhook handles both upload types. Choose a file and submit it directly to the protected n8n workflow; Blueprints never become question rows.</p>
+<main>
+  <div class="brand">MyTST · Data Operations</div>
+  <h1>Unified Uploader</h1>
+  <p>Upload a Question Bank or Blueprint file. The server validates the file, checks for duplicates or conflicts, writes to the appropriate database path, and returns a report. There is no preview or manual metadata step.</p>
 
-    <section class="auth-panel" aria-labelledby="upload-access-title">
-      <h2 id="upload-access-title">Upload access</h2>
-      <p>Enter the dedicated n8n upload username and password shared with the authorized uploaders. This page embeds no password and does not save it to local/session storage; it sends what you enter only over HTTPS. Do not use your n8n owner or database credentials.</p>
-      <div class="auth-grid">
-        <div>
-          <label for="n8n-auth-user">n8n upload username</label>
-          <input type="text" id="n8n-auth-user" autocomplete="username" autocapitalize="none" spellcheck="false">
-        </div>
-        <div>
-          <label for="n8n-auth-password">n8n upload password</label>
-          <input type="password" id="n8n-auth-password" autocomplete="current-password">
-        </div>
+  <section class="panel" aria-labelledby="upload-heading">
+    <h2 id="upload-heading" style="font-size:18px;margin:0">Upload a file</h2>
+    <form id="upload-form">
+      <div class="field">
+        <label for="upload-type">What are you uploading?</label>
+        <select id="upload-type" name="upload_type">
+          <option value="questions">Question Bank</option>
+          <option value="blueprint">Blueprint</option>
+        </select>
       </div>
+      <div class="field">
+        <label for="file">Choose your source file</label>
+        <div id="drop" class="drop" role="button" tabindex="0" aria-controls="file">
+          <strong>Drop a file here or click to browse</strong>
+          <small id="file-help">Question Bank: .csv, .xlsx, .xls</small>
+        </div>
+        <input id="file" name="file" type="file" accept=".csv,.xlsx,.xls" required>
+        <div id="selected" class="selected" aria-live="polite"></div>
+        <p class="help">Your original file is sent to the authenticated application proxy. No shared secret is stored in this page.</p>
+      </div>
+      <button class="button" id="submit" type="submit">Upload and validate</button>
+    </form>
+    <div id="status" class="status" role="status" aria-live="polite"></div>
+    <section id="report" class="report" aria-labelledby="report-heading">
+      <h2 id="report-heading">Server report</h2>
+      <pre id="report-json"></pre>
     </section>
-
-    <label for="upload-type">Upload type</label>
-    <select id="upload-type">
-      <option value="questions">Question bank (.csv / .xlsx)</option>
-      <option value="blueprint">Blueprint (.json / .xlsx / .csv)</option>
-    </select>
-
-    <label for="uploader">Your name (audit label, not authentication)</label>
-    <input type="text" id="uploader" placeholder="e.g. Partner" autocomplete="name">
-
-    <label id="file-label">Question file (.csv / .xlsx)</label>
-    <div id="drop">
-      <div class="big">📄</div>
-      <p><b>Drag &amp; drop</b> your file here, or <b>click</b> to choose</p>
-      <input type="file" id="file" accept=".csv,.xlsx,.xls,.json" style="display:none">
-    </div>
-    <div id="fileinfo">Selected: <b id="filename"></b> (<span id="filesize"></span>)</div>
-
-    <div id="blueprint-options" class="blueprint-panel" style="display:none">
-      <h2>Blueprint upload</h2>
-      <p class="bp-muted">Select the original workbook and upload. The server discovers the header and worksheet layout, extracts identity and version, validates the blueprint structure, and writes only after automatic checks. No preview or metadata form is required.</p>
-      <p class="bp-muted">Identity, version, and blueprint intent must be established from the file; missing or contradictory fields produce actionable errors rather than invented values. Missing lifecycle defaults to Draft. Existing records are not overwritten; version conflicts are reported.</p>
-    </div>
-
-    <div id="blueprint-result" class="blueprint-panel" style="display:none" aria-live="polite">
-      <h2>Blueprint upload result</h2>
-      <div id="bp-result-message" class="msg"></div>
-      <div id="bp-result-details" class="bp-muted"></div>
-      <ul id="bp-result-errors" class="bp-list err"></ul>
-    </div>
-
-    <button id="upload">⬆ Upload to Database</button>
-    <div id="status"></div>
-
-    <div id="result">
-      <div class="msg ok" id="msg"></div>
-      <div class="grid">
-        <div class="stat t"><div class="n" id="s-total">0</div><div class="l">Input rows</div></div>
-        <div class="stat i"><div class="n" id="s-ins">0</div><div class="l">DB inserted ✅</div></div>
-        <div class="stat d"><div class="n" id="s-dup">0</div><div class="l">Duplicates skipped ⏭️</div></div>
-        <div class="stat r"><div class="n" id="s-rej">0</div><div class="l">Validation rejects ⚠️</div></div>
-      </div>
-      <div id="reconcile-summary" class="reconcile" style="display:none"></div>
-      <details id="dupbox" style="display:none">
-        <summary id="dupsum"></summary>
-        <div class="idlist" id="duplist"></div>
-        <ul class="rowerrors" id="duprowlist" style="display:none"></ul>
-      </details>
-      <div id="rejbox" style="display:none">
-        <ul class="reasons" id="rejlist"></ul>
-      </div>
-      <details id="rowerrorbox" style="display:none">
-        <summary id="rowerrorsummary">Row-level validation and database report</summary>
-        <ul class="rowerrors" id="rowerrorlist"></ul>
-        <button type="button" class="report-download" id="download-error-report">Download row-level error report (.json)</button>
-      </details>
-      <details id="truncbox" style="display:none">
-        <summary id="truncsum"></summary>
-        <ul class="trunclist" id="trunclist"></ul>
-      </details>
-    </div>
-
-    <p class="hint" id="question-hint">
-      <b>Duplicates and accounting:</b> repeated <code>Full Question ID</code> values within this file are reported separately from IDs already in the database. The result distinguishes validation passes/rejects from database attempted, inserted, failed, and unknown writes; a retry is insert-only and does not create another question version.<br>
-      <b>Required content:</b> each accepted question needs an ID, stem, positive marks, board, class, subject, chapter, topic, supported difficulty, question type, answer, and source paper. Fractional marks are accepted to three decimal places. Missing/placeholder fields, malformed options or structure, likely encoding corruption, explicit negative-selection wording, and detected truncation remain quality-gate failures; valid negative numbers and mathematical notation remain allowed. Genuine defects are not auto-corrected or silently discarded.<br>
-      <b>Structured metadata contract:</b> <code>structure_type</code> is descriptive free text (use subject-specific labels; there is no exhaustive global enum). <code>content_features</code> is an array of descriptive strings; delimited input may use semicolon, comma, pipe, or newline, while a JSON string array is safest when a feature itself contains a delimiter. Values are stored as PostgreSQL <code>TEXT[]</code>.<br>
-      <b><code>structure_data</code> contract:</b> stored as a JSONB object. Legacy prose is accepted as <code>{"kind":"description","description":"…"}</code>. For multipart questions, use <code>{"parts":[{"label":"a","marks":1.5}],"internal_choice":false}</code>; labels must be unique, marks positive (≤3 decimals), and when there is no internal choice their sum must equal the question marks. Internal-choice parts require <code>choice_groups</code> metadata. No parts schema is inferred from unrelated fields.<br>
-      <b>Actionable errors:</b> expand “Row-level validation and database report” to see file, worksheet, spreadsheet row, question ID, field, and repair guidance; download the JSON report to fix and revalidate the source rows. Detected truncation details are also listed separately and stored with rejected rows.<br>
-      <b>Excel tip:</b> only the <b>first sheet</b> is read for question uploads. Column names are flexible (<code>QID</code>, <code>Question Text</code>, <code>Type</code>… all work).
-    </p>
-    <p class="hint" id="blueprint-hint" style="display:none">
-      <b>Blueprint path:</b> The original JSON, CSV, or XLSX file is sent as multipart binary directly to the authenticated n8n webhook and parsed server-side; the browser does not convert it into a Blueprint JSON model. All XLSX worksheets and source columns are inspected; unknown fields and unsupported worksheets are preserved and reported. A master curriculum sheet with <code>Chapter_No</code>, <code>Chapter_Name</code>, and <code>Unit_Domain</code> produces a separate distinct chapter pool while every subtopic row remains a slot; a dedicated Chapter_Pool sheet takes precedence. No chapter-level target weights are inferred from row marks. Complete-paper intent is used only when explicitly declared in the file; no fixed slot/mark targets are inferred from an ID or workbook title. CSV supports nested choices, subparts, rules, section definitions, and a chapter pool only when represented as JSON cells. Missing section definitions are clearly marked as derived from slots. Missing subject references remain null; the uploader never creates reference rows.<br>
-      <b>Access control:</b> The n8n Webhook enforces its dedicated Basic Auth credential before the workflow runs. This page does not contain the password; it sends credentials entered by an authorized user over HTTPS. The webhook CORS allow-list must contain only the exact HTTPS origin serving this page. CORS is not authentication, and the <code>uploader</code> name is an audit label, not identity proof.<br>
-      <b>Version safety:</b> identity, version, lifecycle, and complete-paper intent are read from the uploaded file; missing lifecycle defaults to DRAFT. Automatic validation and conflict checks run before any write. Existing records are never overwritten or retired by this uploader; publishing is blocked when a published sibling exists. The direct authenticated request reaches one unified workflow; its upload-type router selects the Blueprint branch.
-    </p>
-  </div>
-</div>
-
-
-
+  </section>
+  <p class="foot">Endpoint: <code>/api/mytst-upload</code> · The endpoint must be served by the same application origin and forward requests to the private n8n webhook using server-side credentials.</p>
+</main>
 <script>
-/* ================================================================
-   Direct browser-to-n8n call. The workflow must have native n8n Webhook
-   Basic Auth assigned in n8n; this file contains no credential. The user
-   enters the dedicated upload credential in the fields above. It is sent
-   in an HTTPS Authorization header and is not stored by this page.
-   The Webhook Allowed Origins (CORS) setting must be the exact HTTPS origin
-   serving this page. Never use wildcard CORS as an authentication control.
-   ================================================================ */
-var UPLOAD_WEBHOOK_URL = 'https://n8n.mytst.cloud/webhook/mytst-upload';
-function mytstUploadCredentialsPresent() {
-  var user = String((document.getElementById('n8n-auth-user') || {}).value || '').trim();
-  var password = String((document.getElementById('n8n-auth-password') || {}).value || '');
-  return user !== '' && user.indexOf(':') === -1 && password !== '';
-}
-function mytstBasicAuthHeader() {
-  var user = String((document.getElementById('n8n-auth-user') || {}).value || '').trim();
-  var password = String((document.getElementById('n8n-auth-password') || {}).value || '');
-  if (!user || !password) throw new Error('Enter the dedicated n8n upload username and password.');
-  if (user.indexOf(':') !== -1) throw new Error('The n8n upload username cannot contain a colon.');
-  var bytes = new TextEncoder().encode(user + ':' + password);
-  var binary = '';
-  for (var i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
-  return 'Basic ' + btoa(binary);
-}
-function mytstSecureContext() {
-  return window.location.protocol === 'https:' && window.location.origin !== 'null';
-}
-function unifiedEndpointReady() {
-  return mytstSecureContext() && /^https:\/\/n8n\.mytst\.cloud\/webhook\/mytst-upload$/.test(UPLOAD_WEBHOOK_URL) && mytstUploadCredentialsPresent();
-}
-function mytstDirectFetchOptions(body, signal) {
-  if (!mytstSecureContext()) throw new Error('Open this uploader from its HTTPS website, not from a local file or HTTP page.');
-  return {
-    method: 'POST',
-    mode: 'cors',
-    body: body,
-    signal: signal,
-    credentials: 'omit',
-    headers: { 'Authorization': mytstBasicAuthHeader() }
-  };
-}
-/* ================================================================ */
-(function () {
-  var drop = document.getElementById('drop');
-  var fileInput = document.getElementById('file');
-  var fileinfo = document.getElementById('fileinfo');
-  var filename = document.getElementById('filename');
-  var filesize = document.getElementById('filesize');
-  var btn = document.getElementById('upload');
-  var status = document.getElementById('status');
-  var result = document.getElementById('result');
-  var uploadType = document.getElementById('upload-type');
-  var fileLabel = document.getElementById('file-label');
-  var blueprintOptions = document.getElementById('blueprint-options');
-  var blueprintResult = document.getElementById('blueprint-result');
-  var chosen = null;
+(function(){
+  'use strict';
+  const ENDPOINT = '/api/mytst-upload';
+  const form = document.getElementById('upload-form');
+  const type = document.getElementById('upload-type');
+  const fileInput = document.getElementById('file');
+  const drop = document.getElementById('drop');
+  const selected = document.getElementById('selected');
+  const help = document.getElementById('file-help');
+  const submit = document.getElementById('submit');
+  const status = document.getElementById('status');
+  const report = document.getElementById('report');
+  const reportJson = document.getElementById('report-json');
+  let chosen = null;
+  let controller = null;
 
-  function fmtBytes(n) {
-    if (n < 1024) return n + ' B';
-    if (n < 1048576) return (n / 1024).toFixed(1) + ' KB';
-    return (n / 1048576).toFixed(1) + ' MB';
+  function allowedExtensions(){return type.value === 'blueprint' ? ['csv','xlsx','json'] : ['csv','xlsx','xls'];}
+  function extension(name){const i=name.lastIndexOf('.');return i<0?'':name.slice(i+1).toLowerCase();}
+  function formatSize(bytes){if(bytes<1024)return bytes+' B';if(bytes<1048576)return (bytes/1024).toFixed(1)+' KB';return (bytes/1048576).toFixed(2)+' MB';}
+  function showStatus(kind,message){status.className='status '+kind;status.textContent=message;}
+  function updateType(){
+    const blueprint=type.value==='blueprint';
+    help.textContent=blueprint?'Blueprint: .csv, .xlsx, .json':'Question Bank: .csv, .xlsx, .xls';
+    fileInput.accept=blueprint?'.csv,.xlsx,.json':'.csv,.xlsx,.xls';
+    submit.textContent=blueprint?'Upload Blueprint':'Upload Question Bank';
+    if(chosen && !allowedExtensions().includes(extension(chosen.name))){chosen=null;fileInput.value='';selected.style.display='none';selected.textContent='';}
+    report.style.display='none';status.className='status';status.textContent='';
   }
-  function setFile(f) {
-    if (chosen !== f) {
-      blueprintResult.style.display = 'none';
+  function chooseFile(file){
+    if(!file)return;
+    if(!allowedExtensions().includes(extension(file.name))){chosen=null;fileInput.value='';selected.style.display='none';showStatus('bad','Unsupported file type. '+help.textContent+'.');return;}
+    chosen=file;selected.textContent=file.name+' · '+formatSize(file.size);selected.style.display='block';
+    report.style.display='none';status.className='status';status.textContent='';
+  }
+  type.addEventListener('change',updateType);
+  drop.addEventListener('click',()=>fileInput.click());
+  drop.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();fileInput.click();}});
+  fileInput.addEventListener('change',()=>chooseFile(fileInput.files&&fileInput.files[0]));
+  ['dragenter','dragover'].forEach(name=>drop.addEventListener(name,e=>{e.preventDefault();drop.classList.add('drag');}));
+  ['dragleave','drop'].forEach(name=>drop.addEventListener(name,e=>{e.preventDefault();drop.classList.remove('drag');}));
+  drop.addEventListener('drop',e=>{const f=e.dataTransfer&&e.dataTransfer.files&&e.dataTransfer.files[0];if(f)chooseFile(f);});
+
+  function reportKind(data){
+    const s=String(data&&data.status||'').toUpperCase();
+    if(['SUCCESS','DUPLICATE_IDENTICAL'].includes(s))return 'good';
+    if(['PARTIAL','WRITE_WITHHELD_MIGRATION_PENDING','VERSION_CONFLICT','DUPLICATE_CONTENT_OTHER_ID','PUBLISH_BLOCKED'].includes(s))return 'warn';
+    if(['ERROR','VALIDATION_FAILED','WRITE_UNCERTAIN','FAILED'].includes(s))return 'bad';
+    return data&&data.write_verified===true?'good':'warn';
+  }
+  function reportMessage(data){
+    const s=String(data&&data.status||'UNKNOWN');
+    const totals=data&&data.totals;
+    if(totals&&typeof totals==='object'){
+      const parts=[];
+      ['input_rows','inserted','duplicates_in_file','duplicates_in_db','conflicts','rejected','failed','unknown'].forEach(k=>{if(totals[k]!==undefined)parts.push(k.replace(/_/g,' ')+': '+totals[k]);});
+      return s+(parts.length?' — '+parts.join(' · '):'');
     }
-    chosen = f;
-    if (!f) { fileinfo.style.display = 'none'; return; }
-    filename.textContent = f.name;
-    filesize.textContent = fmtBytes(f.size);
-    fileinfo.style.display = 'block';
-    var ok = uploadType.value === 'blueprint' ? /\.(csv|xlsx|json)$/i.test(f.name) : /\.(csv|xlsx|xls)$/i.test(f.name);
-    fileinfo.style.borderColor = ok ? '#334155' : '#f87171';
+    return s+(data&&data.detail?' — '+data.detail:'');
   }
-
-  drop.addEventListener('click', function () { fileInput.click(); });
-  fileInput.addEventListener('change', function () { setFile(fileInput.files[0] || null); });
-  ['dragenter', 'dragover'].forEach(function (e) {
-    drop.addEventListener(e, function (ev) { ev.preventDefault(); drop.classList.add('over'); });
-  });
-  ['dragleave', 'drop'].forEach(function (e) {
-    drop.addEventListener(e, function (ev) { ev.preventDefault(); drop.classList.remove('over'); });
-  });
-  drop.addEventListener('drop', function (ev) {
-    var f = ev.dataTransfer.files && ev.dataTransfer.files[0];
-    if (f) setFile(f);
-  });
-
-  function fetchBlueprint(payload) {
-    if (!unifiedEndpointReady()) return Promise.reject(new Error('Open this page on its HTTPS website and enter the dedicated n8n upload username and password.'));
-    if (!chosen) return Promise.reject(new Error('Select the original Blueprint file before uploading.'));
-    if (payload && payload.model !== undefined) return Promise.reject(new Error('Blueprint model JSON is not sent from the browser; upload the original file instead.'));
-    var fd = new FormData();
-    fd.append('upload_type', 'blueprint');
-    fd.append('file', chosen, chosen.name);
-    Object.keys(payload || {}).forEach(function (key) {
-      var value = payload[key];
-      if (value === undefined || value === null) return;
-      fd.append(key, String(value));
-    });
-    return fetch(UPLOAD_WEBHOOK_URL, mytstDirectFetchOptions(fd)).then(function (resp) {
-      return resp.text().then(function (txt) {
-        var data = null; try { data = JSON.parse(txt); } catch (_) { /* non-JSON response */ }
-        if (Array.isArray(data) && data[0] && data[0].json) data = data[0].json;
-        if (resp.status === 401) {
-          var authError = new Error('n8n rejected the upload credentials (HTTP 401). Check the dedicated uploader username and password; native webhook authentication rejects this before workflow execution.');
-          authError.httpStatus = 401;
-          throw authError;
-        }
-        if (!data || typeof data !== 'object') throw new Error('Unexpected n8n response (HTTP ' + resp.status + ').');
-        if (!resp.ok || data.status !== 'success') {
-          var error = new Error(data.message || 'Blueprint upload failed (HTTP ' + resp.status + ').');
-          error.responseData = data;
-          error.httpStatus = resp.status;
-          throw error;
-        }
-        return data;
-      });
-    });
-  }
-  function blueprintErrors(data, fallback) {
-    var errors = [];
-    var validation = data && data.validation || {};
-    if (Array.isArray(validation.errors)) errors = errors.concat(validation.errors);
-    if (Array.isArray(data && data.request_errors)) errors = errors.concat(data.request_errors);
-    if (Array.isArray(data && data.verification_errors)) errors = errors.concat(data.verification_errors);
-    if (data && data.details) errors.push('Database details: ' + data.details);
-    if (data && data.duplicate_content_blueprint_id) errors.push('Identical content already exists under blueprint ID ' + data.duplicate_content_blueprint_id + '.');
-    errors = Array.from(new Set(errors.map(function (item) { return String(item); })));
-    if (!errors.length && fallback) errors.push(String(fallback));
-    if (!errors.length && data && data.message && data.status !== 'success') errors.push(String(data.message));
-    return errors;
-  }
-  function showBlueprintResult(data, succeeded, fallback) {
-    data = data && typeof data === 'object' ? data : {};
-    var verified = succeeded === true && data.status === 'success' && data.transaction_committed === true && data.readback_verified === true;
-    blueprintResult.style.display = 'block';
-    var message = document.getElementById('bp-result-message');
-    message.className = 'msg ' + (verified ? 'ok' : 'err');
-    message.textContent = (verified ? '✅ ' : '❌ ') + (data.message || fallback || (verified ? 'Blueprint saved and read-back verified.' : 'Blueprint upload was not verified.'));
-    var detailLines = [];
-    if (data.blueprint_id) detailLines.push('Blueprint ID: ' + data.blueprint_id);
-    if (data.blueprint_version) detailLines.push('Version: ' + data.blueprint_version);
-    if (verified) {
-      detailLines.push('Database transaction: committed');
-      detailLines.push('Saved data read-back: verified');
-      if (data.total_slots != null) detailLines.push('Slots: ' + data.total_slots);
-      if (data.total_marks != null) detailLines.push('Total marks: ' + data.total_marks);
-      if (data.log_id != null) detailLines.push('Upload audit log: ' + data.log_id);
-    } else {
-      if (data.operation) detailLines.push('Operation: ' + data.operation);
-      if (data.commit_state) detailLines.push('Commit state: ' + data.commit_state);
-      if (data.transaction_committed === true) detailLines.push('Database transaction: committed; verification did not pass');
-      if (data.readback_verified === false) detailLines.push('Saved data read-back: not verified');
-    }
-    document.getElementById('bp-result-details').textContent = detailLines.join(' · ');
-    var list = document.getElementById('bp-result-errors');
-    list.innerHTML = '';
-    blueprintErrors(data, verified ? '' : fallback).forEach(function (item) {
-      var li = document.createElement('li');
-      li.textContent = item;
-      list.appendChild(li);
-    });
-  }
-  function beginBlueprintUpload() {
-    if (!chosen) {
-      showBlueprintResult({ status: 'validation_error', message: 'Select a Blueprint .json, .xlsx, or .csv file first.' }, false);
-      return;
-    }
-    if (!/\.(csv|xlsx|json)$/i.test(chosen.name)) {
-      showBlueprintResult({ status: 'validation_error', message: 'Blueprint uploads accept .json, .xlsx, or .csv only.' }, false);
-      return;
-    }
-    if (!unifiedEndpointReady()) {
-      showBlueprintResult({ status: 'configuration_error', message: 'Open the uploader on its HTTPS website and enter the dedicated n8n upload credentials.' }, false);
-      status.textContent = 'The Blueprint request was not sent. Check HTTPS and the n8n upload username/password fields.';
-      return;
-    }
-
-    blueprintResult.style.display = 'block';
-    document.getElementById('bp-result-message').className = 'msg';
-    document.getElementById('bp-result-message').textContent = 'Uploading original file for server-side validation, conflict checks, transactional save, and read-back…';
-    document.getElementById('bp-result-details').textContent = '';
-    document.getElementById('bp-result-errors').innerHTML = '';
-    status.innerHTML = '<span class="spinner"></span>Uploading and validating Blueprint…';
-    btn.disabled = true;
-    var body = { uploader: document.getElementById('uploader').value.trim() || 'partner' };
-    fetchBlueprint(body).then(function (data) {
-      if (data.status !== 'success' || data.transaction_committed !== true || data.readback_verified !== true) {
-        var error = new Error(data.message || 'Database write and separate read-back were not both verified.');
-        error.responseData = data;
-        throw error;
-      }
-      showBlueprintResult(data, true);
-      status.textContent = 'Blueprint saved and read-back verified. No coverage/LMS integration is implied.';
-    }).catch(function (err) {
-      var data = err.responseData || {};
-      showBlueprintResult(data, false, err.message || String(err));
-      status.textContent = 'Blueprint upload was not verified. A network/CORS failure may hide a completed commit; check n8n executions and database state before retrying.';
-    }).finally(function () { btn.disabled = false; });
-  }
-  function setUploadType() {
-    var isBlueprint = uploadType.value === 'blueprint';
-    fileInput.accept = isBlueprint ? '.json,.xlsx,.csv' : '.csv,.xlsx,.xls';
-    fileLabel.textContent = isBlueprint ? 'Blueprint file (.json / .xlsx / .csv)' : 'Question file (.csv / .xlsx)';
-    document.getElementById('question-hint').style.display = isBlueprint ? 'none' : 'block';
-    document.getElementById('blueprint-hint').style.display = isBlueprint ? 'block' : 'none';
-    document.getElementById('result').style.display = 'none';
-    blueprintOptions.style.display = isBlueprint ? 'block' : 'none';
-    blueprintResult.style.display = 'none';
-    btn.textContent = isBlueprint ? '⬆ Upload Blueprint' : '⬆ Upload to Database';
-    if (chosen) setFile(chosen);
-  }
-  uploadType.addEventListener('change', setUploadType);
-  setUploadType();
-
-  function showResult(data) {
-    result.style.display = 'block';
-    var msg = document.getElementById('msg');
-    var databaseStatus = String(data.database_status || '');
-    var hasDatabaseProblem = Number(data.failed_inserts || 0) > 0 || data.unknown_inserts === null || Number(data.unknown_inserts || 0) > 0 ||
-      Number(data.failed_candidate_rows || 0) > 0 || Number(data.unresolved_candidate_rows || 0) > 0 || Number(data.failed_batches || 0) > 0 || Number(data.unknown_batches || 0) > 0 ||
-      Number(data.failed_reject_records || 0) > 0 || Number(data.unknown_reject_records || 0) > 0 ||
-      ['partial_failure', 'database_error', 'outcome_unknown'].indexOf(databaseStatus) !== -1 ||
-      ['partial_failure', 'database_error'].indexOf(String(data.status || '')) !== -1;
-    msg.className = 'msg ' + (hasDatabaseProblem ? 'err' : 'ok');
-    msg.textContent = (hasDatabaseProblem ? '⚠️ ' : '✅ ') + (data.message || 'Upload finished.');
-    document.getElementById('s-total').textContent = data.total_rows || 0;
-    document.getElementById('s-ins').textContent = data.successful_inserts != null ? data.successful_inserts : (data.confirmed_successful_inserts != null ? '≥' + data.confirmed_successful_inserts : '?');
-    document.getElementById('s-dup').textContent = data.database_duplicate_counts_complete === false ? '?' : (data.duplicates_skipped != null ? data.duplicates_skipped : (data.duplicates || 0));
-    document.getElementById('s-rej').textContent = data.rejected_rows != null ? data.rejected_rows : (data.rejected || 0);
-    var reconciliation = document.getElementById('reconcile-summary');
-    reconciliation.style.display = 'block';
-    var attemptLabel = data.attempted_inserts_count_complete === false
-      ? (data.confirmed_attempted_inserts || 0) + ' confirmed; exact actual insert-attempt count incomplete'
-      : (data.attempted_inserts == null ? 'not reported' : data.attempted_inserts + ' actual');
-    var unknownInsertLabel = data.unknown_inserts == null ? 'unknown' : String(data.unknown_inserts);
-    var successLabel = data.successful_inserts == null
-      ? (data.confirmed_successful_inserts || 0) + ' confirmed; total unknown'
-      : String(data.successful_inserts);
-    var preexistingLabel = data.preexisting_duplicates == null
-      ? (data.confirmed_preexisting_duplicates || 0) + ' confirmed; total incomplete'
-      : String(data.preexisting_duplicates);
-    var concurrentLabel = data.concurrent_duplicates == null
-      ? (data.confirmed_concurrent_duplicates || 0) + ' confirmed; total incomplete'
-      : String(data.concurrent_duplicates);
-    var failedInsertLabel = data.failed_inserts == null
-      ? (data.confirmed_failed_inserts || 0) + ' confirmed; total incomplete'
-      : String(data.failed_inserts);
-    var failedCandidateLabel = data.failed_candidate_rows == null
-      ? (data.confirmed_failed_candidate_rows || 0) + ' confirmed; total incomplete'
-      : String(data.failed_candidate_rows);
-    var duplicateTotalLabel = data.database_duplicate_counts_complete === false
-      ? 'incomplete (' + (data.confirmed_duplicates_skipped || 0) + ' confirmed so far)'
-      : String(data.duplicates_skipped != null ? data.duplicates_skipped : (data.duplicates || 0));
-    reconciliation.textContent = 'Validation: ' + (data.valid_rows || 0) + ' passed, ' + (data.rejected_rows || data.rejected || 0) + ' rejected, ' + (data.empty_rows_skipped || 0) + ' empty skipped. Question candidates: ' + (data.insert_candidates || 0) + '; actual question_versions INSERT attempts: ' + attemptLabel + '; inserted: ' + successLabel + '; pre-existing duplicates: ' + preexistingLabel + '; concurrent duplicates: ' + concurrentLabel + '; failed INSERT rows: ' + failedInsertLabel + '; failed candidates: ' + failedCandidateLabel + '; unresolved candidates: ' + (data.unresolved_candidate_rows || 0) + '; duplicates total: ' + duplicateTotalLabel + '; unknown insert outcomes: ' + unknownInsertLabel + '. Rejected-row records persisted: ' + (data.reject_records_inserted || 0) + '/' + (data.reject_records_attempted || 0) + '. Database status: ' + (data.database_status || 'not reported') + '.';
-    var dupbox = document.getElementById('dupbox');
-    if (data.duplicate_ids && data.duplicate_ids.length) {
-      dupbox.style.display = 'block';
-      var total = data.database_duplicate_counts_complete === false
-        ? 'at least ' + Number(data.confirmed_duplicates_skipped || 0)
-        : String(data.duplicates_skipped != null ? data.duplicates_skipped : (data.duplicates || 0));
-      var uniqueIds = Number(data.duplicate_ids_total || data.duplicate_ids.length);
-      var inFile = Number(data.duplicate_rows_in_file || 0);
-      var inDatabase = data.preexisting_duplicates != null ? data.preexisting_duplicates : ('≥' + Number(data.confirmed_preexisting_duplicates || 0));
-      var concurrent = data.concurrent_duplicates != null ? data.concurrent_duplicates : ('≥' + Number(data.confirmed_concurrent_duplicates || 0));
-      document.getElementById('dupsum').textContent =
-        '⏭️ ' + total + ' duplicate row(s) skipped (' + inFile + ' within this file; ' + inDatabase + ' pre-existing database duplicate(s); ' + concurrent + ' concurrent conflicts; ' + uniqueIds + ' unique ID(s))' +
-        (data.duplicate_ids_truncated ? ' — showing first ' + data.duplicate_ids.length + ' IDs' : '');
-      document.getElementById('duplist').textContent = data.duplicate_ids.join('\n');
-      var duplicateRows = Array.isArray(data.duplicate_rows) ? data.duplicate_rows : [];
-      var duplicateList = document.getElementById('duprowlist');
-      duplicateList.innerHTML = '';
-      duplicateRows.slice(0, 200).forEach(function (item) {
-        var li = document.createElement('li');
-        var location = [item.source_file, item.source_worksheet, item.spreadsheet_row != null ? 'row ' + item.spreadsheet_row : null].filter(Boolean).join(' / ');
-        li.textContent = (location ? location + ' — ' : '') + (item.full_question_id || item.question_id || 'Question ID unavailable') + ': ' + (item.reason || item.category || 'duplicate skipped');
-        duplicateList.appendChild(li);
-      });
-      duplicateList.style.display = duplicateRows.length ? 'block' : 'none';
-    } else { dupbox.style.display = 'none'; }
-    var rejbox = document.getElementById('rejbox');
-    if (data.rejected > 0) {
-      rejbox.style.display = 'block';
-      var ul = document.getElementById('rejlist');
-      ul.innerHTML = '';
-      (data.rejected_reasons || ['See rejected_questions table for details']).forEach(function (r) {
-        var li = document.createElement('li');
-        li.textContent = '⚠️ ' + data.rejected + ' row(s): ' + r;
-        ul.appendChild(li);
-      });
-    } else { rejbox.style.display = 'none'; }
-
-    var rowErrorBox = document.getElementById('rowerrorbox');
-    var rowErrors = Array.isArray(data.row_errors) ? data.row_errors : [];
-    var totalRowErrors = Number(data.row_errors_total || rowErrors.length || 0);
-    if (totalRowErrors > 0) {
-      rowErrorBox.style.display = 'block';
-      var displayed = rowErrors.slice(0, 200);
-      document.getElementById('rowerrorsummary').textContent = 'Row-level validation and database report: ' + totalRowErrors + ' item(s)' + (totalRowErrors > displayed.length ? ' — showing first ' + displayed.length + '; download the complete report' : '');
-      var rowErrorList = document.getElementById('rowerrorlist');
-      rowErrorList.innerHTML = '';
-      displayed.forEach(function (item) {
-        var li = document.createElement('li');
-        var location = [item.source_file, item.source_worksheet, item.spreadsheet_row != null ? 'row ' + item.spreadsheet_row : null].filter(Boolean).join(' / ');
-        var id = item.full_question_id || item.question_id || 'Question ID unavailable';
-        var messages = Array.isArray(item.errors) ? item.errors.map(function (error) {
-          return (error.field ? error.field + ': ' : '') + (error.reason || error.category || 'Review this row');
-        }) : [];
-        if (!messages.length && item.reason) messages.push((item.field ? item.field + ': ' : '') + item.reason);
-        if (!messages.length && item.category) messages.push(item.category);
-        li.textContent = (location ? location + ' — ' : '') + id + ': ' + (messages.join(' | ') || 'Review this row.');
-        rowErrorList.appendChild(li);
-      });
-      document.getElementById('download-error-report').onclick = function () {
-        var report = { source_file: data.file_name || data.file || null, validation: {
-          input_rows: data.input_rows, valid_rows: data.valid_rows, rejected_rows: data.rejected_rows,
-          content_defect_rows: data.content_defect_rows, schema_defect_rows: data.schema_defect_rows,
-          repairable_rows: data.repairable_rows, validation_error_categories: data.validation_error_categories
-        }, database: {
-          status: data.database_status, insert_candidates: data.insert_candidates,
-          attempted_inserts: data.attempted_inserts, confirmed_attempted_inserts: data.confirmed_attempted_inserts,
-          attempted_inserts_count_complete: data.attempted_inserts_count_complete,
-          successful_inserts: data.successful_inserts, confirmed_successful_inserts: data.confirmed_successful_inserts,
-          preexisting_duplicates: data.preexisting_duplicates, confirmed_preexisting_duplicates: data.confirmed_preexisting_duplicates,
-          concurrent_duplicates: data.concurrent_duplicates, confirmed_concurrent_duplicates: data.confirmed_concurrent_duplicates,
-          database_duplicate_counts_complete: data.database_duplicate_counts_complete,
-          duplicates_skipped: data.duplicates_skipped, confirmed_duplicates_skipped: data.confirmed_duplicates_skipped,
-          failed_inserts: data.failed_inserts, confirmed_failed_inserts: data.confirmed_failed_inserts,
-          failed_candidate_rows: data.failed_candidate_rows, confirmed_failed_candidate_rows: data.confirmed_failed_candidate_rows,
-          unresolved_candidate_rows: data.unresolved_candidate_rows,
-          unknown_candidate_rows: data.unknown_candidate_rows, failed_batches: data.failed_batches,
-          unknown_batches: data.unknown_batches, unknown_inserts: data.unknown_inserts, reject_records_inserted: data.reject_records_inserted,
-          failed_reject_records: data.failed_reject_records, database_errors: data.database_errors
-        }, row_errors: rowErrors, duplicate_rows: data.duplicate_rows || [], truncation_rejections: data.truncation_rejections || [] };
-        var blob = new Blob([JSON.stringify(report, null, 2)], { type: 'application/json' });
-        var downloadUrl = URL.createObjectURL(blob);
-        var link = document.createElement('a');
-        link.href = downloadUrl;
-        link.download = (String(data.file_name || data.file || 'upload').replace(/[^A-Za-z0-9._-]+/g, '_') + '.row-errors.json');
-        document.body.appendChild(link); link.click(); link.remove();
-        setTimeout(function () { URL.revokeObjectURL(downloadUrl); }, 1000);
-      };
-    } else { rowErrorBox.style.display = 'none'; }
-
-    var truncBox = document.getElementById('truncbox');
-    var truncationRows = Array.isArray(data.truncation_rejections) ? data.truncation_rejections : [];
-    var truncationCount = Number(data.truncation_rejected_rows || truncationRows.length || 0);
-    if (truncationCount > 0) {
-      truncBox.style.display = 'block';
-      document.getElementById('truncsum').textContent =
-        '⛔ ' + truncationCount + ' row(s) flagged and rejected for possible truncation; click to inspect';
-      var truncList = document.getElementById('trunclist');
-      truncList.innerHTML = '';
-      truncationRows.forEach(function (item) {
-        var li = document.createElement('li');
-        var id = item.full_question_id || item.question_id || 'Question';
-        var location = item.spreadsheet_row != null ? ' (' + (item.source_worksheet || 'worksheet') + ' row ' + item.spreadsheet_row + ')' : '';
-        var flags = Array.isArray(item.flags) ? item.flags : [];
-        li.appendChild(document.createTextNode(id + location + ': ' + flags.join('; ')));
-        if (item.question_excerpt) {
-          var excerpt = document.createElement('span');
-          excerpt.className = 'excerpt';
-          excerpt.textContent = item.question_excerpt;
-          li.appendChild(excerpt);
-        }
-        truncList.appendChild(li);
-      });
-    } else { truncBox.style.display = 'none'; }
-  }
-
-  function showError(text) {
-    result.style.display = 'block';
-    var msg = document.getElementById('msg');
-    msg.className = 'msg err';
-    msg.textContent = '❌ ' + text;
-    document.getElementById('dupbox').style.display = 'none';
-    document.getElementById('rejbox').style.display = 'none';
-    document.getElementById('rowerrorbox').style.display = 'none';
-    document.getElementById('reconcile-summary').style.display = 'none';
-    document.getElementById('truncbox').style.display = 'none';
-  }
-
-  btn.addEventListener('click', function () {
-    if (uploadType.value === 'blueprint') { beginBlueprintUpload(); return; }
-    result.style.display = 'none';
-    var who = document.getElementById('uploader').value.trim() || 'partner';
-    if (!chosen) { showError('Please choose a .csv or .xlsx file first.'); return; }
-    if (!/\.(csv|xlsx|xls)$/i.test(chosen.name)) { showError('Only .csv or .xlsx files are supported.'); return; }
-    if (!unifiedEndpointReady()) {
-      showError('Open the uploader on its HTTPS website and enter the dedicated n8n upload username and password.');
-      return;
-    }
-    var ctrl = new AbortController();
-    var timer = setTimeout(function () { ctrl.abort(); }, 10 * 60 * 1000);
-    btn.disabled = true;
-    var t0 = Date.now();
-    var tick = setInterval(function () {
-      var s = Math.floor((Date.now() - t0) / 1000);
-      status.innerHTML = '<span class="spinner"></span>Uploading &amp; importing… ' + s + 's (large files take a minute or two)';
-    }, 500);
-    status.innerHTML = '<span class="spinner"></span>Uploading &amp; importing…';
-
-    var fd = new FormData();
-    fd.append('upload_type', 'questions');
-    fd.append('file', chosen, chosen.name);
-    fd.append('uploader', who);
-
-    fetch(UPLOAD_WEBHOOK_URL, mytstDirectFetchOptions(fd, ctrl.signal)).then(function (resp) {
-      return resp.text().then(function (txt) {
-        var data = null;
-        try { data = JSON.parse(txt); } catch (e) { /* not JSON */ }
-        if (resp.status === 401) {
-          var authError = new Error('n8n rejected the upload credentials (HTTP 401). Check the dedicated uploader username and password; native webhook authentication rejects this before workflow execution.');
-          authError.responseData = data;
-          authError.httpStatus = 401;
-          throw authError;
-        }
-        if (!resp.ok) {
-          var serverError = new Error((data && data.message) ? ('n8n said: ' + data.message) : ('n8n returned HTTP ' + resp.status + '.'));
-          serverError.responseData = data;
-          serverError.httpStatus = resp.status;
-          throw serverError;
-        }
-        if (!data) throw new Error('Unexpected n8n response.');
-        return data;
-      });
-    }).then(function (data) {
-      clearTimeout(timer); clearInterval(tick); btn.disabled = false;
-      if (data.status === 'success' || data.input_rows != null || Array.isArray(data.row_errors)) {
-        showResult(data);
-        status.textContent = data.status === 'success'
-          ? 'Done in ' + Math.floor((Date.now() - t0) / 1000) + 's.'
-          : 'Database outcomes need review below; use the row-level report before retrying.';
-      } else {
-        status.textContent = '';
-        showError(data.message || 'Upload failed.');
-      }
-    }).catch(function (err) {
-      clearTimeout(timer); clearInterval(tick); btn.disabled = false;
-      status.textContent = '';
-      if (err.name === 'AbortError') showError('Timed out after 10 minutes. The file may be very large — check the database / upload_logs before retrying.');
-      else if (String(err).indexOf('Failed to fetch') !== -1 || String(err).indexOf('NetworkError') !== -1 || err.name === 'TypeError')
-        showError('The browser could not read n8n’s response (network/CORS failure). The request may have reached the workflow; check n8n executions and upload_logs before retrying.');
-      else {
-        var responseData = err.responseData || {};
-        var details = Array.isArray(responseData.issues) ? responseData.issues : [];
-        if (responseData.details) details.push(String(responseData.details));
-        showError([err.message || String(err)].concat(details).join(' '));
-      }
-    });
+  form.addEventListener('submit',async e=>{
+    e.preventDefault();
+    if(!chosen){showStatus('bad','Choose a file before uploading.');return;}
+    if(!allowedExtensions().includes(extension(chosen.name))){showStatus('bad','The selected file type does not match the upload type.');return;}
+    submit.disabled=true;report.style.display='none';showStatus('info','Uploading file and waiting for server validation…');
+    controller=new AbortController();const timeout=setTimeout(()=>controller.abort(),10*60*1000);
+    try{
+      const fd=new FormData();fd.append('upload_type',type.value);fd.append('file',chosen,chosen.name);
+      const response=await fetch(ENDPOINT,{method:'POST',body:fd,credentials:'same-origin',headers:{'Accept':'application/json'},signal:controller.signal});
+      const text=await response.text();let data;
+      try{data=JSON.parse(text);}catch(_){throw new Error('The server returned a non-JSON response (HTTP '+response.status+').');}
+      reportJson.textContent=JSON.stringify(data,null,2);report.style.display='block';
+      const kind=reportKind(data);showStatus(response.ok?kind:'bad',reportMessage(data)+(response.ok?'':' · HTTP '+response.status));
+      if(!response.ok && data.message)status.textContent+=' · '+data.message;
+    }catch(err){
+      if(err.name==='AbortError')showStatus('warn','The request timed out. The database outcome may be unknown; check the server report/logs before retrying.');
+      else showStatus('bad',err.message||'Upload failed.');
+    }finally{clearTimeout(timeout);submit.disabled=false;controller=null;}
   });
 })();
 </script>
-<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a49c06b6ffccd40b',t:'MTc5MTg3MDIwMQ=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</body>
 </html>
