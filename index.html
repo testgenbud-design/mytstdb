@@ -45,6 +45,10 @@
   summary { cursor:pointer; color:var(--accent); }
   .idlist { max-height:180px; overflow:auto; background:#0f172a; border:1px solid #334155; border-radius:8px; padding:8px 10px; margin-top:6px; font-family:ui-monospace,monospace; font-size:12px; white-space:pre-wrap; }
   ul.reasons { margin:6px 0 0; padding-left:20px; font-size:13px; color:var(--amber); }
+  ul.rowerrors { max-height:360px; overflow:auto; background:#0f172a; border:1px solid #334155; border-radius:8px; padding:10px 12px 10px 30px; margin:8px 0; font-size:12px; color:#fecaca; }
+  ul.rowerrors li { margin:0 0 10px; line-height:1.45; overflow-wrap:anywhere; }
+  .report-download { padding:8px 10px; border:1px solid #38bdf8; border-radius:8px; background:#0f172a; color:#bae6fd; cursor:pointer; font-weight:600; }
+  .reconcile { margin-top:10px; padding:9px 11px; border:1px solid #334155; border-radius:8px; color:#cbd5e1; background:#0f172a; font-size:12px; line-height:1.5; }
   .hint { margin-top:18px; font-size:12.5px; color:var(--muted); line-height:1.6; }
   .hint code { background:#0f172a; padding:1px 6px; border-radius:6px; font-size:12px; color:#cbd5e1; }
   select, input[type=checkbox] { accent-color:#38bdf8; }
@@ -78,7 +82,7 @@
 <div class="wrap">
   <div class="card">
     <h1>📤 MyTST <span>Question &amp; Blueprint Upload</span></h1>
-    <p class="sub">One frontend and one webhook handle both upload types. The upload-type IF routes question files to the existing question-bank path or blueprints through one direct, server-validated upload; blueprints never become question rows.</p>
+    <p class="sub">One frontend and one webhook handle both upload types. The same-origin authenticated application proxy routes question files to the question-bank path or blueprints to their separate ingestion path; blueprints never become question rows.</p>
 
     <label for="upload-type">Upload type</label>
     <select id="upload-type">
@@ -98,45 +102,9 @@
     <div id="fileinfo">Selected: <b id="filename"></b> (<span id="filesize"></span>)</div>
 
     <div id="blueprint-options" class="blueprint-panel" style="display:none">
-      <h2>Blueprint upload options</h2>
-      <p class="bp-muted">The original file is uploaded once. n8n parses and validates it, checks conflicts and version rules, commits atomically, then reads the saved record back before reporting success.</p>
-      <h3>Blueprint identity</h3>
-      <p class="bp-muted">Enter identity values only when the workbook does not contain them. These form values fill blanks; they do not overwrite metadata already in the file. Do not reuse the reserved complete-paper ID for a production matrix.</p>
-      <label for="bp-blueprint-id">Blueprint ID</label>
-      <input type="text" id="bp-blueprint-id" placeholder="Distinct, versioned ID when absent from the file">
-      <label for="bp-blueprint-name">Blueprint name</label>
-      <input type="text" id="bp-blueprint-name" placeholder="Name when absent from the file">
-      <label for="bp-board">Board</label>
-      <input type="text" id="bp-board" placeholder="Board when absent from the file">
-      <label for="bp-class">Class (number or Roman numeral)</label>
-      <input type="text" id="bp-class" placeholder="e.g. 12 or XII">
-      <label for="bp-subject">Subject</label>
-      <input type="text" id="bp-subject" placeholder="Subject when absent from the file">
-      <label for="bp-subject-code">Subject code</label>
-      <input type="text" id="bp-subject-code" placeholder="Subject code when absent from the file">
-      <label for="bp-stable-id">Stable blueprint identity (optional)</label>
-      <input type="text" id="bp-stable-id" placeholder="Derived from the versioned Blueprint ID when omitted">
-      <label for="bp-version">Blueprint version (optional)</label>
-      <input type="text" id="bp-version" placeholder="Derived from a -vN ID suffix when omitted">
-      <label class="bp-check">
-        <input type="checkbox" id="bp-complete-paper">
-        <span>Declare this as the reserved complete paper only if it is the full 38-slot, 13-chapter, 80-mark scheme. This enables strict master-paper checks; leave unchecked for production matrices, which must use a distinct ID.</span>
-      </label>
-      <label for="bp-lifecycle">Lifecycle (required)</label>
-      <select id="bp-lifecycle">
-        <option value="">Select lifecycle…</option>
-        <option value="DRAFT">Save as Draft (inactive)</option>
-        <option value="PUBLISHED">Publish (active)</option>
-      </select>
-      <div id="bp-retire-options" style="display:none">
-        <label for="bp-retire-id">Published blueprint to retire</label>
-        <input type="text" id="bp-retire-id" readonly aria-readonly="true">
-        <label class="bp-check">
-          <input type="checkbox" id="bp-replace-confirm">
-          <span>I explicitly authorize retiring exactly this published blueprint as part of the same transaction. Its record and matrix remain preserved.</span>
-        </label>
-        <div id="bp-retire-note" class="bp-note">The server identified this published version as the exact retirement candidate. Leave unchecked to keep the upload blocked.</div>
-      </div>
+      <h2>Blueprint upload</h2>
+      <p class="bp-muted">Select the original workbook and upload. The server discovers the header and worksheet layout, extracts identity and version, validates the blueprint structure, and writes only after automatic checks. No preview or metadata form is required.</p>
+      <p class="bp-muted">Identity, version, and blueprint intent must be established from the file; missing or contradictory fields produce actionable errors rather than invented values. Missing lifecycle defaults to Draft. Existing records are not overwritten; version conflicts are reported.</p>
     </div>
 
     <div id="blueprint-result" class="blueprint-panel" style="display:none" aria-live="polite">
@@ -152,18 +120,25 @@
     <div id="result">
       <div class="msg ok" id="msg"></div>
       <div class="grid">
-        <div class="stat t"><div class="n" id="s-total">0</div><div class="l">Total rows</div></div>
-        <div class="stat i"><div class="n" id="s-ins">0</div><div class="l">Inserted ✅</div></div>
-        <div class="stat d"><div class="n" id="s-dup">0</div><div class="l">Duplicates ⏭️</div></div>
-        <div class="stat r"><div class="n" id="s-rej">0</div><div class="l">Rejected ⚠️</div></div>
+        <div class="stat t"><div class="n" id="s-total">0</div><div class="l">Input rows</div></div>
+        <div class="stat i"><div class="n" id="s-ins">0</div><div class="l">DB inserted ✅</div></div>
+        <div class="stat d"><div class="n" id="s-dup">0</div><div class="l">Duplicates skipped ⏭️</div></div>
+        <div class="stat r"><div class="n" id="s-rej">0</div><div class="l">Validation rejects ⚠️</div></div>
       </div>
+      <div id="reconcile-summary" class="reconcile" style="display:none"></div>
       <details id="dupbox" style="display:none">
         <summary id="dupsum"></summary>
         <div class="idlist" id="duplist"></div>
+        <ul class="rowerrors" id="duprowlist" style="display:none"></ul>
       </details>
       <div id="rejbox" style="display:none">
         <ul class="reasons" id="rejlist"></ul>
       </div>
+      <details id="rowerrorbox" style="display:none">
+        <summary id="rowerrorsummary">Row-level validation and database report</summary>
+        <ul class="rowerrors" id="rowerrorlist"></ul>
+        <button type="button" class="report-download" id="download-error-report">Download row-level error report (.json)</button>
+      </details>
       <details id="truncbox" style="display:none">
         <summary id="truncsum"></summary>
         <ul class="trunclist" id="trunclist"></ul>
@@ -171,15 +146,17 @@
     </div>
 
     <p class="hint" id="question-hint">
-      <b>What counts as a duplicate?</b> Same <code>Full Question ID</code> as a row already in the database → skipped and listed above.<br>
-      <b>Rejected?</b> Rows missing required metadata (<code>Question ID</code>, <code>Question</code>, positive <code>Marks</code>, <code>Board</code>, <code>Class</code>, <code>Subject</code>, <code>Chapter</code>, <code>Topic</code>, valid <code>Difficulty</code>, <code>Question Type</code>, <code>Answer</code>, or <code>Source Paper</code>) are not added to the question bank. Clear encoding corruption and malformed multipart data are rejected with a reason; fix them and re-upload.<br>
-      <b>Truncation policy:</b> rows matching any truncation check (ending ellipsis, unmatched brackets/quotes, dangling ending, or Excel's 32,767-character cell limit) are flagged and rejected, never inserted. Rejected IDs, row numbers, excerpts, and signals appear below and are recorded in <code>rejected_questions</code>. Legitimate symbols (→, ≤, Greek letters, and scientific notation) are preserved.<br>
-      <b>Structured questions:</b> <code>content_features</code> values such as <code>DIAGRAM;GRAPH</code> are stored as a PostgreSQL array, and <code>structure_data</code> must be valid JSON. Multipart labels/marks are checked; invalid structure is rejected. Accepted rows get a validation status, and review flags are stored in the database.<br>
-      <b>Excel tip:</b> only the <b>first sheet</b> is read for the question-bank path. Column names are flexible (<code>QID</code>, <code>Question Text</code>, <code>Type</code>… all work).
+      <b>Duplicates and accounting:</b> repeated <code>Full Question ID</code> values within this file are reported separately from IDs already in the database. The result distinguishes validation passes/rejects from database attempted, inserted, failed, and unknown writes; a retry is insert-only and does not create another question version.<br>
+      <b>Required content:</b> each accepted question needs an ID, stem, positive marks, board, class, subject, chapter, topic, supported difficulty, question type, answer, and source paper. Fractional marks are accepted to three decimal places. Missing/placeholder fields, malformed options or structure, likely encoding corruption, explicit negative-selection wording, and detected truncation remain quality-gate failures; valid negative numbers and mathematical notation remain allowed. Genuine defects are not auto-corrected or silently discarded.<br>
+      <b>Structured metadata contract:</b> <code>structure_type</code> is descriptive free text (use subject-specific labels; there is no exhaustive global enum). <code>content_features</code> is an array of descriptive strings; delimited input may use semicolon, comma, pipe, or newline, while a JSON string array is safest when a feature itself contains a delimiter. Values are stored as PostgreSQL <code>TEXT[]</code>.<br>
+      <b><code>structure_data</code> contract:</b> stored as a JSONB object. Legacy prose is accepted as <code>{"kind":"description","description":"…"}</code>. For multipart questions, use <code>{"parts":[{"label":"a","marks":1.5}],"internal_choice":false}</code>; labels must be unique, marks positive (≤3 decimals), and when there is no internal choice their sum must equal the question marks. Internal-choice parts require <code>choice_groups</code> metadata. No parts schema is inferred from unrelated fields.<br>
+      <b>Actionable errors:</b> expand “Row-level validation and database report” to see file, worksheet, spreadsheet row, question ID, field, and repair guidance; download the JSON report to fix and revalidate the source rows. Detected truncation details are also listed separately and stored with rejected rows.<br>
+      <b>Excel tip:</b> only the <b>first sheet</b> is read for question uploads. Column names are flexible (<code>QID</code>, <code>Question Text</code>, <code>Type</code>… all work).
     </p>
     <p class="hint" id="blueprint-hint" style="display:none">
-      <b>Blueprint path:</b> The original JSON, CSV, or XLSX file is sent as multipart binary to the shared webhook and parsed in n8n; the browser does not convert it into a Blueprint JSON model. All XLSX worksheets and source columns are inspected; unknown fields and unsupported worksheets are preserved and reported. A complete master sheet with <code>Chapter_No</code>, <code>Chapter_Name</code>, and <code>Unit_Domain</code> produces a separate distinct chapter pool while every subtopic row remains a slot; a dedicated Chapter_Pool sheet takes precedence. No chapter-level target weights are inferred from row marks. CSV supports nested choices, subparts, rules, section definitions, and a chapter pool only when represented as JSON cells. The 38-slot/80-mark check applies only to the reserved `CBSE-C12-MAT-041-MASTER-v1` complete-paper identity when `rules.complete_paper=true`; production matrices must use a distinct identity. Missing section definitions are clearly marked as derived from slots. Missing subject references remain null; the uploader never creates reference rows.<br>
-      <b>Version safety:</b> the Blueprint file is validated and conflict-checked on the server in the same direct upload request before any write. No published blueprint is overwritten. A new published version may retire an existing published sibling only after explicit confirmation for the exact ID returned by the server; both records remain available for traceability. The same webhook handles both modes; its upload-type IF routes this request to the Blueprint branch.
+      <b>Blueprint path:</b> The original JSON, CSV, or XLSX file is sent as multipart binary through the authenticated same-origin proxy and parsed server-side; the browser does not convert it into a Blueprint JSON model. All XLSX worksheets and source columns are inspected; unknown fields and unsupported worksheets are preserved and reported. A master curriculum sheet with <code>Chapter_No</code>, <code>Chapter_Name</code>, and <code>Unit_Domain</code> produces a separate distinct chapter pool while every subtopic row remains a slot; a dedicated Chapter_Pool sheet takes precedence. No chapter-level target weights are inferred from row marks. Complete-paper intent is used only when explicitly declared in the file; no fixed slot/mark targets are inferred from an ID or workbook title. CSV supports nested choices, subparts, rules, section definitions, and a chapter pool only when represented as JSON cells. Missing section definitions are clearly marked as derived from slots. Missing subject references remain null; the uploader never creates reference rows.<br>
+      <b>Access control:</b> This page requires a signed-in same-origin session and a session-bound CSRF token. It never contains an n8n URL or upload secret. The application proxy must authenticate the session, validate Origin/CSRF, and privately inject its server-to-server credential; CORS is not authentication.<br>
+      <b>Version safety:</b> identity, version, lifecycle, and complete-paper intent are read from the uploaded file; missing lifecycle defaults to DRAFT. Automatic validation and conflict checks run before any write. Existing records are never overwritten or retired by this uploader; publishing is blocked when a published sibling exists. The same-origin proxy forwards both modes to the private unified webhook; the server-side upload-type router selects the Blueprint branch.
     </p>
   </div>
 </div>
@@ -188,15 +165,38 @@
 
 <script>
 /* ================================================================
-   SET THE SINGLE UNIFIED WEBHOOK URL BELOW.
-   Both question and blueprint uploads go to this endpoint.
-   The workflow routes using the multipart `upload_type` field.
-   Redeploy after editing. Keep the shared upload key private.
-   ================================================================ */
-var N8N_WEBHOOK_URL = "https://n8n.mytst.cloud/webhook/mytst-upload";
-var UPLOAD_KEY = "36217ca2974624a842cdf4a85717e860ed1e09926ec99ee5"; // do not share this file publicly
-/* ================================================================ */
+   Same-origin application proxy only. Configure the server-side proxy
+   upstream as:
+   https://n8n.mytst.cloud/webhook/mytst-upload
 
+   The browser intentionally does NOT call the n8n URL directly and never
+   receives the server-to-server credential. The authenticated host must
+   render a session-bound CSRF token in <meta name="csrf-token" content="…">
+   and expose POST /api/mytst-upload; that proxy authenticates the session,
+   validates Origin/CSRF, forwards the request to the upstream URL above,
+   and injects x-mytst-proxy-key server-side.
+   ================================================================ */
+var UPLOAD_PROXY_PATH = '/api/mytst-upload';
+function mytstCsrfToken() {
+  var node = document.querySelector('meta[name="csrf-token"]');
+  return node && node.content ? String(node.content).trim() : '';
+}
+function mytstSecureContext() {
+  return window.location.protocol === 'https:' || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+}
+function unifiedEndpointReady() {
+  return mytstSecureContext() && UPLOAD_PROXY_PATH.charAt(0) === '/' && mytstCsrfToken() !== '';
+}
+function mytstProxyFetchOptions(body, signal) {
+  return {
+    method: 'POST',
+    body: body,
+    signal: signal,
+    credentials: 'same-origin',
+    headers: { 'X-CSRF-Token': mytstCsrfToken() }
+  };
+}
+/* ================================================================ */
 (function () {
   var drop = document.getElementById('drop');
   var fileInput = document.getElementById('file');
@@ -210,10 +210,6 @@ var UPLOAD_KEY = "36217ca2974624a842cdf4a85717e860ed1e09926ec99ee5"; // do not s
   var fileLabel = document.getElementById('file-label');
   var blueprintOptions = document.getElementById('blueprint-options');
   var blueprintResult = document.getElementById('blueprint-result');
-  var bpLifecycle = document.getElementById('bp-lifecycle');
-  var bpRetireOptions = document.getElementById('bp-retire-options');
-  var bpRetireId = document.getElementById('bp-retire-id');
-  var bpReplaceConfirm = document.getElementById('bp-replace-confirm');
   var chosen = null;
 
   function fmtBytes(n) {
@@ -224,10 +220,6 @@ var UPLOAD_KEY = "36217ca2974624a842cdf4a85717e860ed1e09926ec99ee5"; // do not s
   function setFile(f) {
     if (chosen !== f) {
       blueprintResult.style.display = 'none';
-      bpLifecycle.value = ''; bpRetireId.value = ''; bpReplaceConfirm.checked = false;
-      bpRetireOptions.style.display = 'none';
-      ['bp-blueprint-id','bp-blueprint-name','bp-board','bp-class','bp-subject','bp-subject-code','bp-stable-id','bp-version'].forEach(function (id) { document.getElementById(id).value = ''; });
-      document.getElementById('bp-complete-paper').checked = false;
     }
     chosen = f;
     if (!f) { fileinfo.style.display = 'none'; return; }
@@ -251,14 +243,10 @@ var UPLOAD_KEY = "36217ca2974624a842cdf4a85717e860ed1e09926ec99ee5"; // do not s
     if (f) setFile(f);
   });
 
-  function unifiedEndpointReady() {
-    return N8N_WEBHOOK_URL && N8N_WEBHOOK_URL.indexOf('REPLACE') === -1 && UPLOAD_KEY && UPLOAD_KEY.indexOf('REPLACE') === -1;
-  }
   function fetchBlueprint(payload) {
-    if (!unifiedEndpointReady()) return Promise.reject(new Error('Unified uploader webhook URL is not configured.'));
+    if (!unifiedEndpointReady()) return Promise.reject(new Error('Authenticated same-origin upload proxy is not configured for this secure session.'));
     if (!chosen) return Promise.reject(new Error('Select the original Blueprint file before uploading.'));
     if (payload && payload.model !== undefined) return Promise.reject(new Error('Blueprint model JSON is not sent from the browser; upload the original file instead.'));
-    var url = N8N_WEBHOOK_URL.replace(/\/$/, '');
     var fd = new FormData();
     fd.append('upload_type', 'blueprint');
     fd.append('file', chosen, chosen.name);
@@ -267,7 +255,7 @@ var UPLOAD_KEY = "36217ca2974624a842cdf4a85717e860ed1e09926ec99ee5"; // do not s
       if (value === undefined || value === null) return;
       fd.append(key, String(value));
     });
-    return fetch(url + (url.indexOf('?') === -1 ? '?key=' : '&key=') + encodeURIComponent(UPLOAD_KEY), { method: 'POST', body: fd }).then(function (resp) {
+    return fetch(UPLOAD_PROXY_PATH, mytstProxyFetchOptions(fd)).then(function (resp) {
       return resp.text().then(function (txt) {
         var data = null; try { data = JSON.parse(txt); } catch (_) { /* non-JSON response */ }
         if (Array.isArray(data) && data[0] && data[0].json) data = data[0].json;
@@ -311,13 +299,11 @@ var UPLOAD_KEY = "36217ca2974624a842cdf4a85717e860ed1e09926ec99ee5"; // do not s
       if (data.total_slots != null) detailLines.push('Slots: ' + data.total_slots);
       if (data.total_marks != null) detailLines.push('Total marks: ' + data.total_marks);
       if (data.log_id != null) detailLines.push('Upload audit log: ' + data.log_id);
-      if (data.retired_blueprint_id) detailLines.push('Retired published version: ' + data.retired_blueprint_id);
     } else {
       if (data.operation) detailLines.push('Operation: ' + data.operation);
       if (data.commit_state) detailLines.push('Commit state: ' + data.commit_state);
       if (data.transaction_committed === true) detailLines.push('Database transaction: committed; verification did not pass');
       if (data.readback_verified === false) detailLines.push('Saved data read-back: not verified');
-      if (data.replacement_candidate) detailLines.push('Exact published retirement candidate: ' + data.replacement_candidate);
     }
     document.getElementById('bp-result-details').textContent = detailLines.join(' · ');
     var list = document.getElementById('bp-result-errors');
@@ -328,12 +314,6 @@ var UPLOAD_KEY = "36217ca2974624a842cdf4a85717e860ed1e09926ec99ee5"; // do not s
       list.appendChild(li);
     });
   }
-  function updateBlueprintRetireOptions() {
-    var isPublished = String(bpLifecycle.value || '').toUpperCase() === 'PUBLISHED';
-    var hasCandidate = !!String(bpRetireId.value || '').trim();
-    bpRetireOptions.style.display = isPublished && hasCandidate ? 'block' : 'none';
-    if (!isPublished) bpReplaceConfirm.checked = false;
-  }
   function beginBlueprintUpload() {
     if (!chosen) {
       showBlueprintResult({ status: 'validation_error', message: 'Select a Blueprint .json, .xlsx, or .csv file first.' }, false);
@@ -343,19 +323,9 @@ var UPLOAD_KEY = "36217ca2974624a842cdf4a85717e860ed1e09926ec99ee5"; // do not s
       showBlueprintResult({ status: 'validation_error', message: 'Blueprint uploads accept .json, .xlsx, or .csv only.' }, false);
       return;
     }
-    var lifecycle = String(bpLifecycle.value || '').toUpperCase();
-    if (!['DRAFT', 'PUBLISHED'].includes(lifecycle)) {
-      showBlueprintResult({ status: 'validation_error', message: 'Select Draft or Published lifecycle before uploading.' }, false);
-      return;
-    }
-    var retireId = String(bpRetireId.value || '').trim();
-    if (bpReplaceConfirm.checked && (!retireId || lifecycle !== 'PUBLISHED')) {
-      showBlueprintResult({ status: 'validation_error', message: 'Retirement authorization requires a server-identified exact published blueprint ID and Published lifecycle.' }, false);
-      return;
-    }
     if (!unifiedEndpointReady()) {
-      showBlueprintResult({ status: 'configuration_error', message: 'Unified uploader webhook URL is not configured.' }, false);
-      status.textContent = 'The Blueprint request was not sent.';
+      showBlueprintResult({ status: 'configuration_error', message: 'Authenticated same-origin upload proxy is not configured for this secure session.' }, false);
+      status.textContent = 'The Blueprint request was not sent because this secure session lacks a CSRF token or same-origin proxy.';
       return;
     }
 
@@ -366,21 +336,7 @@ var UPLOAD_KEY = "36217ca2974624a842cdf4a85717e860ed1e09926ec99ee5"; // do not s
     document.getElementById('bp-result-errors').innerHTML = '';
     status.innerHTML = '<span class="spinner"></span>Uploading and validating Blueprint…';
     btn.disabled = true;
-    var body = {
-      uploader: document.getElementById('uploader').value.trim() || 'partner',
-      lifecycle_status: lifecycle,
-      replace_published_confirmed: bpReplaceConfirm.checked === true
-    };
-    [
-      ['blueprint_id','bp-blueprint-id'], ['name','bp-blueprint-name'], ['board','bp-board'],
-      ['class','bp-class'], ['subject','bp-subject'], ['subject_code','bp-subject-code'],
-      ['stable_blueprint_id','bp-stable-id'], ['blueprint_version','bp-version']
-    ].forEach(function (pair) {
-      var value = document.getElementById(pair[1]).value.trim();
-      if (value) body[pair[0]] = value;
-    });
-    if (document.getElementById('bp-complete-paper').checked) body.complete_paper = true;
-    if (bpReplaceConfirm.checked) body.replace_existing_published_id = retireId;
+    var body = { uploader: document.getElementById('uploader').value.trim() || 'partner' };
     fetchBlueprint(body).then(function (data) {
       if (data.status !== 'success' || data.transaction_committed !== true || data.readback_verified !== true) {
         var error = new Error(data.message || 'Database write and separate read-back were not both verified.');
@@ -391,14 +347,8 @@ var UPLOAD_KEY = "36217ca2974624a842cdf4a85717e860ed1e09926ec99ee5"; // do not s
       status.textContent = 'Blueprint saved and read-back verified. No coverage/LMS integration is implied.';
     }).catch(function (err) {
       var data = err.responseData || {};
-      if (data.replacement_candidate) {
-        bpRetireId.value = String(data.replacement_candidate);
-        updateBlueprintRetireOptions();
-      }
       showBlueprintResult(data, false, err.message || String(err));
-      status.textContent = data.replacement_candidate
-        ? 'Server conflict: review the exact retirement candidate and explicitly authorize only if intended, then upload again.'
-        : 'Blueprint upload was not verified. Review the server errors; reconcile database state before retrying if commit state is unknown.';
+      status.textContent = 'Blueprint upload was not verified. Review the server errors; reconcile database state before retrying if commit state is unknown.';
     }).finally(function () { btn.disabled = false; });
   }
   function setUploadType() {
@@ -412,30 +362,74 @@ var UPLOAD_KEY = "36217ca2974624a842cdf4a85717e860ed1e09926ec99ee5"; // do not s
     blueprintResult.style.display = 'none';
     btn.textContent = isBlueprint ? '⬆ Upload Blueprint' : '⬆ Upload to Database';
     if (chosen) setFile(chosen);
-    updateBlueprintRetireOptions();
   }
   uploadType.addEventListener('change', setUploadType);
-  bpLifecycle.addEventListener('change', updateBlueprintRetireOptions);
-  bpReplaceConfirm.addEventListener('change', updateBlueprintRetireOptions);
   setUploadType();
 
   function showResult(data) {
     result.style.display = 'block';
     var msg = document.getElementById('msg');
-    msg.className = 'msg ok';
-    msg.textContent = '✅ ' + (data.message || 'Upload finished.');
+    var databaseStatus = String(data.database_status || '');
+    var hasDatabaseProblem = Number(data.failed_inserts || 0) > 0 || data.unknown_inserts === null || Number(data.unknown_inserts || 0) > 0 ||
+      Number(data.failed_candidate_rows || 0) > 0 || Number(data.unresolved_candidate_rows || 0) > 0 || Number(data.failed_batches || 0) > 0 || Number(data.unknown_batches || 0) > 0 ||
+      Number(data.failed_reject_records || 0) > 0 || Number(data.unknown_reject_records || 0) > 0 ||
+      ['partial_failure', 'database_error', 'outcome_unknown'].indexOf(databaseStatus) !== -1 ||
+      ['partial_failure', 'database_error'].indexOf(String(data.status || '')) !== -1;
+    msg.className = 'msg ' + (hasDatabaseProblem ? 'err' : 'ok');
+    msg.textContent = (hasDatabaseProblem ? '⚠️ ' : '✅ ') + (data.message || 'Upload finished.');
     document.getElementById('s-total').textContent = data.total_rows || 0;
-    document.getElementById('s-ins').textContent = data.inserted || 0;
-    document.getElementById('s-dup').textContent = data.duplicates || 0;
-    document.getElementById('s-rej').textContent = data.rejected || 0;
+    document.getElementById('s-ins').textContent = data.successful_inserts != null ? data.successful_inserts : (data.confirmed_successful_inserts != null ? '≥' + data.confirmed_successful_inserts : '?');
+    document.getElementById('s-dup').textContent = data.database_duplicate_counts_complete === false ? '?' : (data.duplicates_skipped != null ? data.duplicates_skipped : (data.duplicates || 0));
+    document.getElementById('s-rej').textContent = data.rejected_rows != null ? data.rejected_rows : (data.rejected || 0);
+    var reconciliation = document.getElementById('reconcile-summary');
+    reconciliation.style.display = 'block';
+    var attemptLabel = data.attempted_inserts_count_complete === false
+      ? (data.confirmed_attempted_inserts || 0) + ' confirmed; exact actual insert-attempt count incomplete'
+      : (data.attempted_inserts == null ? 'not reported' : data.attempted_inserts + ' actual');
+    var unknownInsertLabel = data.unknown_inserts == null ? 'unknown' : String(data.unknown_inserts);
+    var successLabel = data.successful_inserts == null
+      ? (data.confirmed_successful_inserts || 0) + ' confirmed; total unknown'
+      : String(data.successful_inserts);
+    var preexistingLabel = data.preexisting_duplicates == null
+      ? (data.confirmed_preexisting_duplicates || 0) + ' confirmed; total incomplete'
+      : String(data.preexisting_duplicates);
+    var concurrentLabel = data.concurrent_duplicates == null
+      ? (data.confirmed_concurrent_duplicates || 0) + ' confirmed; total incomplete'
+      : String(data.concurrent_duplicates);
+    var failedInsertLabel = data.failed_inserts == null
+      ? (data.confirmed_failed_inserts || 0) + ' confirmed; total incomplete'
+      : String(data.failed_inserts);
+    var failedCandidateLabel = data.failed_candidate_rows == null
+      ? (data.confirmed_failed_candidate_rows || 0) + ' confirmed; total incomplete'
+      : String(data.failed_candidate_rows);
+    var duplicateTotalLabel = data.database_duplicate_counts_complete === false
+      ? 'incomplete (' + (data.confirmed_duplicates_skipped || 0) + ' confirmed so far)'
+      : String(data.duplicates_skipped != null ? data.duplicates_skipped : (data.duplicates || 0));
+    reconciliation.textContent = 'Validation: ' + (data.valid_rows || 0) + ' passed, ' + (data.rejected_rows || data.rejected || 0) + ' rejected, ' + (data.empty_rows_skipped || 0) + ' empty skipped. Question candidates: ' + (data.insert_candidates || 0) + '; actual question_versions INSERT attempts: ' + attemptLabel + '; inserted: ' + successLabel + '; pre-existing duplicates: ' + preexistingLabel + '; concurrent duplicates: ' + concurrentLabel + '; failed INSERT rows: ' + failedInsertLabel + '; failed candidates: ' + failedCandidateLabel + '; unresolved candidates: ' + (data.unresolved_candidate_rows || 0) + '; duplicates total: ' + duplicateTotalLabel + '; unknown insert outcomes: ' + unknownInsertLabel + '. Rejected-row records persisted: ' + (data.reject_records_inserted || 0) + '/' + (data.reject_records_attempted || 0) + '. Database status: ' + (data.database_status || 'not reported') + '.';
     var dupbox = document.getElementById('dupbox');
     if (data.duplicate_ids && data.duplicate_ids.length) {
       dupbox.style.display = 'block';
-      var total = data.duplicate_ids_total || data.duplicate_ids.length;
+      var total = data.database_duplicate_counts_complete === false
+        ? 'at least ' + Number(data.confirmed_duplicates_skipped || 0)
+        : String(data.duplicates_skipped != null ? data.duplicates_skipped : (data.duplicates || 0));
+      var uniqueIds = Number(data.duplicate_ids_total || data.duplicate_ids.length);
+      var inFile = Number(data.duplicate_rows_in_file || 0);
+      var inDatabase = data.preexisting_duplicates != null ? data.preexisting_duplicates : ('≥' + Number(data.confirmed_preexisting_duplicates || 0));
+      var concurrent = data.concurrent_duplicates != null ? data.concurrent_duplicates : ('≥' + Number(data.confirmed_concurrent_duplicates || 0));
       document.getElementById('dupsum').textContent =
-        '⏭️ ' + total + ' duplicate Full Question ID(s) skipped (already in database)' +
-        (data.duplicate_ids_truncated ? ' — showing first ' + data.duplicate_ids.length : '');
+        '⏭️ ' + total + ' duplicate row(s) skipped (' + inFile + ' within this file; ' + inDatabase + ' pre-existing database duplicate(s); ' + concurrent + ' concurrent conflicts; ' + uniqueIds + ' unique ID(s))' +
+        (data.duplicate_ids_truncated ? ' — showing first ' + data.duplicate_ids.length + ' IDs' : '');
       document.getElementById('duplist').textContent = data.duplicate_ids.join('\n');
+      var duplicateRows = Array.isArray(data.duplicate_rows) ? data.duplicate_rows : [];
+      var duplicateList = document.getElementById('duprowlist');
+      duplicateList.innerHTML = '';
+      duplicateRows.slice(0, 200).forEach(function (item) {
+        var li = document.createElement('li');
+        var location = [item.source_file, item.source_worksheet, item.spreadsheet_row != null ? 'row ' + item.spreadsheet_row : null].filter(Boolean).join(' / ');
+        li.textContent = (location ? location + ' — ' : '') + (item.full_question_id || item.question_id || 'Question ID unavailable') + ': ' + (item.reason || item.category || 'duplicate skipped');
+        duplicateList.appendChild(li);
+      });
+      duplicateList.style.display = duplicateRows.length ? 'block' : 'none';
     } else { dupbox.style.display = 'none'; }
     var rejbox = document.getElementById('rejbox');
     if (data.rejected > 0) {
@@ -449,6 +443,58 @@ var UPLOAD_KEY = "36217ca2974624a842cdf4a85717e860ed1e09926ec99ee5"; // do not s
       });
     } else { rejbox.style.display = 'none'; }
 
+    var rowErrorBox = document.getElementById('rowerrorbox');
+    var rowErrors = Array.isArray(data.row_errors) ? data.row_errors : [];
+    var totalRowErrors = Number(data.row_errors_total || rowErrors.length || 0);
+    if (totalRowErrors > 0) {
+      rowErrorBox.style.display = 'block';
+      var displayed = rowErrors.slice(0, 200);
+      document.getElementById('rowerrorsummary').textContent = 'Row-level validation and database report: ' + totalRowErrors + ' item(s)' + (totalRowErrors > displayed.length ? ' — showing first ' + displayed.length + '; download the complete report' : '');
+      var rowErrorList = document.getElementById('rowerrorlist');
+      rowErrorList.innerHTML = '';
+      displayed.forEach(function (item) {
+        var li = document.createElement('li');
+        var location = [item.source_file, item.source_worksheet, item.spreadsheet_row != null ? 'row ' + item.spreadsheet_row : null].filter(Boolean).join(' / ');
+        var id = item.full_question_id || item.question_id || 'Question ID unavailable';
+        var messages = Array.isArray(item.errors) ? item.errors.map(function (error) {
+          return (error.field ? error.field + ': ' : '') + (error.reason || error.category || 'Review this row');
+        }) : [];
+        if (!messages.length && item.reason) messages.push((item.field ? item.field + ': ' : '') + item.reason);
+        if (!messages.length && item.category) messages.push(item.category);
+        li.textContent = (location ? location + ' — ' : '') + id + ': ' + (messages.join(' | ') || 'Review this row.');
+        rowErrorList.appendChild(li);
+      });
+      document.getElementById('download-error-report').onclick = function () {
+        var report = { source_file: data.file_name || data.file || null, validation: {
+          input_rows: data.input_rows, valid_rows: data.valid_rows, rejected_rows: data.rejected_rows,
+          content_defect_rows: data.content_defect_rows, schema_defect_rows: data.schema_defect_rows,
+          repairable_rows: data.repairable_rows, validation_error_categories: data.validation_error_categories
+        }, database: {
+          status: data.database_status, insert_candidates: data.insert_candidates,
+          attempted_inserts: data.attempted_inserts, confirmed_attempted_inserts: data.confirmed_attempted_inserts,
+          attempted_inserts_count_complete: data.attempted_inserts_count_complete,
+          successful_inserts: data.successful_inserts, confirmed_successful_inserts: data.confirmed_successful_inserts,
+          preexisting_duplicates: data.preexisting_duplicates, confirmed_preexisting_duplicates: data.confirmed_preexisting_duplicates,
+          concurrent_duplicates: data.concurrent_duplicates, confirmed_concurrent_duplicates: data.confirmed_concurrent_duplicates,
+          database_duplicate_counts_complete: data.database_duplicate_counts_complete,
+          duplicates_skipped: data.duplicates_skipped, confirmed_duplicates_skipped: data.confirmed_duplicates_skipped,
+          failed_inserts: data.failed_inserts, confirmed_failed_inserts: data.confirmed_failed_inserts,
+          failed_candidate_rows: data.failed_candidate_rows, confirmed_failed_candidate_rows: data.confirmed_failed_candidate_rows,
+          unresolved_candidate_rows: data.unresolved_candidate_rows,
+          unknown_candidate_rows: data.unknown_candidate_rows, failed_batches: data.failed_batches,
+          unknown_batches: data.unknown_batches, unknown_inserts: data.unknown_inserts, reject_records_inserted: data.reject_records_inserted,
+          failed_reject_records: data.failed_reject_records, database_errors: data.database_errors
+        }, row_errors: rowErrors, duplicate_rows: data.duplicate_rows || [], truncation_rejections: data.truncation_rejections || [] };
+        var blob = new Blob([JSON.stringify(report, null, 2)], { type: 'application/json' });
+        var downloadUrl = URL.createObjectURL(blob);
+        var link = document.createElement('a');
+        link.href = downloadUrl;
+        link.download = (String(data.file_name || data.file || 'upload').replace(/[^A-Za-z0-9._-]+/g, '_') + '.row-errors.json');
+        document.body.appendChild(link); link.click(); link.remove();
+        setTimeout(function () { URL.revokeObjectURL(downloadUrl); }, 1000);
+      };
+    } else { rowErrorBox.style.display = 'none'; }
+
     var truncBox = document.getElementById('truncbox');
     var truncationRows = Array.isArray(data.truncation_rejections) ? data.truncation_rejections : [];
     var truncationCount = Number(data.truncation_rejected_rows || truncationRows.length || 0);
@@ -461,7 +507,7 @@ var UPLOAD_KEY = "36217ca2974624a842cdf4a85717e860ed1e09926ec99ee5"; // do not s
       truncationRows.forEach(function (item) {
         var li = document.createElement('li');
         var id = item.full_question_id || item.question_id || 'Question';
-        var location = item.row_no ? ' (CSV row ' + item.row_no + ')' : '';
+        var location = item.spreadsheet_row != null ? ' (' + (item.source_worksheet || 'worksheet') + ' row ' + item.spreadsheet_row + ')' : '';
         var flags = Array.isArray(item.flags) ? item.flags : [];
         li.appendChild(document.createTextNode(id + location + ': ' + flags.join('; ')));
         if (item.question_excerpt) {
@@ -482,19 +528,19 @@ var UPLOAD_KEY = "36217ca2974624a842cdf4a85717e860ed1e09926ec99ee5"; // do not s
     msg.textContent = '❌ ' + text;
     document.getElementById('dupbox').style.display = 'none';
     document.getElementById('rejbox').style.display = 'none';
+    document.getElementById('rowerrorbox').style.display = 'none';
+    document.getElementById('reconcile-summary').style.display = 'none';
     document.getElementById('truncbox').style.display = 'none';
   }
 
   btn.addEventListener('click', function () {
     if (uploadType.value === 'blueprint') { beginBlueprintUpload(); return; }
     result.style.display = 'none';
-    var url = N8N_WEBHOOK_URL.replace(/\/$/, '');
-    var key = UPLOAD_KEY;
     var who = document.getElementById('uploader').value.trim() || 'partner';
     if (!chosen) { showError('Please choose a .csv or .xlsx file first.'); return; }
     if (!/\.(csv|xlsx|xls)$/i.test(chosen.name)) { showError('Only .csv or .xlsx files are supported.'); return; }
-    if (url.indexOf('REPLACE') !== -1 || key.indexOf('REPLACE') !== -1 || !url || !key) {
-      showError('This page is not configured yet. Set the single N8N_WEBHOOK_URL to the unified /webhook/mytst-upload endpoint and redeploy.');
+    if (!unifiedEndpointReady()) {
+      showError('Authenticated upload proxy is not configured for this secure session. Sign in again or contact the host administrator.');
       return;
     }
     var ctrl = new AbortController();
@@ -512,33 +558,45 @@ var UPLOAD_KEY = "36217ca2974624a842cdf4a85717e860ed1e09926ec99ee5"; // do not s
     fd.append('file', chosen, chosen.name);
     fd.append('uploader', who);
 
-    fetch(url + (url.indexOf('?') === -1 ? '?key=' : '&key=') + encodeURIComponent(key), {
-      method: 'POST', body: fd, signal: ctrl.signal
-    }).then(function (resp) {
+    fetch(UPLOAD_PROXY_PATH, mytstProxyFetchOptions(fd, ctrl.signal)).then(function (resp) {
       return resp.text().then(function (txt) {
         var data = null;
         try { data = JSON.parse(txt); } catch (e) { /* not JSON */ }
         if (!resp.ok) {
-          throw new Error((data && data.message) ? ('Server said: ' + data.message) : ('Server error (HTTP ' + resp.status + '). Is the n8n workflow Active?'));
+          var serverError = new Error((data && data.message) ? ('Server said: ' + data.message) : ('Server error (HTTP ' + resp.status + '). Is the authenticated upload proxy available?'));
+          serverError.responseData = data;
+          serverError.httpStatus = resp.status;
+          throw serverError;
         }
-        if (!data) throw new Error('Unexpected server response. Is the n8n workflow Active?');
+        if (!data) throw new Error('Unexpected server response. Is the authenticated upload proxy available?');
         return data;
       });
     }).then(function (data) {
       clearTimeout(timer); clearInterval(tick); btn.disabled = false;
-      status.textContent = 'Done in ' + Math.floor((Date.now() - t0) / 1000) + 's.';
-      if (data.status === 'success') showResult(data);
-      else showError(data.message || 'Upload failed.');
+      if (data.status === 'success' || data.input_rows != null || Array.isArray(data.row_errors)) {
+        showResult(data);
+        status.textContent = data.status === 'success'
+          ? 'Done in ' + Math.floor((Date.now() - t0) / 1000) + 's.'
+          : 'Database outcomes need review below; use the row-level report before retrying.';
+      } else {
+        status.textContent = '';
+        showError(data.message || 'Upload failed.');
+      }
     }).catch(function (err) {
       clearTimeout(timer); clearInterval(tick); btn.disabled = false;
       status.textContent = '';
       if (err.name === 'AbortError') showError('Timed out after 10 minutes. The file may be very large — check the database / upload_logs before retrying.');
       else if (String(err).indexOf('Failed to fetch') !== -1 || String(err).indexOf('NetworkError') !== -1)
-        showError('Cannot reach n8n. Check: (1) webhook URL is correct, (2) workflow is Active, (3) you have internet/VPN access to the VPS.');
-      else showError(err.message || String(err));
+        showError('Cannot reach the authenticated upload service. Check your sign-in/session and contact the host administrator if the proxy is unavailable.');
+      else {
+        var responseData = err.responseData || {};
+        var details = Array.isArray(responseData.issues) ? responseData.issues : [];
+        if (responseData.details) details.push(String(responseData.details));
+        showError([err.message || String(err)].concat(details).join(' '));
+      }
     });
   });
 })();
 </script>
-<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a4930467695c0997',t:'MTc5MTc3NTczNA=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a49bdff7eaa9d220',t:'MTc5MTg2ODYxNA=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
