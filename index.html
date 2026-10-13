@@ -13,6 +13,10 @@
   h1 { margin:0 0 4px; font-size:22px; }
   h1 span { color:var(--accent); }
   p.sub { margin:0 0 20px; color:var(--muted); font-size:14px; }
+  .auth-panel { margin:0 0 18px; padding:14px; border:1px solid #334155; border-radius:12px; background:rgba(15,23,42,.7); }
+  .auth-panel h2 { margin:0 0 6px; font-size:16px; color:#bae6fd; }
+  .auth-panel p { margin:0; color:var(--muted); font-size:12px; line-height:1.5; }
+  .auth-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
   label { display:block; font-size:13px; color:var(--muted); margin:14px 0 6px; }
   input[type=text], input[type=password] { width:100%; padding:11px 12px; border-radius:10px; border:1px solid #334155; background:#0f172a; color:#e2e8f0; font-size:15px; }
   input:focus { outline:2px solid var(--accent); border-color:var(--accent); }
@@ -75,14 +79,29 @@
   .bp-error { color:#fecaca; background:rgba(248,113,113,.08); border:1px solid rgba(248,113,113,.45); padding:9px 11px; border-radius:8px; margin:8px 0; font-size:13px; }
   .bp-muted { color:var(--muted); font-size:12px; line-height:1.5; }
   @media (max-width:720px){ .bp-grid{grid-template-columns:repeat(2,minmax(0,1fr));} }
-  @media (max-width:520px){ .grid{grid-template-columns:repeat(2,1fr);} .bp-actions{grid-template-columns:1fr;} }
+  @media (max-width:520px){ .grid{grid-template-columns:repeat(2,1fr);} .auth-grid,.bp-actions{grid-template-columns:1fr;} }
 </style>
 </head>
 <body>
 <div class="wrap">
   <div class="card">
     <h1>📤 MyTST <span>Question &amp; Blueprint Upload</span></h1>
-    <p class="sub">One frontend and one webhook handle both upload types. The same-origin authenticated application proxy routes question files to the question-bank path or blueprints to their separate ingestion path; blueprints never become question rows.</p>
+    <p class="sub">One secure webhook handles both upload types. Choose a file and submit it directly to the protected n8n workflow; Blueprints never become question rows.</p>
+
+    <section class="auth-panel" aria-labelledby="upload-access-title">
+      <h2 id="upload-access-title">Upload access</h2>
+      <p>Enter the dedicated n8n upload username and password shared with the authorized uploaders. This page embeds no password and does not save it to local/session storage; it sends what you enter only over HTTPS. Do not use your n8n owner or database credentials.</p>
+      <div class="auth-grid">
+        <div>
+          <label for="n8n-auth-user">n8n upload username</label>
+          <input type="text" id="n8n-auth-user" autocomplete="username" autocapitalize="none" spellcheck="false">
+        </div>
+        <div>
+          <label for="n8n-auth-password">n8n upload password</label>
+          <input type="password" id="n8n-auth-password" autocomplete="current-password">
+        </div>
+      </div>
+    </section>
 
     <label for="upload-type">Upload type</label>
     <select id="upload-type">
@@ -90,7 +109,7 @@
       <option value="blueprint">Blueprint (.json / .xlsx / .csv)</option>
     </select>
 
-    <label for="uploader">Your name (for the upload log)</label>
+    <label for="uploader">Your name (audit label, not authentication)</label>
     <input type="text" id="uploader" placeholder="e.g. Partner" autocomplete="name">
 
     <label id="file-label">Question file (.csv / .xlsx)</label>
@@ -154,9 +173,9 @@
       <b>Excel tip:</b> only the <b>first sheet</b> is read for question uploads. Column names are flexible (<code>QID</code>, <code>Question Text</code>, <code>Type</code>… all work).
     </p>
     <p class="hint" id="blueprint-hint" style="display:none">
-      <b>Blueprint path:</b> The original JSON, CSV, or XLSX file is sent as multipart binary through the authenticated same-origin proxy and parsed server-side; the browser does not convert it into a Blueprint JSON model. All XLSX worksheets and source columns are inspected; unknown fields and unsupported worksheets are preserved and reported. A master curriculum sheet with <code>Chapter_No</code>, <code>Chapter_Name</code>, and <code>Unit_Domain</code> produces a separate distinct chapter pool while every subtopic row remains a slot; a dedicated Chapter_Pool sheet takes precedence. No chapter-level target weights are inferred from row marks. Complete-paper intent is used only when explicitly declared in the file; no fixed slot/mark targets are inferred from an ID or workbook title. CSV supports nested choices, subparts, rules, section definitions, and a chapter pool only when represented as JSON cells. Missing section definitions are clearly marked as derived from slots. Missing subject references remain null; the uploader never creates reference rows.<br>
-      <b>Access control:</b> This page requires a signed-in same-origin session and a session-bound CSRF token. It never contains an n8n URL or upload secret. The application proxy must authenticate the session, validate Origin/CSRF, and privately inject its server-to-server credential; CORS is not authentication.<br>
-      <b>Version safety:</b> identity, version, lifecycle, and complete-paper intent are read from the uploaded file; missing lifecycle defaults to DRAFT. Automatic validation and conflict checks run before any write. Existing records are never overwritten or retired by this uploader; publishing is blocked when a published sibling exists. The same-origin proxy forwards both modes to the private unified webhook; the server-side upload-type router selects the Blueprint branch.
+      <b>Blueprint path:</b> The original JSON, CSV, or XLSX file is sent as multipart binary directly to the authenticated n8n webhook and parsed server-side; the browser does not convert it into a Blueprint JSON model. All XLSX worksheets and source columns are inspected; unknown fields and unsupported worksheets are preserved and reported. A master curriculum sheet with <code>Chapter_No</code>, <code>Chapter_Name</code>, and <code>Unit_Domain</code> produces a separate distinct chapter pool while every subtopic row remains a slot; a dedicated Chapter_Pool sheet takes precedence. No chapter-level target weights are inferred from row marks. Complete-paper intent is used only when explicitly declared in the file; no fixed slot/mark targets are inferred from an ID or workbook title. CSV supports nested choices, subparts, rules, section definitions, and a chapter pool only when represented as JSON cells. Missing section definitions are clearly marked as derived from slots. Missing subject references remain null; the uploader never creates reference rows.<br>
+      <b>Access control:</b> The n8n Webhook enforces its dedicated Basic Auth credential before the workflow runs. This page does not contain the password; it sends credentials entered by an authorized user over HTTPS. The webhook CORS allow-list must contain only the exact HTTPS origin serving this page. CORS is not authentication, and the <code>uploader</code> name is an audit label, not identity proof.<br>
+      <b>Version safety:</b> identity, version, lifecycle, and complete-paper intent are read from the uploaded file; missing lifecycle defaults to DRAFT. Automatic validation and conflict checks run before any write. Existing records are never overwritten or retired by this uploader; publishing is blocked when a published sibling exists. The direct authenticated request reaches one unified workflow; its upload-type router selects the Blueprint branch.
     </p>
   </div>
 </div>
@@ -165,30 +184,44 @@
 
 <script>
 /* ================================================================
-   Same-origin application proxy only. The browser never knows the n8n URL
-   or its server-to-server credential. The authenticated host must render a
-   session-bound CSRF token in <meta name="csrf-token" content="…"> and expose
-   POST /api/mytst-upload; that proxy authenticates the session, validates
-   Origin/CSRF, and injects x-mytst-proxy-key server-side.
+   Direct browser-to-n8n call. The workflow must have native n8n Webhook
+   Basic Auth assigned in n8n; this file contains no credential. The user
+   enters the dedicated upload credential in the fields above. It is sent
+   in an HTTPS Authorization header and is not stored by this page.
+   The Webhook Allowed Origins (CORS) setting must be the exact HTTPS origin
+   serving this page. Never use wildcard CORS as an authentication control.
    ================================================================ */
-var UPLOAD_PROXY_PATH = '/api/mytst-upload';
-function mytstCsrfToken() {
-  var node = document.querySelector('meta[name="csrf-token"]');
-  return node && node.content ? String(node.content).trim() : '';
+var UPLOAD_WEBHOOK_URL = 'https://n8n.mytst.cloud/webhook/mytst-upload';
+function mytstUploadCredentialsPresent() {
+  var user = String((document.getElementById('n8n-auth-user') || {}).value || '').trim();
+  var password = String((document.getElementById('n8n-auth-password') || {}).value || '');
+  return user !== '' && user.indexOf(':') === -1 && password !== '';
+}
+function mytstBasicAuthHeader() {
+  var user = String((document.getElementById('n8n-auth-user') || {}).value || '').trim();
+  var password = String((document.getElementById('n8n-auth-password') || {}).value || '');
+  if (!user || !password) throw new Error('Enter the dedicated n8n upload username and password.');
+  if (user.indexOf(':') !== -1) throw new Error('The n8n upload username cannot contain a colon.');
+  var bytes = new TextEncoder().encode(user + ':' + password);
+  var binary = '';
+  for (var i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
+  return 'Basic ' + btoa(binary);
 }
 function mytstSecureContext() {
-  return window.location.protocol === 'https:' || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+  return window.location.protocol === 'https:' && window.location.origin !== 'null';
 }
 function unifiedEndpointReady() {
-  return mytstSecureContext() && UPLOAD_PROXY_PATH.charAt(0) === '/' && mytstCsrfToken() !== '';
+  return mytstSecureContext() && /^https:\/\/n8n\.mytst\.cloud\/webhook\/mytst-upload$/.test(UPLOAD_WEBHOOK_URL) && mytstUploadCredentialsPresent();
 }
-function mytstProxyFetchOptions(body, signal) {
+function mytstDirectFetchOptions(body, signal) {
+  if (!mytstSecureContext()) throw new Error('Open this uploader from its HTTPS website, not from a local file or HTTP page.');
   return {
     method: 'POST',
+    mode: 'cors',
     body: body,
     signal: signal,
-    credentials: 'same-origin',
-    headers: { 'X-CSRF-Token': mytstCsrfToken() }
+    credentials: 'omit',
+    headers: { 'Authorization': mytstBasicAuthHeader() }
   };
 }
 /* ================================================================ */
@@ -239,7 +272,7 @@ function mytstProxyFetchOptions(body, signal) {
   });
 
   function fetchBlueprint(payload) {
-    if (!unifiedEndpointReady()) return Promise.reject(new Error('Authenticated same-origin upload proxy is not configured for this secure session.'));
+    if (!unifiedEndpointReady()) return Promise.reject(new Error('Open this page on its HTTPS website and enter the dedicated n8n upload username and password.'));
     if (!chosen) return Promise.reject(new Error('Select the original Blueprint file before uploading.'));
     if (payload && payload.model !== undefined) return Promise.reject(new Error('Blueprint model JSON is not sent from the browser; upload the original file instead.'));
     var fd = new FormData();
@@ -250,11 +283,16 @@ function mytstProxyFetchOptions(body, signal) {
       if (value === undefined || value === null) return;
       fd.append(key, String(value));
     });
-    return fetch(UPLOAD_PROXY_PATH, mytstProxyFetchOptions(fd)).then(function (resp) {
+    return fetch(UPLOAD_WEBHOOK_URL, mytstDirectFetchOptions(fd)).then(function (resp) {
       return resp.text().then(function (txt) {
         var data = null; try { data = JSON.parse(txt); } catch (_) { /* non-JSON response */ }
         if (Array.isArray(data) && data[0] && data[0].json) data = data[0].json;
-        if (!data || typeof data !== 'object') throw new Error('Unexpected Blueprint webhook response (HTTP ' + resp.status + ').');
+        if (resp.status === 401) {
+          var authError = new Error('n8n rejected the upload credentials (HTTP 401). Check the dedicated uploader username and password; native webhook authentication rejects this before workflow execution.');
+          authError.httpStatus = 401;
+          throw authError;
+        }
+        if (!data || typeof data !== 'object') throw new Error('Unexpected n8n response (HTTP ' + resp.status + ').');
         if (!resp.ok || data.status !== 'success') {
           var error = new Error(data.message || 'Blueprint upload failed (HTTP ' + resp.status + ').');
           error.responseData = data;
@@ -319,8 +357,8 @@ function mytstProxyFetchOptions(body, signal) {
       return;
     }
     if (!unifiedEndpointReady()) {
-      showBlueprintResult({ status: 'configuration_error', message: 'Authenticated same-origin upload proxy is not configured for this secure session.' }, false);
-      status.textContent = 'The Blueprint request was not sent because this secure session lacks a CSRF token or same-origin proxy.';
+      showBlueprintResult({ status: 'configuration_error', message: 'Open the uploader on its HTTPS website and enter the dedicated n8n upload credentials.' }, false);
+      status.textContent = 'The Blueprint request was not sent. Check HTTPS and the n8n upload username/password fields.';
       return;
     }
 
@@ -343,7 +381,7 @@ function mytstProxyFetchOptions(body, signal) {
     }).catch(function (err) {
       var data = err.responseData || {};
       showBlueprintResult(data, false, err.message || String(err));
-      status.textContent = 'Blueprint upload was not verified. Review the server errors; reconcile database state before retrying if commit state is unknown.';
+      status.textContent = 'Blueprint upload was not verified. A network/CORS failure may hide a completed commit; check n8n executions and database state before retrying.';
     }).finally(function () { btn.disabled = false; });
   }
   function setUploadType() {
@@ -535,7 +573,7 @@ function mytstProxyFetchOptions(body, signal) {
     if (!chosen) { showError('Please choose a .csv or .xlsx file first.'); return; }
     if (!/\.(csv|xlsx|xls)$/i.test(chosen.name)) { showError('Only .csv or .xlsx files are supported.'); return; }
     if (!unifiedEndpointReady()) {
-      showError('Authenticated upload proxy is not configured for this secure session. Sign in again or contact the host administrator.');
+      showError('Open the uploader on its HTTPS website and enter the dedicated n8n upload username and password.');
       return;
     }
     var ctrl = new AbortController();
@@ -553,17 +591,23 @@ function mytstProxyFetchOptions(body, signal) {
     fd.append('file', chosen, chosen.name);
     fd.append('uploader', who);
 
-    fetch(UPLOAD_PROXY_PATH, mytstProxyFetchOptions(fd, ctrl.signal)).then(function (resp) {
+    fetch(UPLOAD_WEBHOOK_URL, mytstDirectFetchOptions(fd, ctrl.signal)).then(function (resp) {
       return resp.text().then(function (txt) {
         var data = null;
         try { data = JSON.parse(txt); } catch (e) { /* not JSON */ }
+        if (resp.status === 401) {
+          var authError = new Error('n8n rejected the upload credentials (HTTP 401). Check the dedicated uploader username and password; native webhook authentication rejects this before workflow execution.');
+          authError.responseData = data;
+          authError.httpStatus = 401;
+          throw authError;
+        }
         if (!resp.ok) {
-          var serverError = new Error((data && data.message) ? ('Server said: ' + data.message) : ('Server error (HTTP ' + resp.status + '). Is the authenticated upload proxy available?'));
+          var serverError = new Error((data && data.message) ? ('n8n said: ' + data.message) : ('n8n returned HTTP ' + resp.status + '.'));
           serverError.responseData = data;
           serverError.httpStatus = resp.status;
           throw serverError;
         }
-        if (!data) throw new Error('Unexpected server response. Is the authenticated upload proxy available?');
+        if (!data) throw new Error('Unexpected n8n response.');
         return data;
       });
     }).then(function (data) {
@@ -581,8 +625,8 @@ function mytstProxyFetchOptions(body, signal) {
       clearTimeout(timer); clearInterval(tick); btn.disabled = false;
       status.textContent = '';
       if (err.name === 'AbortError') showError('Timed out after 10 minutes. The file may be very large — check the database / upload_logs before retrying.');
-      else if (String(err).indexOf('Failed to fetch') !== -1 || String(err).indexOf('NetworkError') !== -1)
-        showError('Cannot reach the authenticated upload service. Check your sign-in/session and contact the host administrator if the proxy is unavailable.');
+      else if (String(err).indexOf('Failed to fetch') !== -1 || String(err).indexOf('NetworkError') !== -1 || err.name === 'TypeError')
+        showError('The browser could not read n8n’s response (network/CORS failure). The request may have reached the workflow; check n8n executions and upload_logs before retrying.');
       else {
         var responseData = err.responseData || {};
         var details = Array.isArray(responseData.issues) ? responseData.issues : [];
@@ -593,5 +637,5 @@ function mytstProxyFetchOptions(body, signal) {
   });
 })();
 </script>
-<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a49bdff7eaa9d220',t:'MTc5MTg2ODYxNA=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a49c06b6ffccd40b',t:'MTc5MTg3MDIwMQ=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
