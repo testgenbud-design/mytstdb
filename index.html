@@ -48,7 +48,7 @@
         </div>
         <input id="file" name="file" type="file" accept=".csv,.xlsx,.xls" required>
         <div id="selected" class="selected" aria-live="polite"></div>
-        <p class="help">Your original file is sent to the authenticated application proxy. No shared secret is stored in this page.</p>
+        <p class="help">Your original file is sent directly to the n8n webhook. No shared secret is stored in this page.</p>
       </div>
       <button class="button" id="submit" type="submit">Upload and validate</button>
     </form>
@@ -58,12 +58,12 @@
       <pre id="report-json"></pre>
     </section>
   </section>
-  <p class="foot">Endpoint: <code>/api/mytst-upload</code> · The endpoint must be served by the same application origin and forward requests to the private n8n webhook using server-side credentials.</p>
+  <p class="foot">Endpoint: <code>https://n8n.mytst.cloud/webhook/mytst-upload</code> · The n8n webhook must allow browser CORS requests and accept requests without a client-side secret.</p>
 </main>
 <script>
 (function(){
   'use strict';
-  const ENDPOINT = '/api/mytst-upload';
+  const ENDPOINT = 'https://n8n.mytst.cloud/webhook/mytst-upload';
   const form = document.getElementById('upload-form');
   const type = document.getElementById('upload-type');
   const fileInput = document.getElementById('file');
@@ -128,7 +128,7 @@
     controller=new AbortController();const timeout=setTimeout(()=>controller.abort(),10*60*1000);
     try{
       const fd=new FormData();fd.append('upload_type',type.value);fd.append('file',chosen,chosen.name);
-      const response=await fetch(ENDPOINT,{method:'POST',body:fd,credentials:'same-origin',headers:{'Accept':'application/json'},signal:controller.signal});
+      const response=await fetch(ENDPOINT,{method:'POST',mode:'cors',body:fd,credentials:'omit',headers:{'Accept':'application/json'},signal:controller.signal});
       const text=await response.text();let data;
       try{data=JSON.parse(text);}catch(_){throw new Error('The server returned a non-JSON response (HTTP '+response.status+').');}
       reportJson.textContent=JSON.stringify(data,null,2);report.style.display='block';
