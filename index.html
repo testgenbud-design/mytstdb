@@ -143,13 +143,11 @@
     data.append('file', file);
     ['uploadKind','board','classNumber','subject','academicYear','blueprintId','schemaVersion','uploadedBy','subpartOverride'].forEach((id) => data.append(id, $(id).value.trim()));
     data.append('portalSource', 'mytst-simple-html-uploader');
+    // Secret is sent in the form body (no custom headers => no CORS preflight)
+    data.append('importSecret', secret);
     $('submitButton').disabled = true; $('submitButton').textContent = 'Validating and importing…';
     try {
-      const response = await fetch(IMPORT_WEBHOOK_URL, {
-        method:'POST',
-        headers:{'x-import-secret':secret,'x-import-source':'mytst-simple-html-uploader'},
-        body:data
-      });
+      const response = await fetch(IMPORT_WEBHOOK_URL, { method:'POST', body:data });
       const result = await response.json().catch(() => ({error:'n8n returned a non-JSON response.'}));
       if (!response.ok) return showError(result);
       showSummary(result);
