@@ -165,16 +165,11 @@
 
 <script>
 /* ================================================================
-   Same-origin application proxy only. Configure the server-side proxy
-   upstream as:
-   https://n8n.mytst.cloud/webhook/mytst-upload
-
-   The browser intentionally does NOT call the n8n URL directly and never
-   receives the server-to-server credential. The authenticated host must
-   render a session-bound CSRF token in <meta name="csrf-token" content="…">
-   and expose POST /api/mytst-upload; that proxy authenticates the session,
-   validates Origin/CSRF, forwards the request to the upstream URL above,
-   and injects x-mytst-proxy-key server-side.
+   Same-origin application proxy only. The browser never knows the n8n URL
+   or its server-to-server credential. The authenticated host must render a
+   session-bound CSRF token in <meta name="csrf-token" content="…"> and expose
+   POST /api/mytst-upload; that proxy authenticates the session, validates
+   Origin/CSRF, and injects x-mytst-proxy-key server-side.
    ================================================================ */
 var UPLOAD_PROXY_PATH = '/api/mytst-upload';
 function mytstCsrfToken() {
