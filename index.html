@@ -47,7 +47,7 @@
           </label>
           <label>Class
             <select id="classNumber" required></select>
-            <small>Required for the canonical Class ↔ Subject check.</small>
+            <small>Used to establish the Class scope for a blueprint or question bank.</small>
           </label>
           <label>Subject display name
             <input id="subject" placeholder="e.g. Mathematics" required>
@@ -149,7 +149,7 @@
       $('questionTab').classList.toggle('active', !blueprint);
       $('blueprintTab').classList.toggle('active', blueprint);
       $('formatNotice').innerHTML = blueprint
-        ? '<span>✓</span><span><strong>Blueprint format:</strong> the file must supply <code>BLUEPRINT_ID</code>, <code>Subject_Code</code>, per-row <code>Chapter_Code</code>, and <code>Subtopic_ID</code>. Valid blueprint chapter mappings establish the chapter catalog for the resolved existing subject.</span>'
+        ? '<span>✓</span><span><strong>Blueprint format:</strong> the file must supply <code>BLUEPRINT_ID</code>, <code>Subject_Code</code>, per-row <code>Chapter_Code</code>, and <code>Subtopic_ID</code>. Valid values establish or update the Class, Subject, and Chapter catalog.</span>'
         : '<span>✓</span><span><strong>Question-bank format:</strong> direct <code>Subject_Code</code>, <code>Chapter_Code</code>, <code>Subtopic_ID</code>, <code>Quality_Score</code>, and inline MCQ options in the Question field are supported.</span>';
     }
     $('questionTab').addEventListener('click', () => selectKind('question_bank'));
@@ -273,5 +273,6 @@
     });
   })();
   </script>
-<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a4c8cb577d830868',t:'MTc5MjMzOTYyOA=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a4c8d9edec328a7c',t:'MTc5MjM0MDIyNg=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
+l>
