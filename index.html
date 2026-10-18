@@ -252,9 +252,10 @@
       Object.entries(fields).forEach(([key, value]) => data.append(key, value));
       const submit = $('submitButton'); submit.disabled = true; submit.textContent = 'Checking and importing…';
       try {
+        // Keep this cross-origin request header-free. importSecret is already included in FormData.
+        // The deployed n8n CORS policy permits multipart Content-Type but not custom x-import-* headers.
         const response = await fetch(IMPORT_WEBHOOK_URL, {
           method: 'POST',
-          headers: { 'x-import-secret': secret, 'x-import-source': 'mytst-content-uploader' },
           body: data
         });
         const result = await response.json().catch(() => ({ error: `The server returned HTTP ${response.status} without a JSON report.` }));
@@ -268,5 +269,5 @@
     });
   })();
   </script>
-</body>
+<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a4c899bb585edf32',t:'MTc5MjMzNzU5Ng=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
