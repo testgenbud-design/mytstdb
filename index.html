@@ -2,162 +2,271 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>myTST Import Uploader</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>myTST · Content Import</title>
   <style>
-    :root{--ink:#18332b;--muted:#5f756d;--line:#cfe0d8;--paper:#f5faf7;--card:#fff;--accent:#087f5b;--danger:#ad3340;--orange:#a66312}
-    *{box-sizing:border-box}body{margin:0;background:linear-gradient(135deg,#eaf6ef,#fcfbf6);color:var(--ink);font-family:Arial,Helvetica,sans-serif}main{width:min(900px,calc(100% - 28px));margin:38px auto 70px}h1{font-size:clamp(2rem,5vw,3.1rem);letter-spacing:-.045em;margin:.15rem 0 .65rem}h2{font-size:1.2rem;margin:0 0 1rem}.eyebrow{font-size:.75rem;text-transform:uppercase;letter-spacing:.12em;font-weight:bold;color:var(--accent)}p{line-height:1.55;color:var(--muted)}
-    .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:24px;margin-top:20px;box-shadow:0 14px 38px #174b3920}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:15px}.wide{grid-column:1/-1}label{display:grid;gap:7px;font-size:.9rem;font-weight:bold}input,select{min-height:43px;border:1px solid #b9ccc3;border-radius:8px;padding:9px 11px;font:inherit;background:#fff;color:var(--ink)}input:focus,select:focus{outline:3px solid #087f5b25;border-color:var(--accent)}
-    button{border:0;border-radius:8px;padding:12px 16px;font-size:.95rem;font-weight:bold;cursor:pointer;background:var(--accent);color:#fff}.tabbar{display:flex;gap:8px;margin:12px 0 18px}.tabbar button{background:#e9f3ed;color:#436a5b}.tabbar button.active{background:var(--accent);color:#fff}.notice{border-left:4px solid var(--accent);padding:12px 14px;background:#eef9f3;border-radius:5px;color:#31594b;line-height:1.45;font-size:.9rem}.warning{border-left-color:#bd7b20;background:#fff8eb;color:#704b18}.hidden{display:none}.optional{font-weight:normal;color:var(--muted)}
-    .metrics{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px}.metric{padding:14px 11px;border-radius:10px;background:#eef8f3;border:1px solid #c9e5d8}.metric span{display:block;font-size:.73rem;color:var(--muted);text-transform:uppercase;letter-spacing:.055em}.metric strong{font-size:1.7rem;line-height:1.35}.metric.rejected{background:#fff1f2;border-color:#f0c5ca}.metric.duplicate{background:#fff8e9;border-color:#f0dbaf}.metric.truncated{background:#fff4ec;border-color:#ebc6a6}
-    table{width:100%;border-collapse:collapse;font-size:.87rem}th,td{text-align:left;padding:9px;border-bottom:1px solid #e5ece8;vertical-align:top}th{color:#4d6c60;font-size:.75rem;text-transform:uppercase;letter-spacing:.05em}pre{white-space:pre-wrap;overflow-wrap:anywhere;border-radius:8px;background:#f2f6f3;padding:14px;font-size:.8rem;margin:0}.error pre{background:#fff2f3;color:#8e2935}.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}@media(max-width:700px){main{margin-top:22px}.card{padding:18px}.grid{grid-template-columns:1fr}.metrics{grid-template-columns:repeat(2,1fr)}}
+    :root{--ink:#162a24;--muted:#65776f;--line:#d7e2dc;--paper:#f5f8f6;--card:#fff;--brand:#007d5a;--brand-soft:#e8f6ef;--warn:#9a620b;--warn-soft:#fff6e4;--danger:#b3263b;--danger-soft:#fff0f2;--blue:#235fa8;--blue-soft:#edf5ff}
+    *{box-sizing:border-box} body{margin:0;background:linear-gradient(145deg,#f0f8f4 0%,#fbfaf7 52%,#eef4fb 100%);color:var(--ink);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+    main{max-width:1120px;margin:0 auto;padding:42px 22px 76px}.eyebrow{margin:0 0 10px;color:var(--brand);font-size:.76rem;font-weight:800;letter-spacing:.13em;text-transform:uppercase}.title-row{display:flex;align-items:flex-start;justify-content:space-between;gap:22px}h1{margin:0;font-size:clamp(2rem,5vw,3.45rem);letter-spacing:-.055em;line-height:1}h2{margin:0;font-size:1.18rem;letter-spacing:-.02em}p{line-height:1.55;color:var(--muted)}.intro{max-width:760px;margin:15px 0 0;font-size:1.02rem}.status-chip{white-space:nowrap;border:1px solid #b9ddd0;border-radius:999px;background:var(--brand-soft);padding:7px 11px;font-size:.76rem;font-weight:750;color:#087052}
+    .card{margin-top:23px;border:1px solid var(--line);border-radius:18px;background:var(--card);padding:25px;box-shadow:0 18px 48px rgba(31,68,53,.09)}.notice{display:flex;gap:10px;align-items:flex-start;margin:0 0 21px;padding:13px 14px;border:1px solid #bce3d3;border-radius:10px;background:var(--brand-soft);font-size:.91rem;line-height:1.46;color:#225b49}.notice.warning{border-color:#f0d59a;background:var(--warn-soft);color:#704a10}.notice strong{color:inherit}.tabs{display:flex;gap:8px;margin-bottom:22px;border-bottom:1px solid var(--line);padding-bottom:14px}.tab{appearance:none;border:1px solid transparent;border-radius:9px;background:transparent;color:var(--muted);font:inherit;font-size:.9rem;font-weight:750;padding:9px 12px;cursor:pointer}.tab.active{border-color:#b2dacb;background:var(--brand-soft);color:#006c4d}
+    .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:15px}.wide{grid-column:1/-1}label{display:grid;gap:7px;color:#29463b;font-size:.87rem;font-weight:750}label small{font-size:.77rem;font-weight:500;line-height:1.35;color:var(--muted)}input,select{width:100%;min-height:44px;border:1px solid #bfcfc7;border-radius:9px;background:#fff;padding:10px 11px;font:inherit;color:var(--ink)}input:focus,select:focus{outline:3px solid rgba(0,125,90,.14);border-color:var(--brand)}input[type=file]{padding:9px}.hidden{display:none!important}.actions{display:flex;gap:12px;align-items:center;margin-top:23px;flex-wrap:wrap}button.primary{appearance:none;border:0;border-radius:10px;background:var(--brand);color:#fff;padding:12px 17px;font:inherit;font-weight:800;cursor:pointer;box-shadow:0 7px 16px rgba(0,125,90,.2)}button.primary:hover{background:#006b4d}button.primary:disabled{cursor:wait;opacity:.66}.file-note{font-size:.84rem;color:var(--muted)}
+    .summary-head{display:flex;gap:18px;justify-content:space-between;align-items:flex-start}.summary-state{font-size:.85rem;font-weight:800;color:var(--brand)}.metrics{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin-top:19px}.metric{min-height:92px;padding:13px;border:1px solid #d2e5dc;border-radius:12px;background:#f1faf5}.metric.warn{border-color:#f0d8aa;background:#fff8e9}.metric.bad{border-color:#f2c7ce;background:#fff2f4}.metric.blue{border-color:#caddf4;background:var(--blue-soft)}.metric span{display:block;color:var(--muted);font-size:.69rem;font-weight:750;letter-spacing:.06em;text-transform:uppercase}.metric strong{display:block;margin-top:7px;font-size:1.75rem;letter-spacing:-.05em;line-height:1}
+    .scope-list{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}.scope{border:1px solid #f0d8aa;border-radius:999px;background:var(--warn-soft);padding:6px 9px;color:#76500d;font-size:.78rem;font-weight:700}.scope code{font:inherit}.table-wrap{margin-top:18px;overflow:auto;border:1px solid var(--line);border-radius:12px}table{border-collapse:collapse;width:100%;min-width:790px;font-size:.84rem}th,td{padding:11px 12px;text-align:left;vertical-align:top;border-bottom:1px solid #e7ede9}tr:last-child td{border-bottom:0}th{position:sticky;top:0;background:#f3f7f4;color:#536d62;font-size:.69rem;letter-spacing:.065em;text-transform:uppercase}td.reason{min-width:340px;white-space:normal;color:#674453}.badge{display:inline-block;border-radius:999px;padding:4px 7px;background:#eef2f0;color:#4b6258;font-size:.72rem;font-weight:800}.badge.rejected,.badge.unresolved{background:var(--danger-soft);color:#9d2437}.badge.duplicate{background:var(--warn-soft);color:#80520d}.badge.staged{background:var(--blue-soft);color:var(--blue)}.empty{padding:23px;color:var(--muted);text-align:center}.error{border-color:#edc3ca;background:var(--danger-soft)}.error pre{margin:14px 0 0;max-height:320px;overflow:auto;white-space:pre-wrap;overflow-wrap:anywhere;border-radius:10px;background:#fff8f9;padding:14px;color:#8b2333;font-size:.82rem}.footer-note{font-size:.8rem;margin-top:15px;color:var(--muted)}
+    @media(max-width:800px){main{padding:27px 15px 54px}.card{padding:18px}.title-row{display:block}.status-chip{display:inline-block;margin-top:15px}.grid{grid-template-columns:1fr}.metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.tabs{overflow:auto}.tab{white-space:nowrap}}
   </style>
 </head>
 <body>
-<main>
-  <p class="eyebrow">myTST · strict data importer</p>
-  <h1>Upload a question bank or blueprint</h1>
-  <p>This uploader is connected to <strong>https://n8n.mytst.cloud/webhook/mytst-import</strong>.</p>
-
-  <section class="card">
-    <div class="notice warning">Use this only on a private internal device. The n8n access key is stored only for the current browser session and is cleared when the browser session ends.</div>
-    <p><label>n8n shared secret
-      <input id="secret" type="password" placeholder="Same value as IMPORT_WEBHOOK_SHARED_SECRET" required>
-    </label></p>
-
-    <form id="uploadForm">
-      <div class="tabbar" aria-label="Upload type">
-        <button type="button" id="questionTab" class="active">Question Bank</button>
-        <button type="button" id="blueprintTab">Blueprint</button>
+  <main>
+    <p class="eyebrow">myTST · Canonical content import</p>
+    <div class="title-row">
+      <div>
+        <h1>Upload content with confidence.</h1>
+        <p class="intro">Upload a fixed-format question bank or blueprint. Every row is checked before writing. If a row cannot be imported, the report shows the exact source row, canonical scope, and reason.</p>
       </div>
-      <input id="uploadKind" type="hidden" value="question_bank">
-
-      <div class="grid">
-        <label>Board<input id="board" value="CBSE" required></label>
-        <label>Class<input id="classNumber" value="12" inputmode="numeric" required></label>
-        <label>Subject
-          <select id="subject" required>
-            <option value="">Select subject</option>
-            <option>Biology</option><option>Chemistry</option><option>English Core</option>
-            <option>Information Technology</option><option>Mathematics</option><option>Physics</option>
-          </select>
-        </label>
-        <label>Academic year<input id="academicYear" value="2026" placeholder="2026 or 2026-27" required></label>
-
-        <label id="subpartField" class="wide">Subpart override <span class="optional">optional</span>
-          <input id="subpartOverride" maxlength="30" pattern="[A-Za-z0-9()_-]+" placeholder="Leave blank to preserve file values; e.g. a, b, (i)">
-          <span class="optional">A supplied value replaces Subpart on every question row in this upload. Full Question ID remains unchanged.</span>
-        </label>
-
-        <label id="blueprintIdField" class="hidden">Blueprint ID<input id="blueprintId" placeholder="CBSE-12-PHY-2026-v1"></label>
-        <label id="schemaVersionField" class="hidden">Blueprint schema version<input id="schemaVersion" value="blueprint-import-v1"></label>
-        <label>Uploader name <span class="optional">optional</span><input id="uploadedBy" placeholder="Name shown in upload log"></label>
-        <label class="wide">CSV or XLSX file
-          <input id="file" type="file" accept=".csv,.xlsx,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" required>
-          <span id="fileHint" class="optional">Choose a UTF-8 CSV or genuine XLSX file, maximum 10 MB.</span>
-        </label>
-      </div>
-
-      <div class="notice">Strict mode rejects duplicates, incomplete/truncated text, malformed formulae/code, broken symbols, invalid JSON, missing fields, and invalid values. Valid Unicode content such as Δ, μ, ℤ, ℝ, ×, ≤, and ⁻¹ is retained.</div>
-      <p><button id="submitButton" type="submit">Validate and import</button></p>
-    </form>
-  </section>
-
-  <section id="summaryCard" class="card hidden">
-    <h2 id="summaryTitle">Import complete</h2>
-    <div class="metrics">
-      <div class="metric"><span>Total input rows</span><strong id="totalInputRows">0</strong></div>
-      <div class="metric"><span>Imported</span><strong id="imported">0</strong></div>
-      <div class="metric rejected"><span>Rejected</span><strong id="rejected">0</strong></div>
-      <div class="metric duplicate"><span>Duplicates</span><strong id="duplicates">0</strong></div>
-      <div class="metric truncated"><span>Truncated</span><strong id="truncated">0</strong></div>
+      <span class="status-chip">CBSE · Class 1–12</span>
     </div>
-  </section>
 
-  <section id="issuesCard" class="card hidden">
-    <h2>Flagged and rejected records</h2>
-    <div style="overflow-x:auto"><table><thead><tr><th>Source row</th><th>Question / Blueprint ID</th><th>Subpart</th><th>Status</th><th>Reason</th></tr></thead><tbody id="issuesBody"></tbody></table></div>
-  </section>
-  <section id="errorCard" class="card error hidden"><h2>Upload error</h2><pre id="errorOutput"></pre></section>
-</main>
-<script>
-(() => {
-  const IMPORT_WEBHOOK_URL = 'https://n8n.mytst.cloud/webhook/mytst-import';
-  const $ = (id) => document.getElementById(id);
-  $('secret').value = sessionStorage.getItem('mytst.import.secret') || '';
-  $('secret').addEventListener('input', () => sessionStorage.setItem('mytst.import.secret', $('secret').value));
+    <section class="card" aria-labelledby="upload-heading">
+      <h2 id="upload-heading">New import</h2>
+      <p class="notice warning"><span>⚠</span><span><strong>Private uploader.</strong> Use a trusted device. The n8n secret is stored only for this browser session. Upload problems are reported; no automatic text repair or guessed canonical code is performed.</span></p>
 
-  function selectKind(kind) {
-    const blueprint = kind === 'blueprint';
-    $('uploadKind').value = kind;
-    $('questionTab').classList.toggle('active', !blueprint);
-    $('blueprintTab').classList.toggle('active', blueprint);
-    $('subpartField').classList.toggle('hidden', blueprint);
-    $('blueprintIdField').classList.toggle('hidden', !blueprint);
-    $('schemaVersionField').classList.toggle('hidden', !blueprint);
-    $('blueprintId').required = blueprint;
-  }
-  $('questionTab').onclick = () => selectKind('question_bank');
-  $('blueprintTab').onclick = () => selectKind('blueprint');
-  $('file').onchange = () => {
-    const file = $('file').files[0];
-    $('fileHint').textContent = file ? `${file.name} · ${(file.size / 1024 / 1024).toFixed(2)} MB` : 'Choose a UTF-8 CSV or genuine XLSX file, maximum 10 MB.';
-  };
+      <form id="uploadForm">
+        <input id="uploadKind" type="hidden" value="question_bank">
+        <div class="tabs" aria-label="Upload type">
+          <button class="tab active" id="questionTab" type="button">Question bank</button>
+          <button class="tab" id="blueprintTab" type="button">Blueprint</button>
+        </div>
 
-  function numeric(value) { return Number(value || 0) || 0; }
-  function showError(error) {
-    $('errorCard').classList.remove('hidden');
-    $('errorOutput').textContent = JSON.stringify(error, null, 2);
-  }
-  function showSummary(raw) {
-    const result = raw.result || raw;
-    $('errorCard').classList.add('hidden');
-    $('summaryCard').classList.remove('hidden');
-    $('summaryTitle').textContent = result.status === 'COMPLETED' ? `Import completed · batch ${result.batchId}` : 'Import result';
-    ['totalInputRows','imported','rejected','duplicates','truncated'].forEach((key) => { $(key).textContent = numeric(result[key]); });
-    const issues = Array.isArray(result.issues) ? result.issues : [];
-    $('issuesBody').innerHTML = '';
-    if (issues.length) {
-      $('issuesCard').classList.remove('hidden');
+        <div class="grid">
+          <label class="wide">n8n shared secret
+            <input id="secret" type="password" autocomplete="off" placeholder="Enter the configured private uploader secret" required>
+          </label>
+          <label>Board
+            <input id="board" value="CBSE" readonly aria-readonly="true">
+            <small>The current importer writes CBSE only.</small>
+          </label>
+          <label>Class
+            <select id="classNumber" required></select>
+            <small>Required for the canonical Class ↔ Subject check.</small>
+          </label>
+          <label>Subject display name
+            <input id="subject" placeholder="e.g. Mathematics" required>
+            <small>Must agree exactly with the master subject display name.</small>
+          </label>
+          <label>Subject code <span style="font-weight:500;color:var(--muted)">optional portal metadata</span>
+            <input id="subjectCode" placeholder="e.g. 12-MAT">
+            <small>The source file code takes priority; a supplied portal code is checked when needed.</small>
+          </label>
+          <label>Academic year <span style="font-weight:500;color:var(--muted)">optional</span>
+            <input id="academicYear" value="2026" placeholder="2026 or 2026-27">
+          </label>
+          <label>Uploader name <span style="font-weight:500;color:var(--muted)">optional</span>
+            <input id="uploadedBy" placeholder="Name for the audit record">
+          </label>
+          <label class="wide">Question-bank or blueprint file
+            <input id="file" type="file" accept=".csv,.xlsx,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" required>
+            <small id="fileHint">Choose a UTF-8 CSV or genuine XLSX file, maximum 10 MB.</small>
+          </label>
+        </div>
+
+        <p class="notice" id="formatNotice"><span>✓</span><span><strong>Question-bank format:</strong> direct <code>Subject_Code</code>, <code>Chapter_Code</code>, <code>Subtopic_ID</code>, <code>Quality_Score</code>, and inline MCQ options in the Question field are supported.</span></p>
+        <div class="actions">
+          <button class="primary" id="submitButton" type="submit">Validate and import</button>
+          <span class="file-note">Nothing is written for rejected rows.</span>
+        </div>
+      </form>
+    </section>
+
+    <section id="summaryCard" class="card hidden" aria-live="polite">
+      <div class="summary-head">
+        <div>
+          <h2 id="summaryTitle">Import result</h2>
+          <p id="summaryDescription">Review the outcome below.</p>
+        </div>
+        <span id="summaryState" class="summary-state"></span>
+      </div>
+      <div class="metrics">
+        <div class="metric"><span>Total rows</span><strong id="totalInputRows">0</strong></div>
+        <div class="metric"><span>Written</span><strong id="written">0</strong></div>
+        <div class="metric"><span>Inserted</span><strong id="inserted">0</strong></div>
+        <div class="metric blue"><span>Updated</span><strong id="updated">0</strong></div>
+        <div class="metric blue"><span>Staged</span><strong id="staged">0</strong></div>
+        <div class="metric"><span>Unchanged</span><strong id="unchanged">0</strong></div>
+        <div class="metric bad"><span>Rejected</span><strong id="rejected">0</strong></div>
+        <div class="metric warn"><span>Duplicates</span><strong id="duplicates">0</strong></div>
+        <div class="metric bad"><span>Unresolved</span><strong id="unresolved">0</strong></div>
+        <div class="metric warn"><span>Truncated</span><strong id="truncated">0</strong></div>
+      </div>
+      <div id="scopeBlock" class="hidden">
+        <p class="footer-note"><strong>Master scopes requiring attention</strong></p>
+        <div id="scopeList" class="scope-list"></div>
+      </div>
+    </section>
+
+    <section id="issuesCard" class="card hidden">
+      <h2>Rows requiring attention</h2>
+      <p>Every returned validation or import issue is listed below. Correct the source/master data and upload again.</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Source row</th><th>Question / blueprint ID</th><th>Canonical scope</th><th>Status</th><th>Reason</th></tr></thead>
+          <tbody id="issuesBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="errorCard" class="card error hidden" aria-live="assertive">
+      <h2>Upload could not be completed</h2>
+      <p>The workflow did not return a normal import report. Check the details below and the n8n execution if needed.</p>
+      <pre id="errorOutput"></pre>
+    </section>
+  </main>
+
+  <script>
+  (() => {
+    // Change only this constant when the deployed n8n webhook URL changes.
+    const IMPORT_WEBHOOK_URL = 'https://n8n.mytst.cloud/webhook/mytst-import';
+    const $ = (id) => document.getElementById(id);
+    const numeric = (value) => Number(value ?? 0) || 0;
+    const clean = (value) => String(value ?? '').trim();
+    const classes = Array.from({length:12}, (_, index) => index + 1);
+
+    const chooseClass = document.createElement('option'); chooseClass.value = ''; chooseClass.textContent = 'Select class'; chooseClass.disabled = true; chooseClass.selected = true;
+    $('classNumber').appendChild(chooseClass);
+    for (const number of classes) {
+      const option = document.createElement('option'); option.value = String(number); option.textContent = `Class ${number}`;
+      $('classNumber').appendChild(option);
+    }
+    $('subject').value = localStorage.getItem('mytst.import.subject') || '';
+    $('subjectCode').value = localStorage.getItem('mytst.import.subjectCode') || '';
+    $('secret').value = sessionStorage.getItem('mytst.import.secret') || '';
+    $('secret').addEventListener('input', () => sessionStorage.setItem('mytst.import.secret', $('secret').value));
+    $('subject').addEventListener('input', () => localStorage.setItem('mytst.import.subject', $('subject').value));
+    $('subjectCode').addEventListener('input', () => localStorage.setItem('mytst.import.subjectCode', $('subjectCode').value));
+
+    function selectKind(kind) {
+      const blueprint = kind === 'blueprint';
+      $('uploadKind').value = kind;
+      $('questionTab').classList.toggle('active', !blueprint);
+      $('blueprintTab').classList.toggle('active', blueprint);
+      $('formatNotice').innerHTML = blueprint
+        ? '<span>✓</span><span><strong>Blueprint format:</strong> the file must supply <code>BLUEPRINT_ID</code>, <code>Subject_Code</code>, per-row <code>Chapter_Code</code>, and <code>Subtopic_ID</code>.</span>'
+        : '<span>✓</span><span><strong>Question-bank format:</strong> direct <code>Subject_Code</code>, <code>Chapter_Code</code>, <code>Subtopic_ID</code>, <code>Quality_Score</code>, and inline MCQ options in the Question field are supported.</span>';
+    }
+    $('questionTab').addEventListener('click', () => selectKind('question_bank'));
+    $('blueprintTab').addEventListener('click', () => selectKind('blueprint'));
+    $('file').addEventListener('change', () => {
+      const file = $('file').files[0];
+      $('fileHint').textContent = file ? `${file.name} · ${(file.size / 1024 / 1024).toFixed(2)} MB` : 'Choose a UTF-8 CSV or genuine XLSX file, maximum 10 MB.';
+    });
+
+    function showError(error) {
+      $('summaryCard').classList.add('hidden'); $('issuesCard').classList.add('hidden');
+      $('errorCard').classList.remove('hidden');
+      $('errorOutput').textContent = typeof error === 'string' ? error : JSON.stringify(error, null, 2);
+      window.scrollTo({ top: $('errorCard').offsetTop - 18, behavior: 'smooth' });
+    }
+    function scopeText(issue) {
+      const chapterScopes = Array.isArray(issue.unresolved_chapters) ? issue.unresolved_chapters.map((item) => item.chapter_code).filter(Boolean) : [];
+      return [issue.subject_code, issue.chapter_code, ...chapterScopes].filter(Boolean).join(' / ') || '—';
+    }
+    function reasonText(issue) {
+      const details = Array.isArray(issue.validation_errors) ? issue.validation_errors
+        .map((item) => [item.code, item.field, item.message].filter(Boolean).join(': ')).filter(Boolean) : [];
+      return details.length ? details.join(' | ') : clean(issue.reason || issue.code) || '—';
+    }
+    function statusClass(status) {
+      const value = clean(status).toLowerCase();
+      if (value.includes('unresolved')) return 'unresolved';
+      if (value.includes('duplicate') || value.includes('unchanged')) return 'duplicate';
+      if (value.includes('stage')) return 'staged';
+      if (value.includes('reject')) return 'rejected';
+      return '';
+    }
+    function showSummary(raw) {
+      const result = raw?.result || raw || {};
+      if (result.status === 'FAILED' || result.error) return showError(result);
+      $('errorCard').classList.add('hidden'); $('summaryCard').classList.remove('hidden');
+      $('summaryTitle').textContent = result.status === 'COMPLETED' ? `Import completed · batch ${result.batchId}` : 'Import result';
+      $('summaryDescription').textContent = numeric(result.rejected) || numeric(result.unresolved)
+        ? 'Some rows were not written. Review every listed reason below.'
+        : 'All processed rows completed without a reported validation rejection.';
+      $('summaryState').textContent = result.status || 'COMPLETED';
+      for (const key of ['totalInputRows','written','inserted','updated','staged','unchanged','rejected','duplicates','unresolved','truncated']) {
+        $(key).textContent = numeric(result[key]);
+      }
+      const scopes = Array.isArray(result.unresolvedScopes) ? result.unresolvedScopes : [];
+      $('scopeList').innerHTML = '';
+      $('scopeBlock').classList.toggle('hidden', scopes.length === 0);
+      for (const item of scopes) {
+        const chip = document.createElement('span'); chip.className = 'scope';
+        chip.textContent = [item.subject_code, item.chapter_code, item.chapter_name, item.reason].filter(Boolean).join(' · ');
+        $('scopeList').appendChild(chip);
+      }
+      const issues = Array.isArray(result.issues) ? result.issues : [];
+      $('issuesBody').innerHTML = '';
+      $('issuesCard').classList.toggle('hidden', issues.length === 0);
       for (const issue of issues) {
         const row = document.createElement('tr');
-        [issue.row ?? '—', issue.question_id || issue.blueprint_id || '—', issue.subpart || '—', issue.status || '—', issue.reason || '—'].forEach((value) => {
-          const cell = document.createElement('td'); cell.textContent = String(value); row.appendChild(cell);
+        const values = [
+          issue.row ?? '—',
+          issue.question_id || issue.blueprint_id || issue.subtopic_id || '—',
+          scopeText(issue),
+          issue.status || '—',
+          reasonText(issue)
+        ];
+        values.forEach((value, index) => {
+          const cell = document.createElement('td');
+          if (index === 3) { const badge = document.createElement('span'); badge.className = `badge ${statusClass(value)}`; badge.textContent = String(value); cell.appendChild(badge); }
+          else { cell.textContent = String(value); if (index === 4) cell.className = 'reason'; }
+          row.appendChild(cell);
         });
         $('issuesBody').appendChild(row);
       }
-    } else $('issuesCard').classList.add('hidden');
-  }
-
-  $('uploadForm').onsubmit = async (event) => {
-    event.preventDefault();
-    const file = $('file').files[0];
-    const secret = $('secret').value.trim();
-    const subpart = $('subpartOverride').value.trim();
-    if (!secret || !file) return showError({error:'Enter the n8n shared secret and choose a file.'});
-    if (!/\.(csv|xlsx)$/i.test(file.name)) return showError({error:'Only .csv and .xlsx files are accepted.'});
-    if (file.size > 10 * 1024 * 1024) return showError({error:'File exceeds the 10 MB limit.'});
-    if (subpart && !/^[A-Za-z0-9()_-]{1,30}$/.test(subpart)) return showError({error:'Subpart override contains unsupported characters.'});
-
-    const data = new FormData();
-    data.append('file', file);
-    ['uploadKind','board','classNumber','subject','academicYear','blueprintId','schemaVersion','uploadedBy','subpartOverride'].forEach((id) => data.append(id, $(id).value.trim()));
-    data.append('portalSource', 'mytst-simple-html-uploader');
-    // Secret is sent in the form body (no custom headers => no CORS preflight)
-    data.append('importSecret', secret);
-    $('submitButton').disabled = true; $('submitButton').textContent = 'Validating and importing…';
-    try {
-      const response = await fetch(IMPORT_WEBHOOK_URL, { method:'POST', body:data });
-      const result = await response.json().catch(() => ({error:'n8n returned a non-JSON response.'}));
-      if (!response.ok) return showError(result);
-      showSummary(result);
-    } catch (error) {
-      showError({error:'Could not reach n8n. Check the workflow is active, the shared secret, HTTPS, and CORS configuration.', details:String(error)});
-    } finally {
-      $('submitButton').disabled = false; $('submitButton').textContent = 'Validate and import';
+      window.scrollTo({ top: $('summaryCard').offsetTop - 18, behavior: 'smooth' });
     }
-  };
-})();
-</script>
+
+    $('uploadForm').addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const file = $('file').files[0]; const secret = clean($('secret').value);
+      const classNumber = clean($('classNumber').value); const subject = clean($('subject').value);
+      if (!secret || !file || !subject || !/^(?:[1-9]|1[0-2])$/.test(classNumber)) {
+        return showError({ error: 'Enter the shared secret, choose a valid Class 1–12, provide a subject display name, and select a file.' });
+      }
+      if (!/\.(csv|xlsx)$/i.test(file.name)) return showError({ error: 'Only .csv and .xlsx files are accepted.' });
+      if (file.size > 10 * 1024 * 1024) return showError({ error: 'The selected file exceeds the 10 MB limit.' });
+      const data = new FormData();
+      data.append('file', file);
+      data.append('importSecret', secret);
+      const fields = {
+        uploadKind: $('uploadKind').value,
+        board: 'CBSE',
+        classNumber,
+        subject,
+        subjectCode: clean($('subjectCode').value),
+        academicYear: clean($('academicYear').value),
+        uploadedBy: clean($('uploadedBy').value),
+        schemaVersion: 'unified-question-v5',
+        blueprintId: '',
+        subpartOverride: ''
+      };
+      Object.entries(fields).forEach(([key, value]) => data.append(key, value));
+      const submit = $('submitButton'); submit.disabled = true; submit.textContent = 'Checking and importing…';
+      try {
+        const response = await fetch(IMPORT_WEBHOOK_URL, {
+          method: 'POST',
+          headers: { 'x-import-secret': secret, 'x-import-source': 'mytst-content-uploader' },
+          body: data
+        });
+        const result = await response.json().catch(() => ({ error: `The server returned HTTP ${response.status} without a JSON report.` }));
+        if (!response.ok) return showError(result);
+        showSummary(result);
+      } catch (error) {
+        showError({ error: 'Could not reach the import webhook.', details: String(error) });
+      } finally {
+        submit.disabled = false; submit.textContent = 'Validate and import';
+      }
+    });
+  })();
+  </script>
 </body>
 </html>
