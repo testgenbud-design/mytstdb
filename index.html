@@ -35,7 +35,7 @@
         <div class="tabs" aria-label="Upload type">
           <button class="tab active" id="questionTab" type="button">Question bank</button>
           <button class="tab" id="blueprintTab" type="button">Blueprint</button>
-          <button class="tab" id="formatCatalogueTab" type="button">Format catalogue</button>
+          <button class="tab" id="formatCatalogueTab" type="button">Format catalogue · non-production</button>
         </div>
 
         <div class="grid">
@@ -65,11 +65,10 @@
             <input id="uploadedBy" placeholder="Name for the audit record">
           </label>
           <label id="formatActionField" class="hidden">Format Catalogue action
-            <select id="requestedAction">
-              <option value="VALIDATE">Validate only</option>
-              <option value="STAGE_DRAFT">Validate and stage DRAFT</option>
+            <select id="requestedAction" aria-label="Format Catalogue action">
+              <option value="IMPORT_AND_ACTIVATE">Import and activate — non-production</option>
             </select>
-            <small>Profiles and bindings can only be staged as DRAFT / INACTIVE_DRAFT. This standalone uploader has no Activate action.</small>
+            <small>One successful V4 upload validates, writes, and activates the format in the non-production database atomically.</small>
           </label>
           <label class="wide" id="fileLabel">Question-bank or blueprint file
             <input id="file" type="file" accept=".csv,.xlsx,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" required>
@@ -167,10 +166,10 @@
       $('formatActionField').classList.toggle('hidden', !formatCatalogue);
       $('fileLabel').childNodes[0].textContent = formatCatalogue ? 'Master Format Catalogue workbook\n            ' : 'Question-bank or blueprint file\n            ';
       $('file').accept = formatCatalogue ? '.xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' : '.csv,.xlsx,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
-      $('fileHint').textContent = formatCatalogue ? 'Choose one genuine multi-tab .xlsx FORMAT_CATALOGUE_V2 workbook, maximum 10 MB.' : 'Choose a UTF-8 CSV or genuine XLSX file, maximum 10 MB.';
-      $('submitButton').textContent = formatCatalogue ? 'Validate Format Catalogue' : 'Validate and import';
+      $('fileHint').textContent = formatCatalogue ? 'Choose one genuine multi-tab .xlsx FORMAT_CATALOGUE_V4_ACTIVE_LOOKUP workbook, maximum 10 MB.' : 'Choose a UTF-8 CSV or genuine XLSX file, maximum 10 MB.';
+      $('submitButton').textContent = formatCatalogue ? 'Import and activate Format Catalogue' : 'Validate and import';
       $('formatNotice').innerHTML = formatCatalogue
-        ? '<span>✓</span><span><strong>Format Catalogue mode:</strong> uploads one multi-tab <code>FORMAT_CATALOGUE_V2</code> workbook to the dedicated format webhook. It only validates or stages <code>DRAFT</code> configuration and <code>INACTIVE_DRAFT</code> binding candidates; it never changes questions, Blueprints, or active paper generation.</span>'
+        ? '<span>✓</span><span><strong>Non-production active Format Catalogue mode:</strong> uploads one <code>FORMAT_CATALOGUE_V4_ACTIVE_LOOKUP</code> workbook for <code>IMPORT_AND_ACTIVATE</code>. The importer validates and compiles before its atomic database write; a matching old active format is retired only if the replacement activates successfully. It never imports questions or edits Blueprint content.</span>'
         : blueprint
           ? '<span>✓</span><span><strong>Blueprint format:</strong> the file must supply <code>BLUEPRINT_ID</code>, <code>Subject_Code</code>, per-row <code>Chapter_Code</code>, and <code>Subtopic_ID</code>. Valid values establish or update the Class, Subject, and Chapter catalog.</span>'
           : '<span>✓</span><span><strong>Question-bank format:</strong> direct <code>Subject_Code</code>, <code>Chapter_Code</code>, <code>Subtopic_ID</code>, <code>Quality_Score</code>, and inline MCQ options in the Question field are supported.</span>';
@@ -213,15 +212,19 @@
       const warnings = Array.isArray(validation.warnings) ? validation.warnings : [];
       const profiles = Array.isArray(result.compiledProfiles) ? result.compiledProfiles : [];
       const staged = result.outcome === 'STAGED_DRAFT';
+      const activated = result.outcome === 'ACTIVATED';
+      const persisted = staged || activated;
       $('errorCard').classList.add('hidden'); $('summaryCard').classList.remove('hidden');
       $('summaryTitle').textContent = `Format Catalogue ${result.outcome || 'result'} · ${result.packageId || 'package'}`;
       $('summaryDescription').textContent = errors.length
-        ? 'The workbook was not staged. Correct every listed tab, row, column, and validation reason.'
-        : staged
-          ? 'The validated workbook was staged as DRAFT configuration only. No active profile or binding was created.'
-          : 'Workbook validation completed. Copy each returned compiled fingerprint into its fixture row before a Stage DRAFT upload.';
+        ? 'The workbook was not written. Correct every listed tab, row, column, and validation reason.'
+        : activated
+          ? 'The format was atomically written and activated in non-production. Any earlier active format with the same lookup key was retired only as part of this successful transaction.'
+          : staged
+            ? 'The validated workbook was staged as DRAFT configuration only. No active profile or binding was created.'
+            : 'Workbook validation completed.';
       $('summaryState').textContent = result.status || result.outcome || 'COMPLETED';
-      const metrics = { totalInputRows: 1, written: staged ? profiles.length : 0, inserted: staged ? profiles.length : 0, updated: 0, staged: staged ? profiles.length : 0, unchanged: 0, rejected: errors.length, duplicates: 0, unresolved: 0, truncated: 0 };
+      const metrics = { totalInputRows: 1, written: persisted ? profiles.length : 0, inserted: persisted ? profiles.length : 0, updated: 0, staged: persisted ? profiles.length : 0, unchanged: 0, rejected: errors.length, duplicates: 0, unresolved: 0, truncated: 0 };
       Object.entries(metrics).forEach(([name, value]) => { $(name).textContent = String(value); });
       $('scopeBlock').classList.add('hidden'); $('issuesBody').innerHTML = '';
       $('issuesCard').classList.toggle('hidden', errors.length === 0);
@@ -299,6 +302,11 @@
         headers[sheetName] = (matrix[0] || []).map((header) => String(header ?? '').normalize('NFC').trim()).filter(Boolean);
         sheets[sheetName] = window.XLSX.utils.sheet_to_json(sheet, { defval: '', raw: false }).map((row) => Object.fromEntries(Object.entries(row).map(([header, value]) => [String(header).normalize('NFC').trim(), value])));
       });
+      const manifest = sheets.MANIFEST?.[0] || {};
+      if (clean(manifest.package_schema_version) !== 'FORMAT_CATALOGUE_V4_ACTIVE_LOOKUP'
+          || clean(manifest.requested_action).toUpperCase() !== 'IMPORT_AND_ACTIVATE') {
+        throw new Error('Use a FORMAT_CATALOGUE_V4_ACTIVE_LOOKUP workbook with MANIFEST.requested_action set to IMPORT_AND_ACTIVATE. This standalone screen cannot upload V2, V3, or validation-only packages.');
+      }
       return { sheets, headers };
     }
 
@@ -321,12 +329,14 @@
       try {
         let webhookUrl = IMPORT_WEBHOOK_URL;
         if (formatCatalogue) {
+          submit.textContent = 'Validating and activating Format Catalogue…';
           const cataloguePayload = await catalogueWorkbookPayload(file);
-          data.append('requestedAction', $('requestedAction').value);
+          data.append('requestedAction', 'IMPORT_AND_ACTIVATE');
           data.append('uploadedBy', clean($('uploadedBy').value));
           data.append('sourceFileSha256', await sha256Prefix(file));
           data.append('cataloguePayload', JSON.stringify(cataloguePayload));
           data.append('packageIdHint', String(cataloguePayload.sheets.MANIFEST?.[0]?.package_id ?? '').trim());
+          data.append('portalSource', 'mytst-standalone-format-catalogue-uploader');
           webhookUrl = FORMAT_CATALOGUE_WEBHOOK_URL;
         } else {
           const fields = {
@@ -352,10 +362,10 @@
       } catch (error) {
         showError({ error: formatCatalogue ? 'Could not reach the Format Catalogue webhook.' : 'Could not reach the import webhook.', details: String(error) });
       } finally {
-        submit.disabled = false; submit.textContent = formatCatalogue ? 'Validate Format Catalogue' : 'Validate and import';
+        submit.disabled = false; submit.textContent = formatCatalogue ? 'Import and activate Format Catalogue' : 'Validate and import';
       }
     });
   })();
   </script>
-<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a4ef0e0b18dd564c',t:'MTc5Mjc0MDgxOQ=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a4f1adb93ee98800',t:'MTc5Mjc2ODMzMQ=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
