@@ -135,7 +135,7 @@
   (() => {
     // The format webhook is deliberately separate from the Question Bank/Blueprint webhook.
     const IMPORT_WEBHOOK_URL = 'https://n8n.mytst.cloud/webhook/mytst-import';
-    const FORMAT_CATALOGUE_WEBHOOK_URL = 'https://n8n.mytst.cloud/webhook/mytst-format-catalogue-validate';
+    const FORMAT_CATALOGUE_WEBHOOK_URL = 'https://n8n.mytst.cloud/webhook/mytst-format-catalogue-activate-nonprod';
     const $ = (id) => document.getElementById(id);
     const numeric = (value) => Number(value ?? 0) || 0;
     const clean = (value) => String(value ?? '').trim();
