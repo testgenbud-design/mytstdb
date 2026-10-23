@@ -35,35 +35,43 @@
         <div class="tabs" aria-label="Upload type">
           <button class="tab active" id="questionTab" type="button">Question bank</button>
           <button class="tab" id="blueprintTab" type="button">Blueprint</button>
+          <button class="tab" id="formatCatalogueTab" type="button">Format catalogue</button>
         </div>
 
         <div class="grid">
           <label class="wide">n8n shared secret
             <input id="secret" type="password" autocomplete="off" placeholder="Enter the configured private uploader secret" required>
           </label>
-          <label>Board
+          <label class="content-scope">Board
             <input id="board" value="CBSE" readonly aria-readonly="true">
             <small>The current importer writes CBSE only.</small>
           </label>
-          <label>Class
+          <label class="content-scope">Class
             <select id="classNumber" required></select>
             <small>Used to establish the Class scope for a blueprint or question bank.</small>
           </label>
-          <label>Subject display name
+          <label class="content-scope">Subject display name
             <input id="subject" placeholder="e.g. Mathematics" required>
             <small>Must agree exactly with the master subject display name.</small>
           </label>
-          <label>Subject code <span style="font-weight:500;color:var(--muted)">optional portal metadata</span>
+          <label class="content-scope">Subject code <span style="font-weight:500;color:var(--muted)">optional portal metadata</span>
             <input id="subjectCode" placeholder="e.g. 12-MAT">
             <small>The source file code takes priority; a supplied portal code is checked when needed.</small>
           </label>
-          <label>Academic year <span style="font-weight:500;color:var(--muted)">optional</span>
+          <label class="content-scope">Academic year <span style="font-weight:500;color:var(--muted)">optional</span>
             <input id="academicYear" value="2026" placeholder="2026 or 2026-27">
           </label>
           <label>Uploader name <span style="font-weight:500;color:var(--muted)">optional</span>
             <input id="uploadedBy" placeholder="Name for the audit record">
           </label>
-          <label class="wide">Question-bank or blueprint file
+          <label id="formatActionField" class="hidden">Format Catalogue action
+            <select id="requestedAction">
+              <option value="VALIDATE">Validate only</option>
+              <option value="STAGE_DRAFT">Validate and stage DRAFT</option>
+            </select>
+            <small>Profiles and bindings can only be staged as DRAFT / INACTIVE_DRAFT. This standalone uploader has no Activate action.</small>
+          </label>
+          <label class="wide" id="fileLabel">Question-bank or blueprint file
             <input id="file" type="file" accept=".csv,.xlsx,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" required>
             <small id="fileHint">Choose a UTF-8 CSV or genuine XLSX file, maximum 10 MB.</small>
           </label>
@@ -121,10 +129,13 @@
     </section>
   </main>
 
+  <!-- SheetJS is loaded only to serialize the multi-tab Format Catalogue workbook. All validation and database staging remain server-side in n8n/PostgreSQL. -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <script>
   (() => {
-    // Change only this constant when the deployed n8n webhook URL changes.
+    // The format webhook is deliberately separate from the Question Bank/Blueprint webhook.
     const IMPORT_WEBHOOK_URL = 'https://n8n.mytst.cloud/webhook/mytst-import';
+    const FORMAT_CATALOGUE_WEBHOOK_URL = 'https://n8n.mytst.cloud/webhook/mytst-format-catalogue-import';
     const $ = (id) => document.getElementById(id);
     const numeric = (value) => Number(value ?? 0) || 0;
     const clean = (value) => String(value ?? '').trim();
@@ -145,18 +156,32 @@
 
     function selectKind(kind) {
       const blueprint = kind === 'blueprint';
+      const formatCatalogue = kind === 'format_catalogue';
       $('uploadKind').value = kind;
-      $('questionTab').classList.toggle('active', !blueprint);
+      $('questionTab').classList.toggle('active', kind === 'question_bank');
       $('blueprintTab').classList.toggle('active', blueprint);
-      $('formatNotice').innerHTML = blueprint
-        ? '<span>✓</span><span><strong>Blueprint format:</strong> the file must supply <code>BLUEPRINT_ID</code>, <code>Subject_Code</code>, per-row <code>Chapter_Code</code>, and <code>Subtopic_ID</code>. Valid values establish or update the Class, Subject, and Chapter catalog.</span>'
-        : '<span>✓</span><span><strong>Question-bank format:</strong> direct <code>Subject_Code</code>, <code>Chapter_Code</code>, <code>Subtopic_ID</code>, <code>Quality_Score</code>, and inline MCQ options in the Question field are supported.</span>';
+      $('formatCatalogueTab').classList.toggle('active', formatCatalogue);
+      document.querySelectorAll('.content-scope').forEach((field) => field.classList.toggle('hidden', formatCatalogue));
+      $('classNumber').required = !formatCatalogue;
+      $('subject').required = !formatCatalogue;
+      $('formatActionField').classList.toggle('hidden', !formatCatalogue);
+      $('fileLabel').childNodes[0].textContent = formatCatalogue ? 'Master Format Catalogue workbook\n            ' : 'Question-bank or blueprint file\n            ';
+      $('file').accept = formatCatalogue ? '.xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' : '.csv,.xlsx,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+      $('fileHint').textContent = formatCatalogue ? 'Choose one genuine multi-tab .xlsx FORMAT_CATALOGUE_V2 workbook, maximum 10 MB.' : 'Choose a UTF-8 CSV or genuine XLSX file, maximum 10 MB.';
+      $('submitButton').textContent = formatCatalogue ? 'Validate Format Catalogue' : 'Validate and import';
+      $('formatNotice').innerHTML = formatCatalogue
+        ? '<span>✓</span><span><strong>Format Catalogue mode:</strong> uploads one multi-tab <code>FORMAT_CATALOGUE_V2</code> workbook to the dedicated format webhook. It only validates or stages <code>DRAFT</code> configuration and <code>INACTIVE_DRAFT</code> binding candidates; it never changes questions, Blueprints, or active paper generation.</span>'
+        : blueprint
+          ? '<span>✓</span><span><strong>Blueprint format:</strong> the file must supply <code>BLUEPRINT_ID</code>, <code>Subject_Code</code>, per-row <code>Chapter_Code</code>, and <code>Subtopic_ID</code>. Valid values establish or update the Class, Subject, and Chapter catalog.</span>'
+          : '<span>✓</span><span><strong>Question-bank format:</strong> direct <code>Subject_Code</code>, <code>Chapter_Code</code>, <code>Subtopic_ID</code>, <code>Quality_Score</code>, and inline MCQ options in the Question field are supported.</span>';
     }
     $('questionTab').addEventListener('click', () => selectKind('question_bank'));
     $('blueprintTab').addEventListener('click', () => selectKind('blueprint'));
+    $('formatCatalogueTab').addEventListener('click', () => selectKind('format_catalogue'));
     $('file').addEventListener('change', () => {
       const file = $('file').files[0];
-      $('fileHint').textContent = file ? `${file.name} · ${(file.size / 1024 / 1024).toFixed(2)} MB` : 'Choose a UTF-8 CSV or genuine XLSX file, maximum 10 MB.';
+      const catalogue = $('uploadKind').value === 'format_catalogue';
+      $('fileHint').textContent = file ? `${file.name} · ${(file.size / 1024 / 1024).toFixed(2)} MB` : catalogue ? 'Choose one genuine multi-tab .xlsx FORMAT_CATALOGUE_V2 workbook, maximum 10 MB.' : 'Choose a UTF-8 CSV or genuine XLSX file, maximum 10 MB.';
     });
 
     function showError(error) {
@@ -182,9 +207,39 @@
       if (value.includes('reject')) return 'rejected';
       return '';
     }
+    function showFormatCatalogueSummary(result) {
+      const validation = result.validation || {};
+      const errors = Array.isArray(validation.errors) ? validation.errors : [];
+      const warnings = Array.isArray(validation.warnings) ? validation.warnings : [];
+      const profiles = Array.isArray(result.compiledProfiles) ? result.compiledProfiles : [];
+      const staged = result.outcome === 'STAGED_DRAFT';
+      $('errorCard').classList.add('hidden'); $('summaryCard').classList.remove('hidden');
+      $('summaryTitle').textContent = `Format Catalogue ${result.outcome || 'result'} · ${result.packageId || 'package'}`;
+      $('summaryDescription').textContent = errors.length
+        ? 'The workbook was not staged. Correct every listed tab, row, column, and validation reason.'
+        : staged
+          ? 'The validated workbook was staged as DRAFT configuration only. No active profile or binding was created.'
+          : 'Workbook validation completed. Copy each returned compiled fingerprint into its fixture row before a Stage DRAFT upload.';
+      $('summaryState').textContent = result.status || result.outcome || 'COMPLETED';
+      const metrics = { totalInputRows: 1, written: staged ? profiles.length : 0, inserted: staged ? profiles.length : 0, updated: 0, staged: staged ? profiles.length : 0, unchanged: 0, rejected: errors.length, duplicates: 0, unresolved: 0, truncated: 0 };
+      Object.entries(metrics).forEach(([name, value]) => { $(name).textContent = String(value); });
+      $('scopeBlock').classList.add('hidden'); $('issuesBody').innerHTML = '';
+      $('issuesCard').classList.toggle('hidden', errors.length === 0);
+      for (const issue of errors) {
+        const row = document.createElement('tr');
+        const values = [issue.row ?? '—', issue.entity_id || issue.sheet || '—', [issue.sheet, issue.column].filter(Boolean).join(' / ') || '—', 'REJECTED', [issue.code, issue.message].filter(Boolean).join(': ') || '—'];
+        values.forEach((value, index) => { const cell = document.createElement('td'); if (index === 3) { const badge = document.createElement('span'); badge.className = 'badge rejected'; badge.textContent = String(value); cell.appendChild(badge); } else { cell.textContent = String(value); if (index === 4) cell.className = 'reason'; } row.appendChild(cell); });
+        $('issuesBody').appendChild(row);
+      }
+      if (warnings.length && !errors.length) {
+        const row = document.createElement('tr'); const cell = document.createElement('td'); cell.colSpan = 5; cell.className = 'reason'; cell.textContent = `Warnings: ${warnings.map((warning) => [warning.code, warning.message].filter(Boolean).join(': ')).join(' | ')}`; row.appendChild(cell); $('issuesBody').appendChild(row); $('issuesCard').classList.remove('hidden');
+      }
+      window.scrollTo({ top: $('summaryCard').offsetTop - 18, behavior: 'smooth' });
+    }
     function showSummary(raw) {
       const result = raw?.result || raw || {};
       if (result.status === 'FAILED' || result.error) return showError(result);
+      if (result.packageId || result.requestedAction || result.compiledProfiles) return showFormatCatalogueSummary(result);
       $('errorCard').classList.add('hidden'); $('summaryCard').classList.remove('hidden');
       $('summaryTitle').textContent = result.status === 'COMPLETED' ? `Import completed · batch ${result.batchId}` : 'Import result';
       const baseDescription = numeric(result.rejected) || numeric(result.unresolved)
@@ -229,50 +284,78 @@
       window.scrollTo({ top: $('summaryCard').offsetTop - 18, behavior: 'smooth' });
     }
 
+    async function sha256Prefix(file) {
+      if (!window.crypto?.subtle) throw new Error('This browser cannot calculate the required SHA-256 workbook hash. Use a modern HTTPS browser.');
+      const digest = await window.crypto.subtle.digest('SHA-256', await file.arrayBuffer());
+      return `sha256:${Array.from(new Uint8Array(digest)).map((value) => value.toString(16).padStart(2, '0')).join('')}`;
+    }
+    async function catalogueWorkbookPayload(file) {
+      if (!window.XLSX) throw new Error('The workbook reader did not load. Check your network connection and retry, or use the secure /format-catalogue portal route.');
+      const workbook = window.XLSX.read(await file.arrayBuffer(), { type: 'array', cellDates: true });
+      const sheets = {}; const headers = {};
+      workbook.SheetNames.forEach((sheetName) => {
+        const sheet = workbook.Sheets[sheetName];
+        const matrix = window.XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '', raw: false });
+        headers[sheetName] = (matrix[0] || []).map((header) => String(header ?? '').normalize('NFC').trim()).filter(Boolean);
+        sheets[sheetName] = window.XLSX.utils.sheet_to_json(sheet, { defval: '', raw: false }).map((row) => Object.fromEntries(Object.entries(row).map(([header, value]) => [String(header).normalize('NFC').trim(), value])));
+      });
+      return { sheets, headers };
+    }
+
     $('uploadForm').addEventListener('submit', async (event) => {
       event.preventDefault();
       const file = $('file').files[0]; const secret = clean($('secret').value);
+      const kind = $('uploadKind').value; const formatCatalogue = kind === 'format_catalogue';
       const classNumber = clean($('classNumber').value); const subject = clean($('subject').value);
-      if (!secret || !file || !subject || !/^(?:[1-9]|1[0-2])$/.test(classNumber)) {
-        return showError({ error: 'Enter the shared secret, choose a valid Class 1–12, provide a subject display name, and select a file.' });
+      if (!secret || !file || (!formatCatalogue && (!subject || !/^(?:[1-9]|1[0-2])$/.test(classNumber)))) {
+        return showError({ error: formatCatalogue
+          ? 'Enter the shared secret and select the master .xlsx Format Catalogue workbook.'
+          : 'Enter the shared secret, choose a valid Class 1–12, provide a subject display name, and select a file.' });
       }
-      if (!/\.(csv|xlsx)$/i.test(file.name)) return showError({ error: 'Only .csv and .xlsx files are accepted.' });
+      if (formatCatalogue ? !/\.xlsx$/i.test(file.name) : !/\.(csv|xlsx)$/i.test(file.name)) return showError({ error: formatCatalogue ? 'Format Catalogue mode accepts one .xlsx workbook only.' : 'Only .csv and .xlsx files are accepted.' });
       if (file.size > 10 * 1024 * 1024) return showError({ error: 'The selected file exceeds the 10 MB limit.' });
       const data = new FormData();
       data.append('file', file);
       data.append('importSecret', secret);
-      const fields = {
-        uploadKind: $('uploadKind').value,
-        board: 'CBSE',
-        classNumber,
-        subject,
-        subjectCode: clean($('subjectCode').value),
-        academicYear: clean($('academicYear').value),
-        uploadedBy: clean($('uploadedBy').value),
-        schemaVersion: 'unified-question-v5',
-        blueprintId: '',
-        subpartOverride: ''
-      };
-      Object.entries(fields).forEach(([key, value]) => data.append(key, value));
-      const submit = $('submitButton'); submit.disabled = true; submit.textContent = 'Checking and importing…';
+      const submit = $('submitButton'); submit.disabled = true; submit.textContent = formatCatalogue ? 'Checking Format Catalogue…' : 'Checking and importing…';
       try {
+        let webhookUrl = IMPORT_WEBHOOK_URL;
+        if (formatCatalogue) {
+          const cataloguePayload = await catalogueWorkbookPayload(file);
+          data.append('requestedAction', $('requestedAction').value);
+          data.append('uploadedBy', clean($('uploadedBy').value));
+          data.append('sourceFileSha256', await sha256Prefix(file));
+          data.append('cataloguePayload', JSON.stringify(cataloguePayload));
+          data.append('packageIdHint', String(cataloguePayload.sheets.MANIFEST?.[0]?.package_id ?? '').trim());
+          webhookUrl = FORMAT_CATALOGUE_WEBHOOK_URL;
+        } else {
+          const fields = {
+            uploadKind: kind,
+            board: 'CBSE',
+            classNumber,
+            subject,
+            subjectCode: clean($('subjectCode').value),
+            academicYear: clean($('academicYear').value),
+            uploadedBy: clean($('uploadedBy').value),
+            schemaVersion: 'unified-question-v5',
+            blueprintId: '',
+            subpartOverride: ''
+          };
+          Object.entries(fields).forEach(([key, value]) => data.append(key, value));
+        }
         // Keep this cross-origin request header-free. importSecret is already included in FormData.
         // The deployed n8n CORS policy permits multipart Content-Type but not custom x-import-* headers.
-        const response = await fetch(IMPORT_WEBHOOK_URL, {
-          method: 'POST',
-          body: data
-        });
+        const response = await fetch(webhookUrl, { method: 'POST', body: data });
         const result = await response.json().catch(() => ({ error: `The server returned HTTP ${response.status} without a JSON report.` }));
         if (!response.ok) return showError(result);
         showSummary(result);
       } catch (error) {
-        showError({ error: 'Could not reach the import webhook.', details: String(error) });
+        showError({ error: formatCatalogue ? 'Could not reach the Format Catalogue webhook.' : 'Could not reach the import webhook.', details: String(error) });
       } finally {
-        submit.disabled = false; submit.textContent = 'Validate and import';
+        submit.disabled = false; submit.textContent = formatCatalogue ? 'Validate Format Catalogue' : 'Validate and import';
       }
     });
   })();
   </script>
-<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a4c8d9edec328a7c',t:'MTc5MjM0MDIyNg=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a4ef0e0b18dd564c',t:'MTc5Mjc0MDgxOQ=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
-l>
