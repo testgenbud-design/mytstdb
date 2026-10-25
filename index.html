@@ -39,7 +39,7 @@
         </div>
 
         <div class="grid">
-          <label class="wide">n8n shared secret
+          <label class="wide" id="secretField">n8n shared secret
             <input id="secret" type="password" autocomplete="off" placeholder="Enter the configured private uploader secret" required>
           </label>
           <label class="content-scope">Board
@@ -163,16 +163,21 @@
       document.querySelectorAll('.content-scope').forEach((field) => field.classList.toggle('hidden', formatCatalogue));
       $('classNumber').required = !formatCatalogue;
       $('subject').required = !formatCatalogue;
+      // Explicit non-production operator decision: the V4 Format Catalogue
+      // webhook has no secret/IF authorization layer. Question/Blueprint uploads
+      // retain their existing secret requirement and workflow behavior.
+      $('secretField').classList.toggle('hidden', formatCatalogue);
+      $('secret').required = !formatCatalogue;
       $('formatActionField').classList.toggle('hidden', !formatCatalogue);
       $('fileLabel').childNodes[0].textContent = formatCatalogue ? 'Master Format Catalogue workbook\n            ' : 'Question-bank or blueprint file\n            ';
       $('file').accept = formatCatalogue ? '.xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' : '.csv,.xlsx,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
       $('fileHint').textContent = formatCatalogue ? 'Choose one genuine multi-tab .xlsx FORMAT_CATALOGUE_V4_ACTIVE_LOOKUP workbook, maximum 10 MB.' : 'Choose a UTF-8 CSV or genuine XLSX file, maximum 10 MB.';
       $('submitButton').textContent = formatCatalogue ? 'Import and activate Format Catalogue' : 'Validate and import';
       $('formatNotice').innerHTML = formatCatalogue
-        ? '<span>✓</span><span><strong>Non-production active Format Catalogue mode:</strong> uploads one <code>FORMAT_CATALOGUE_V4_ACTIVE_LOOKUP</code> workbook for <code>IMPORT_AND_ACTIVATE</code>. The importer validates and compiles before its atomic database write; a matching old active format is retired only if the replacement activates successfully. It never imports questions or edits Blueprint content.</span>'
+        ? '<span>✓</span><span><strong>Non-production active Format Catalogue mode:</strong> uploads one <code>FORMAT_CATALOGUE_V4_ACTIVE_LOOKUP</code> workbook for <code>IMPORT_AND_ACTIVATE</code>. The importer validates and compiles before its atomic database write; a matching old active format is retired only if the replacement activates successfully. It never imports questions or edits Blueprint content. This V4 non-production endpoint has no workflow shared-secret check by explicit operator decision; do not expose its URL outside trusted non-production access.</span>'
         : blueprint
-          ? '<span>✓</span><span><strong>Blueprint format:</strong> the file must supply <code>BLUEPRINT_ID</code>, <code>Subject_Code</code>, per-row <code>Chapter_Code</code>, and <code>Subtopic_ID</code>. Valid values establish or update the Class, Subject, and Chapter catalog.</span>'
-          : '<span>✓</span><span><strong>Question-bank format:</strong> direct <code>Subject_Code</code>, <code>Chapter_Code</code>, <code>Subtopic_ID</code>, <code>Quality_Score</code>, and inline MCQ options in the Question field are supported.</span>';
+          ? '<span>✓</span><span><strong>Blueprint format:</strong> the file must supply <code>BLUEPRINT_ID</code>, <code>Subject_Code</code>, per-row <code>Chapter_Code</code>, and <code>Subtopic_ID</code>. <code>Cognitive_Typology</code> accepts <code>UND</code>, <code>APPL</code>, <code>ANL</code>, or <code>CRE</code>. Optional <code>Practical_Skill</code> accepts a descriptive skill such as <code>Titration</code>; legacy Yes/No remains valid.</span>'
+          : '<span>✓</span><span><strong>Question-bank format:</strong> direct <code>Subject_Code</code>, <code>Chapter_Code</code>, <code>Subtopic_ID</code>, <code>Quality_Score</code>, and inline MCQ options in the Question field are supported. <code>Cognitive Level</code> accepts <code>UND</code>, <code>APPL</code>, <code>ANL</code>, or <code>CRE</code>; optional <code>Practical Skill</code> accepts a descriptive skill such as <code>Titration</code>.</span>';
     }
     $('questionTab').addEventListener('click', () => selectKind('question_bank'));
     $('blueprintTab').addEventListener('click', () => selectKind('blueprint'));
@@ -219,7 +224,9 @@
       $('summaryDescription').textContent = errors.length
         ? 'The workbook was not written. Correct every listed tab, row, column, and validation reason.'
         : activated
-          ? 'The format was atomically written and activated in non-production. Any earlier active format with the same lookup key was retired only as part of this successful transaction.'
+          ? result.reason === 'ALREADY_ACTIVATED_SAME_PACKAGE_AND_SOURCE'
+            ? 'This exact package and source file are already active. No second database write or replacement was performed.'
+            : 'The format was atomically written and activated in non-production. Any earlier active format with the same lookup key was retired only as part of this successful transaction.'
           : staged
             ? 'The validated workbook was staged as DRAFT configuration only. No active profile or binding was created.'
             : 'Workbook validation completed.';
@@ -315,16 +322,16 @@
       const file = $('file').files[0]; const secret = clean($('secret').value);
       const kind = $('uploadKind').value; const formatCatalogue = kind === 'format_catalogue';
       const classNumber = clean($('classNumber').value); const subject = clean($('subject').value);
-      if (!secret || !file || (!formatCatalogue && (!subject || !/^(?:[1-9]|1[0-2])$/.test(classNumber)))) {
+      if (!file || (!formatCatalogue && (!secret || !subject || !/^(?:[1-9]|1[0-2])$/.test(classNumber)))) {
         return showError({ error: formatCatalogue
-          ? 'Enter the shared secret and select the master .xlsx Format Catalogue workbook.'
+          ? 'Select the reviewed V4 .xlsx Format Catalogue workbook.'
           : 'Enter the shared secret, choose a valid Class 1–12, provide a subject display name, and select a file.' });
       }
       if (formatCatalogue ? !/\.xlsx$/i.test(file.name) : !/\.(csv|xlsx)$/i.test(file.name)) return showError({ error: formatCatalogue ? 'Format Catalogue mode accepts one .xlsx workbook only.' : 'Only .csv and .xlsx files are accepted.' });
       if (file.size > 10 * 1024 * 1024) return showError({ error: 'The selected file exceeds the 10 MB limit.' });
       const data = new FormData();
       data.append('file', file);
-      data.append('importSecret', secret);
+      if (!formatCatalogue) data.append('importSecret', secret);
       const submit = $('submitButton'); submit.disabled = true; submit.textContent = formatCatalogue ? 'Checking Format Catalogue…' : 'Checking and importing…';
       try {
         let webhookUrl = IMPORT_WEBHOOK_URL;
@@ -367,5 +374,5 @@
     });
   })();
   </script>
-<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a4f1adb93ee98800',t:'MTc5Mjc2ODMzMQ=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a4ff94053e1f5790',t:'MTc5MjkxNDA3OQ=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
