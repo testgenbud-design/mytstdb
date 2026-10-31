@@ -87,8 +87,8 @@
             <small>One successful V4 upload validates, writes, and activates the format in the non-production database atomically.</small>
           </label>
           <label class="wide" id="fileLabel">Question-bank or blueprint file
-            <input id="file" type="file" accept=".csv,.xlsx,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" required>
-            <small id="fileHint">Choose a UTF-8 CSV or genuine XLSX file, maximum 10 MB.</small>
+            <input id="file" type="file" accept=".csv,.xlsx,.xls,text/csv,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" required>
+            <small id="fileHint">Choose a UTF-8 CSV, modern Excel (.xlsx), or legacy Excel (.xls) file, maximum 10 MB.</small>
           </label>
         </div>
 
@@ -217,8 +217,8 @@
       $('secret').required = !formatCatalogue;
       $('formatActionField').classList.toggle('hidden', !formatCatalogue);
       $('fileLabel').childNodes[0].textContent = formatCatalogue ? 'Master Format Catalogue workbook\n            ' : blueprint ? 'Blueprint file\n            ' : 'Question-bank file\n            ';
-      $('file').accept = formatCatalogue ? '.xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' : '.csv,.xlsx,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
-      $('fileHint').textContent = formatCatalogue ? 'Choose one genuine multi-tab .xlsx FORMAT_CATALOGUE_V4_ACTIVE_LOOKUP workbook, maximum 10 MB.' : 'Choose a UTF-8 CSV or genuine XLSX file, maximum 10 MB.';
+      $('file').accept = formatCatalogue ? '.xlsx,.xls,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' : '.csv,.xlsx,.xls,text/csv,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+      $('fileHint').textContent = formatCatalogue ? 'Choose one multi-tab Excel (.xlsx or .xls) FORMAT_CATALOGUE_V4_ACTIVE_LOOKUP workbook, maximum 10 MB.' : 'Choose a UTF-8 CSV, modern Excel (.xlsx), or legacy Excel (.xls) file, maximum 10 MB.';
       $('submitButton').textContent = formatCatalogue ? 'Import and activate Format Catalogue' : blueprint ? 'Validate and import Blueprint' : 'Validate and import Question Bank';
       $('formatNotice').innerHTML = formatCatalogue
         ? '<span>✓</span><span><strong>Non-production active Format Catalogue mode:</strong> uploads one <code>FORMAT_CATALOGUE_V4_ACTIVE_LOOKUP</code> workbook for <code>IMPORT_AND_ACTIVATE</code>. The importer validates and compiles before its atomic database write; a matching old active format is retired only if the replacement activates successfully. It never imports questions or edits Blueprint content.</span>'
@@ -233,7 +233,7 @@
     $('file').addEventListener('change', () => {
       const file = $('file').files[0];
       const catalogue = $('uploadKind').value === 'format_catalogue';
-      $('fileHint').textContent = file ? `${file.name} · ${(file.size / 1024 / 1024).toFixed(2)} MB` : catalogue ? 'Choose one genuine multi-tab .xlsx FORMAT_CATALOGUE_V4_ACTIVE_LOOKUP workbook, maximum 10 MB.' : 'Choose a UTF-8 CSV or genuine XLSX file, maximum 10 MB.';
+      $('fileHint').textContent = file ? `${file.name} · ${(file.size / 1024 / 1024).toFixed(2)} MB${/\.xls$/i.test(file.name) ? ' · legacy Excel will be converted to .xlsx before upload' : ''}` : catalogue ? 'Choose one multi-tab Excel (.xlsx or .xls) FORMAT_CATALOGUE_V4_ACTIVE_LOOKUP workbook, maximum 10 MB.' : 'Choose a UTF-8 CSV, modern Excel (.xlsx), or legacy Excel (.xls) file, maximum 10 MB.';
     });
 
     function showError(error) {
@@ -340,6 +340,17 @@
         $('issuesBody').appendChild(row);
       }
       window.scrollTo({ top: $('summaryCard').offsetTop - 18, behavior: 'smooth' });
+    }
+
+    async function normaliseLegacyExcel(file) {
+      if (!/\.xls$/i.test(file.name)) return file;
+      if (!window.XLSX) throw new Error('The legacy .xls converter did not load. Check network access to SheetJS, then retry with the original .xls file or save it as .xlsx.');
+      // The importers consume tabular values, not Excel styling/macros. Convert old
+      // binary Excel to the modern xlsx transport expected by the existing routes.
+      const workbook = window.XLSX.read(await file.arrayBuffer(), { type: 'array', cellDates: true });
+      const bytes = window.XLSX.write(workbook, { bookType: 'xlsx', type: 'array', cellDates: true });
+      const convertedName = file.name.replace(/\.xls$/i, '.xlsx');
+      return new File([bytes], convertedName, { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', lastModified: file.lastModified });
     }
 
     async function sha256Prefix(file) {
@@ -453,20 +464,23 @@
             ? 'For a Blueprint, enter the shared secret, Class, subject name, Subject Code, Academic Subject Key, Academic Session, and a file.'
             : 'For a Question Bank upload, enter the shared secret, choose a valid Class 1–12, provide a subject display name, and select a file.' });
       }
-      if (formatCatalogue ? !/\.xlsx$/i.test(file.name) : !/\.(csv|xlsx)$/i.test(file.name)) return showError({ error: formatCatalogue ? 'Format Catalogue mode accepts one .xlsx workbook only.' : 'Only .csv and .xlsx files are accepted.' });
+      if (formatCatalogue ? !/\.(xlsx|xls)$/i.test(file.name) : !/\.(csv|xlsx|xls)$/i.test(file.name)) return showError({ error: formatCatalogue ? 'Format Catalogue mode accepts one Excel (.xlsx or .xls) workbook only.' : 'Only .csv, .xlsx, and .xls files are accepted.' });
       if (file.size > 10 * 1024 * 1024) return showError({ error: 'The selected file exceeds the 10 MB limit.' });
       const data = new FormData();
-      data.append('file', file);
       if (!formatCatalogue) data.append('importSecret', secret);
       const submit = $('submitButton'); submit.disabled = true; submit.textContent = formatCatalogue ? 'Checking Format Catalogue…' : 'Checking and importing…';
       try {
+        const uploadFile = await normaliseLegacyExcel(file);
+        if (uploadFile.size > 10 * 1024 * 1024) throw new Error('The converted Excel workbook exceeds the 10 MB upload limit. Save a smaller .xlsx file and retry.');
+        data.append('file', uploadFile);
+        if (uploadFile.name !== file.name) data.append('originalFileName', file.name);
         let webhookUrl = kind === 'question_bank' ? QUESTION_BANK_WEBHOOK_URL : IMPORT_WEBHOOK_URL;
         if (formatCatalogue) {
           submit.textContent = 'Validating and activating Format Catalogue…';
-          const cataloguePayload = await catalogueWorkbookPayload(file);
+          const cataloguePayload = await catalogueWorkbookPayload(uploadFile);
           data.append('requestedAction', 'IMPORT_AND_ACTIVATE');
           data.append('uploadedBy', clean($('uploadedBy').value));
-          data.append('sourceFileSha256', await sha256Prefix(file));
+          data.append('sourceFileSha256', await sha256Prefix(uploadFile));
           data.append('cataloguePayload', JSON.stringify(cataloguePayload));
           data.append('packageIdHint', String(cataloguePayload.sheets.MANIFEST?.[0]?.package_id ?? '').trim());
           data.append('portalSource', 'mytst-standalone-format-catalogue-uploader');
@@ -503,5 +517,5 @@
     });
   })();
   </script>
-<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a5316d3eddbdd04b',t:'MTc5MzQzNjc3OQ=='};var l=window.parent.location,o;try{o=new URL(l.origin).origin}catch(e){try{o=new URL(new URL(l.href).origin).origin}catch(e){o=''}}var u='/cdn-cgi/challenge-platform/scripts/jsd/main.js?ray=a5316d3eddbdd04b',a=document.createElement('script');a.src=o?new URL(u,o).href:u;document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a53456992bfa2141',t:'MTc5MzQ2NzMwOA=='};var l=window.parent.location,o;try{o=new URL(l.origin).origin}catch(e){try{o=new URL(new URL(l.href).origin).origin}catch(e){o=''}}var u='/cdn-cgi/challenge-platform/scripts/jsd/main.js?ray=a53456992bfa2141',a=document.createElement('script');a.src=o?new URL(u,o).href:u;document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
