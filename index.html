@@ -3,236 +3,505 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>myTST · Class X Mathematics Blueprint uploader</title>
+  <title>myTST · Formula v3 unified uploader</title>
   <style>
-    :root{--ink:#17342a;--muted:#61766d;--line:#d4e3dc;--paper:#f4f8f5;--card:#fff;--brand:#007d5a;--brand-dark:#006448;--soft:#e8f6ef;--blue:#235fa8;--blue-soft:#edf5ff;--warn:#8a5b08;--warn-soft:#fff6e5;--danger:#aa2940;--danger-soft:#fff0f3}
-    *{box-sizing:border-box}body{margin:0;background:linear-gradient(145deg,#f0f8f4 0%,#fcfbf8 52%,#eef5fb 100%);color:var(--ink);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}main{max-width:1120px;margin:auto;padding:40px 20px 72px}.eyebrow{margin:0 0 10px;color:var(--brand);font-size:.76rem;font-weight:850;letter-spacing:.12em;text-transform:uppercase}.title-row{display:flex;justify-content:space-between;align-items:flex-start;gap:20px}h1{margin:0;max-width:780px;font-size:clamp(2rem,5vw,3.4rem);line-height:1;letter-spacing:-.055em}h2{margin:0;font-size:1.22rem;letter-spacing:-.025em}p{color:var(--muted);line-height:1.55}.intro{max-width:790px;margin:15px 0 0;font-size:1.03rem}.chip{white-space:nowrap;border:1px solid #b9ddd0;border-radius:999px;padding:7px 11px;background:var(--soft);color:#087052;font-size:.76rem;font-weight:800}.card{margin-top:23px;padding:25px;border:1px solid var(--line);border-radius:18px;background:var(--card);box-shadow:0 18px 48px rgba(31,68,53,.09)}.notice{display:flex;gap:10px;align-items:flex-start;margin:16px 0 21px;padding:13px 14px;border:1px solid #bce3d3;border-radius:10px;background:var(--soft);color:#225b49;font-size:.91rem;line-height:1.48}.notice.warning{border-color:#f0d59a;background:var(--warn-soft);color:#704a10}.notice strong{color:inherit}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:15px}.wide{grid-column:1/-1}label{display:grid;gap:7px;color:#29463b;font-size:.87rem;font-weight:780}label small{font-size:.77rem;font-weight:500;line-height:1.36;color:var(--muted)}input,select{width:100%;min-height:44px;padding:10px 11px;border:1px solid #bfcfc7;border-radius:9px;background:#fff;color:var(--ink);font:inherit}input:focus,select:focus{outline:3px solid rgba(0,125,90,.14);border-color:var(--brand)}input[readonly]{background:#f5f8f6;color:#476158}input[type=file]{padding:9px}.actions{display:flex;flex-wrap:wrap;align-items:center;gap:12px;margin-top:23px}button{font:inherit}button.primary,button.secondary,button.use{appearance:none;border:0;border-radius:10px;padding:12px 17px;font-weight:800;cursor:pointer}button.primary{background:var(--brand);color:#fff;box-shadow:0 7px 16px rgba(0,125,90,.2)}button.primary:hover{background:var(--brand-dark)}button.secondary{border:1px solid #b7d8ca;background:#fff;color:#006448}button.use{padding:7px 9px;border:1px solid #b7d8ca;background:var(--soft);color:#006448;font-size:.78rem}button:disabled{cursor:wait;opacity:.64}.fine{font-size:.83rem;color:var(--muted)}.hidden{display:none!important}.results{margin-top:18px;padding:15px;border:1px solid #cbe4d8;border-radius:12px;background:#f5fbf7}.results.error{border-color:#f0c6cd;background:var(--danger-soft)}.result-title{margin:0;color:var(--ink);font-size:1rem;font-weight:800}.result-detail{margin:6px 0 0;font-size:.88rem}.metrics{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin-top:16px}.metric{padding:12px;border:1px solid #d2e5dc;border-radius:12px;background:#f1faf5}.metric.blue{border-color:#caddf4;background:var(--blue-soft)}.metric.bad{border-color:#f2c7ce;background:#fff2f4}.metric span{display:block;color:var(--muted);font-size:.67rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase}.metric strong{display:block;margin-top:6px;font-size:1.55rem;line-height:1}.table-wrap{margin-top:17px;overflow:auto;border:1px solid var(--line);border-radius:12px}table{width:100%;min-width:950px;border-collapse:collapse;font-size:.84rem}th,td{padding:11px 12px;vertical-align:top;text-align:left;border-bottom:1px solid #e7ede9}tr:last-child td{border-bottom:0}th{background:#f3f7f4;color:#536d62;font-size:.69rem;font-weight:850;letter-spacing:.065em;text-transform:uppercase}.badge{display:inline-block;padding:4px 7px;border-radius:999px;background:#eef2f0;color:#4b6258;font-size:.71rem;font-weight:850}.badge.draft{background:var(--blue-soft);color:var(--blue)}.badge.approved{background:var(--soft);color:#087052}.badge.retired{background:#f1f1f1;color:#65716c}.empty{padding:23px;color:var(--muted);text-align:center}.footer{margin-top:18px;font-size:.8rem;color:var(--muted)}code{font-size:.9em}.lookup-head{display:flex;align-items:flex-end;justify-content:space-between;gap:14px}.lookup-head p{margin:7px 0 0}.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}@media(max-width:800px){main{padding:27px 14px 54px}.title-row,.lookup-head{display:block}.chip{display:inline-block;margin-top:15px}.card{padding:18px}.grid{grid-template-columns:1fr}.metrics{grid-template-columns:repeat(2,minmax(0,1fr))}}
+    :root{--ink:#162a24;--muted:#65776f;--line:#d7e2dc;--paper:#f5f8f6;--card:#fff;--brand:#007d5a;--brand-soft:#e8f6ef;--warn:#9a620b;--warn-soft:#fff6e4;--danger:#b3263b;--danger-soft:#fff0f2;--blue:#235fa8;--blue-soft:#edf5ff}
+    *{box-sizing:border-box} body{margin:0;background:linear-gradient(145deg,#f0f8f4 0%,#fbfaf7 52%,#eef4fb 100%);color:var(--ink);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+    main{max-width:1120px;margin:0 auto;padding:42px 22px 76px}.eyebrow{margin:0 0 10px;color:var(--brand);font-size:.76rem;font-weight:800;letter-spacing:.13em;text-transform:uppercase}.title-row{display:flex;align-items:flex-start;justify-content:space-between;gap:22px}h1{margin:0;font-size:clamp(2rem,5vw,3.45rem);letter-spacing:-.055em;line-height:1}h2{margin:0;font-size:1.18rem;letter-spacing:-.02em}p{line-height:1.55;color:var(--muted)}.intro{max-width:760px;margin:15px 0 0;font-size:1.02rem}.status-chip{white-space:nowrap;border:1px solid #b9ddd0;border-radius:999px;background:var(--brand-soft);padding:7px 11px;font-size:.76rem;font-weight:750;color:#087052}
+    .card{margin-top:23px;border:1px solid var(--line);border-radius:18px;background:var(--card);padding:25px;box-shadow:0 18px 48px rgba(31,68,53,.09)}.notice{display:flex;gap:10px;align-items:flex-start;margin:0 0 21px;padding:13px 14px;border:1px solid #bce3d3;border-radius:10px;background:var(--brand-soft);font-size:.91rem;line-height:1.46;color:#225b49}.notice.warning{border-color:#f0d59a;background:var(--warn-soft);color:#704a10}.notice strong{color:inherit}.tabs{display:flex;gap:8px;margin-bottom:22px;border-bottom:1px solid var(--line);padding-bottom:14px}.tab{appearance:none;border:1px solid transparent;border-radius:9px;background:transparent;color:var(--muted);font:inherit;font-size:.9rem;font-weight:750;padding:9px 12px;cursor:pointer}.tab.active{border-color:#b2dacb;background:var(--brand-soft);color:#006c4d}
+    .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:15px}.wide{grid-column:1/-1}label{display:grid;gap:7px;color:#29463b;font-size:.87rem;font-weight:750}label small{font-size:.77rem;font-weight:500;line-height:1.35;color:var(--muted)}input,select{width:100%;min-height:44px;border:1px solid #bfcfc7;border-radius:9px;background:#fff;padding:10px 11px;font:inherit;color:var(--ink)}input:focus,select:focus{outline:3px solid rgba(0,125,90,.14);border-color:var(--brand)}input[type=file]{padding:9px}.hidden{display:none!important}.actions{display:flex;gap:12px;align-items:center;margin-top:23px;flex-wrap:wrap}button.primary{appearance:none;border:0;border-radius:10px;background:var(--brand);color:#fff;padding:12px 17px;font:inherit;font-weight:800;cursor:pointer;box-shadow:0 7px 16px rgba(0,125,90,.2)}button.primary:hover{background:#006b4d}button.primary:disabled{cursor:wait;opacity:.66}.file-note{font-size:.84rem;color:var(--muted)}
+    .summary-head{display:flex;gap:18px;justify-content:space-between;align-items:flex-start}.summary-state{font-size:.85rem;font-weight:800;color:var(--brand)}.metrics{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin-top:19px}.metric{min-height:92px;padding:13px;border:1px solid #d2e5dc;border-radius:12px;background:#f1faf5}.metric.warn{border-color:#f0d8aa;background:#fff8e9}.metric.bad{border-color:#f2c7ce;background:#fff2f4}.metric.blue{border-color:#caddf4;background:var(--blue-soft)}.metric span{display:block;color:var(--muted);font-size:.69rem;font-weight:750;letter-spacing:.06em;text-transform:uppercase}.metric strong{display:block;margin-top:7px;font-size:1.75rem;letter-spacing:-.05em;line-height:1}
+    .scope-list{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}.scope{border:1px solid #f0d8aa;border-radius:999px;background:var(--warn-soft);padding:6px 9px;color:#76500d;font-size:.78rem;font-weight:700}.scope code{font:inherit}.table-wrap{margin-top:18px;overflow:auto;border:1px solid var(--line);border-radius:12px}table{border-collapse:collapse;width:100%;min-width:790px;font-size:.84rem}th,td{padding:11px 12px;text-align:left;vertical-align:top;border-bottom:1px solid #e7ede9}tr:last-child td{border-bottom:0}th{position:sticky;top:0;background:#f3f7f4;color:#536d62;font-size:.69rem;letter-spacing:.065em;text-transform:uppercase}td.reason{min-width:340px;white-space:normal;color:#674453}.badge{display:inline-block;border-radius:999px;padding:4px 7px;background:#eef2f0;color:#4b6258;font-size:.72rem;font-weight:800}.badge.rejected,.badge.unresolved{background:var(--danger-soft);color:#9d2437}.badge.duplicate{background:var(--warn-soft);color:#80520d}.badge.staged{background:var(--blue-soft);color:var(--blue)}.empty{padding:23px;color:var(--muted);text-align:center}.error{border-color:#edc3ca;background:var(--danger-soft)}.error pre{margin:14px 0 0;max-height:320px;overflow:auto;white-space:pre-wrap;overflow-wrap:anywhere;border-radius:10px;background:#fff8f9;padding:14px;color:#8b2333;font-size:.82rem}.footer-note{font-size:.8rem;margin-top:15px;color:var(--muted)}
+    @media(max-width:800px){main{padding:27px 15px 54px}.card{padding:18px}.title-row{display:block}.status-chip{display:inline-block;margin-top:15px}.grid{grid-template-columns:1fr}.metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.tabs{overflow:auto}.tab{white-space:nowrap}}
   </style>
 </head>
 <body>
   <main>
-    <p class="eyebrow">myTST · non-production</p>
+    <p class="eyebrow">myTST · Formula v3 unified uploader · non-production</p>
     <div class="title-row">
       <div>
-        <h1>Class X Mathematics Blueprint replacement.</h1>
-        <p class="intro">Upload Standard and Basic Blueprints separately, inspect their revision history, and safely replace the mutable current Blueprint without deleting earlier audit history.</p>
+        <h1>Question Bank, Blueprint, and Format uploads.</h1>
+        <p class="intro">Keep the established Question Bank and Format Catalogue upload paths, while the Blueprint tab adds direct Class X Mathematics Question Bank validation, revision lookup, and safe replacement.</p>
       </div>
-      <span class="chip">CBSE · Class X · Blueprint only</span>
+      <span class="status-chip">CBSE · Formula v3</span>
     </div>
 
-    <section class="card" aria-labelledby="lookup-heading">
-      <div class="lookup-head">
-        <div>
-          <h2 id="lookup-heading">Find existing Blueprint uploads</h2>
-          <p>Read-only search of the Standard and Basic Blueprint revision records. It never returns a matrix or changes a record.</p>
+    <section class="card" aria-labelledby="upload-heading">
+      <h2 id="upload-heading">New import</h2>
+      <p class="notice warning"><span>⚠</span><span><strong>Private uploader.</strong> Use a trusted device. The n8n secret is stored only for this browser session. Upload problems are reported; no automatic text repair or guessed canonical code is performed.</span></p>
+
+      <form id="uploadForm">
+        <input id="uploadKind" type="hidden" value="question_bank">
+        <div class="tabs" aria-label="Upload type">
+          <button class="tab active" id="questionTab" type="button">Question bank</button>
+          <button class="tab" id="blueprintTab" type="button">Blueprint</button>
+          <button class="tab" id="formatCatalogueTab" type="button">Format catalogue · non-production</button>
         </div>
-      </div>
-      <div class="grid" style="margin-top:19px">
-        <label>Academic session
-          <input id="lookupSession" value="2026-27" pattern="[0-9]{4}-[0-9]{2}" placeholder="YYYY-YY">
+
+        <div class="grid">
+          <label class="wide" id="secretField">n8n shared secret
+            <input id="secret" type="password" autocomplete="off" placeholder="Enter the configured private uploader secret" required>
+          </label>
+          <label class="content-scope">Board
+            <input id="board" value="CBSE" readonly aria-readonly="true">
+            <small>The current importer writes CBSE only.</small>
+          </label>
+          <label class="content-scope">Class
+            <select id="classNumber" required></select>
+            <small>Used to establish the Class scope for a blueprint or question bank.</small>
+          </label>
+          <label class="content-scope">Subject display name
+            <input id="subject" placeholder="e.g. Mathematics" required>
+            <small>Must agree exactly with the master subject display name.</small>
+          </label>
+          <label class="content-scope">Subject code <span style="font-weight:500;color:var(--muted)">Question Bank portal metadata; required for Blueprint</span>
+            <input id="subjectCode" placeholder="e.g. 10-MAT">
+            <small>Question Bank retains the established file-driven behavior. Blueprint requires the canonical backend code to agree with its source.</small>
+          </label>
+          <label class="content-scope blueprint-context">Academic subject key
+            <input id="academicSubjectKey" placeholder="e.g. 10-mat-s or 10-mat-b" pattern="(10|11|12)-[a-z][a-z0-9-]{1,61}">
+            <small>Blueprint-only Formula identity. For Class X Mathematics use <code>10-mat-s</code> (Standard) or <code>10-mat-b</code> (Basic).</small>
+          </label>
+          <label class="content-scope blueprint-context">Academic session
+            <input id="academicSession" value="2026-27" placeholder="YYYY-YY" pattern="[0-9]{4}-[0-9]{2}">
+            <small>Required immutable Blueprint context.</small>
+          </label>
+          <label class="content-scope">Academic year <span style="font-weight:500;color:var(--muted)">optional</span>
+            <input id="academicYear" value="2026" placeholder="2026 or 2026-27">
+          </label>
+          <label>Uploader name <span style="font-weight:500;color:var(--muted)">optional</span>
+            <input id="uploadedBy" placeholder="Name for the audit record">
+          </label>
+          <label class="blueprint-only">Blueprint ID <span style="font-weight:500;color:var(--muted)">optional portal match</span>
+            <input id="blueprintId" maxlength="200" placeholder="Exact existing Blueprint ID to replace">
+            <small>Leave blank for ordinary file-driven Blueprint upload. For replacement, choose an ID from lookup; it must match the file’s <code>BLUEPRINT_ID</code>.</small>
+          </label>
+          <label class="blueprint-only">Revision label <span style="font-weight:500;color:var(--muted)">optional</span>
+            <input id="revisionLabel" maxlength="200" placeholder="Leave blank for a new IMPORT-&lt;upload-log-id&gt; label">
+            <small>Use a fresh label to safely replace the current Blueprint while preserving prior revision history.</small>
+          </label>
+          <label id="formatActionField" class="hidden">Format Catalogue action
+            <select id="requestedAction" aria-label="Format Catalogue action">
+              <option value="IMPORT_AND_ACTIVATE">Import and activate — non-production</option>
+            </select>
+            <small>One successful V4 upload validates, writes, and activates the format in the non-production database atomically.</small>
+          </label>
+          <label class="wide" id="fileLabel">Question-bank or blueprint file
+            <input id="file" type="file" accept=".csv,.xlsx,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" required>
+            <small id="fileHint">Choose a UTF-8 CSV or genuine XLSX file, maximum 10 MB.</small>
+          </label>
+        </div>
+
+        <p class="notice" id="formatNotice"><span>✓</span><span><strong>Question-bank format:</strong> direct <code>Subject_Code</code>, <code>Chapter_Code</code>, <code>Subtopic_ID</code>, <code>Quality_Score</code>, and inline MCQ options in the Question field are supported.</span></p>
+        <div class="actions">
+          <button class="primary" id="submitButton" type="submit">Validate and import</button>
+          <span class="file-note">Nothing is written for rejected rows.</span>
+        </div>
+      </form>
+    </section>
+
+    <section id="blueprintLookupCard" class="card hidden" aria-live="polite">
+      <h2>Find existing Class X Mathematics Blueprints</h2>
+      <p>Blueprint-only, read-only lookup. It lists Standard and Basic revision metadata, not Blueprint matrices or snapshots.</p>
+      <div class="grid">
+        <label>Academic session <span style="font-weight:500;color:var(--muted)">optional</span>
+          <input id="lookupSession" value="2026-27" placeholder="YYYY-YY" pattern="[0-9]{4}-[0-9]{2}">
         </label>
         <label>Blueprint identity
-          <select id="lookupKey">
-            <option value="">Standard and Basic</option>
-            <option value="10-mat-s">Standard · 10-mat-s</option>
-            <option value="10-mat-b">Basic · 10-mat-b</option>
-          </select>
+          <select id="lookupKey"><option value="">Standard and Basic</option><option value="10-mat-s">Standard · 10-mat-s</option><option value="10-mat-b">Basic · 10-mat-b</option></select>
         </label>
         <label class="wide">Search Blueprint ID or revision label <span style="font-weight:500;color:var(--muted)">optional</span>
           <input id="lookupSearch" maxlength="120" placeholder="e.g. CBSE-X-MAT-STANDARD or IMPORT-123">
         </label>
       </div>
-      <div class="actions">
-        <button class="secondary" id="lookupButton" type="button">Find Blueprints</button>
-        <span class="fine">Uses the same private uploader secret entered below.</span>
+      <div class="actions"><button class="primary" id="lookupButton" type="button">Find Blueprints</button><span class="file-note">Uses the same private uploader secret.</span></div>
+      <div id="lookupOutput" class="table-wrap hidden"></div>
+    </section>
+
+    <section id="summaryCard" class="card hidden" aria-live="polite">
+      <div class="summary-head">
+        <div>
+          <h2 id="summaryTitle">Import result</h2>
+          <p id="summaryDescription">Review the outcome below.</p>
+        </div>
+        <span id="summaryState" class="summary-state"></span>
       </div>
-      <div id="lookupResult" class="hidden" aria-live="polite"></div>
+      <div class="metrics">
+        <div class="metric"><span>Total rows</span><strong id="totalInputRows">0</strong></div>
+        <div class="metric"><span>Written</span><strong id="written">0</strong></div>
+        <div class="metric"><span>Inserted</span><strong id="inserted">0</strong></div>
+        <div class="metric blue"><span>Updated</span><strong id="updated">0</strong></div>
+        <div class="metric blue"><span>Staged</span><strong id="staged">0</strong></div>
+        <div class="metric"><span>Unchanged</span><strong id="unchanged">0</strong></div>
+        <div class="metric bad"><span>Rejected</span><strong id="rejected">0</strong></div>
+        <div class="metric warn"><span>Duplicates</span><strong id="duplicates">0</strong></div>
+        <div class="metric bad"><span>Unresolved</span><strong id="unresolved">0</strong></div>
+        <div class="metric warn"><span>Truncated</span><strong id="truncated">0</strong></div>
+      </div>
+      <div id="scopeBlock" class="hidden">
+        <p class="footer-note"><strong>Master scopes requiring attention</strong></p>
+        <div id="scopeList" class="scope-list"></div>
+      </div>
     </section>
 
-    <section class="card" aria-labelledby="upload-heading">
-      <h2 id="upload-heading">Upload a replacement Blueprint</h2>
-      <p class="notice warning"><span>⚠</span><span><strong>Safe replacement rule.</strong> Reuse the existing <code>Blueprint ID</code>, but leave <code>Revision label</code> blank (recommended) or enter a new label. The upload updates the mutable current Blueprint and records a new immutable <code>DRAFT</code> revision. It does not delete prior DRAFT, APPROVED, or RETIRED history.</span></p>
-      <p class="notice"><span>✓</span><span><strong>Question Bank protection.</strong> Before any Blueprint write, every demand-row <code>Subtopic_ID</code> is checked against the newly loaded physical Class X Mathematics <code>10-MAT</code> Question Bank rows. A mismatch rejects the Blueprint with no Blueprint write.</span></p>
-      <p class="notice"><span>i</span><span><strong>Approval boundary.</strong> A replacement is stored as <code>DRAFT</code>. If an earlier revision is already <code>APPROVED</code>, any separate Formula consumer continues to resolve that approved frozen revision until an authorized reviewer approves the new one.</span></p>
-
-      <form id="uploadForm">
-        <div class="grid">
-          <label class="wide">n8n shared secret
-            <input id="secret" type="password" autocomplete="off" placeholder="Enter the configured private uploader secret" required>
-            <small>Kept only in this browser session and used for both lookup and upload.</small>
-          </label>
-          <label>Board
-            <input value="CBSE" readonly aria-readonly="true">
-          </label>
-          <label>Class
-            <input value="10" readonly aria-readonly="true">
-          </label>
-          <label>Blueprint identity
-            <select id="academicSubjectKey" required>
-              <option value="10-mat-s">Standard · 10-mat-s</option>
-              <option value="10-mat-b">Basic · 10-mat-b</option>
-            </select>
-            <small>Select the identity represented by the uploaded Blueprint file.</small>
-          </label>
-          <label>Academic session
-            <input id="academicSession" value="2026-27" pattern="[0-9]{4}-[0-9]{2}" required>
-          </label>
-          <label>Blueprint ID
-            <input id="blueprintId" maxlength="200" required placeholder="Exact existing Blueprint ID to replace">
-            <small>Must match the file’s <code>BLUEPRINT_ID</code>. Click “Use for replacement” above to prefill it.</small>
-          </label>
-          <label>Revision label <span style="font-weight:500;color:var(--muted)">optional</span>
-            <input id="revisionLabel" maxlength="200" placeholder="Leave blank for a new IMPORT-&lt;upload-log-id&gt; label">
-            <small>A changed Blueprint may not reuse an existing revision label.</small>
-          </label>
-          <label>Uploader name <span style="font-weight:500;color:var(--muted)">optional</span>
-            <input id="uploadedBy" maxlength="500" placeholder="Name for the audit record">
-          </label>
-          <label class="wide">Blueprint CSV or XLSX file
-            <input id="file" type="file" accept=".csv,.xlsx,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" required>
-            <small>Maximum 10 MB. Question Bank and Format Catalogue uploads are intentionally unavailable from this screen.</small>
-          </label>
-        </div>
-        <div class="actions">
-          <button class="primary" id="uploadButton" type="submit">Validate and safely replace Blueprint</button>
-          <span class="fine">A successful replacement returns <code>UPDATED</code>; a first import returns <code>IMPORTED</code>.</span>
-        </div>
-      </form>
-      <div id="uploadResult" class="hidden" aria-live="polite"></div>
+    <section id="issuesCard" class="card hidden">
+      <h2>Rows requiring attention</h2>
+      <p>Every returned validation or import issue is listed below. Correct the source/master data and upload again.</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Source row</th><th>Question / blueprint ID</th><th>Canonical scope</th><th>Status</th><th>Reason</th></tr></thead>
+          <tbody id="issuesBody"></tbody>
+        </table>
+      </div>
     </section>
 
-    <p class="footer">This file targets the private non-production n8n endpoints. The workflow must first be imported with its Postgres credential, private secret policy, and approved CORS origin configured by an authorized operator.</p>
+    <section id="errorCard" class="card error hidden" aria-live="assertive">
+      <h2>Upload could not be completed</h2>
+      <p>The workflow did not return a normal import report. Check the details below and the n8n execution if needed.</p>
+      <pre id="errorOutput"></pre>
+    </section>
   </main>
 
+  <!-- SheetJS is loaded only to serialize the multi-tab Format Catalogue workbook. All validation and database staging remain server-side in n8n/PostgreSQL. -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <script>
   (() => {
-    const IMPORT_URL = 'https://n8n.mytst.cloud/webhook/mytst-import-formula-v3-nonprod';
-    const LOOKUP_URL = 'https://n8n.mytst.cloud/webhook/mytst-blueprint-lookup-formula-v3-nonprod';
-    const $ = id => document.getElementById(id);
-    const clean = value => String(value ?? '').trim();
-    const escape = value => String(value ?? '').replace(/[&<>'"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
-    const number = value => Number(value ?? 0) || 0;
+    // The format webhook is deliberately separate from the Question Bank/Blueprint webhook.
+    // Existing Question Bank path is deliberately unchanged. Blueprint alone uses
+    // the Formula v3 endpoint upgraded with revision lookup/replacement behavior.
+    const QUESTION_BANK_WEBHOOK_URL = 'https://n8n.mytst.cloud/webhook/mytst-import';
+    const IMPORT_WEBHOOK_URL = 'https://n8n.mytst.cloud/webhook/mytst-import-formula-v3-nonprod';
+    const BLUEPRINT_LOOKUP_WEBHOOK_URL = 'https://n8n.mytst.cloud/webhook/mytst-blueprint-lookup-formula-v3-nonprod';
+    const FORMAT_CATALOGUE_WEBHOOK_URL = 'https://n8n.mytst.cloud/webhook/mytst-format-catalogue-activate-nonprod';
+    const $ = (id) => document.getElementById(id);
+    const numeric = (value) => Number(value ?? 0) || 0;
+    const clean = (value) => String(value ?? '').trim();
+    const classes = Array.from({length:12}, (_, index) => index + 1);
 
-    $('secret').value = sessionStorage.getItem('mytst.formulaBlueprint.secret') || '';
-    for (const id of ['academicSubjectKey','academicSession']) {
-      $(id).value = localStorage.getItem(`mytst.formulaBlueprint.${id}`) || $(id).value;
-      $(id).addEventListener('input', () => localStorage.setItem(`mytst.formulaBlueprint.${id}`, $(id).value));
-      $(id).addEventListener('change', () => localStorage.setItem(`mytst.formulaBlueprint.${id}`, $(id).value));
+    const chooseClass = document.createElement('option'); chooseClass.value = ''; chooseClass.textContent = 'Select class'; chooseClass.disabled = true; chooseClass.selected = true;
+    $('classNumber').appendChild(chooseClass);
+    for (const number of classes) {
+      const option = document.createElement('option'); option.value = String(number); option.textContent = `Class ${number}`;
+      $('classNumber').appendChild(option);
     }
-    $('secret').addEventListener('input', () => sessionStorage.setItem('mytst.formulaBlueprint.secret', $('secret').value));
+    $('subject').value = localStorage.getItem('mytst.formulaV3.subject') || '';
+    $('subjectCode').value = localStorage.getItem('mytst.formulaV3.subjectCode') || '';
+    $('academicSubjectKey').value = localStorage.getItem('mytst.formulaV3.academicSubjectKey') || '';
+    $('academicSession').value = localStorage.getItem('mytst.formulaV3.academicSession') || '2026-27';
+    $('secret').value = sessionStorage.getItem('mytst.formulaV3.secret') || '';
+    $('secret').addEventListener('input', () => sessionStorage.setItem('mytst.formulaV3.secret', $('secret').value));
+    $('subject').addEventListener('input', () => localStorage.setItem('mytst.formulaV3.subject', $('subject').value));
+    $('subjectCode').addEventListener('input', () => localStorage.setItem('mytst.formulaV3.subjectCode', $('subjectCode').value));
+    $('academicSubjectKey').addEventListener('input', () => localStorage.setItem('mytst.formulaV3.academicSubjectKey', $('academicSubjectKey').value.toLowerCase()));
+    $('academicSession').addEventListener('input', () => localStorage.setItem('mytst.formulaV3.academicSession', $('academicSession').value));
 
-    function requestError(response, body) {
-      const message = body?.error || body?.message || (typeof body === 'string' ? body : 'The workflow did not return a usable response.');
-      return new Error(`${response.status} ${response.statusText}: ${message}`);
+    function selectKind(kind) {
+      const blueprint = kind === 'blueprint';
+      const formatCatalogue = kind === 'format_catalogue';
+      $('uploadKind').value = kind;
+      $('questionTab').classList.toggle('active', kind === 'question_bank');
+      $('blueprintTab').classList.toggle('active', blueprint);
+      $('formatCatalogueTab').classList.toggle('active', formatCatalogue);
+      document.querySelectorAll('.content-scope').forEach((field) => field.classList.toggle('hidden', formatCatalogue));
+      document.querySelectorAll('.blueprint-context').forEach((field) => field.classList.toggle('hidden', !blueprint));
+      document.querySelectorAll('.blueprint-only').forEach((field) => field.classList.toggle('hidden', !blueprint));
+      $('blueprintLookupCard').classList.toggle('hidden', !blueprint);
+      $('classNumber').required = !formatCatalogue;
+      $('subject').required = !formatCatalogue;
+      $('subjectCode').required = blueprint;
+      $('academicSubjectKey').required = blueprint;
+      $('academicSession').required = blueprint;
+      // The existing V4 Format Catalogue path intentionally remains separate.
+      // Question Bank and Blueprint retain their established shared-secret gate.
+      $('secretField').classList.toggle('hidden', formatCatalogue);
+      $('secret').required = !formatCatalogue;
+      $('formatActionField').classList.toggle('hidden', !formatCatalogue);
+      $('fileLabel').childNodes[0].textContent = formatCatalogue ? 'Master Format Catalogue workbook\n            ' : blueprint ? 'Blueprint file\n            ' : 'Question-bank file\n            ';
+      $('file').accept = formatCatalogue ? '.xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' : '.csv,.xlsx,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+      $('fileHint').textContent = formatCatalogue ? 'Choose one genuine multi-tab .xlsx FORMAT_CATALOGUE_V4_ACTIVE_LOOKUP workbook, maximum 10 MB.' : 'Choose a UTF-8 CSV or genuine XLSX file, maximum 10 MB.';
+      $('submitButton').textContent = formatCatalogue ? 'Import and activate Format Catalogue' : blueprint ? 'Validate and import Blueprint' : 'Validate and import Question Bank';
+      $('formatNotice').innerHTML = formatCatalogue
+        ? '<span>✓</span><span><strong>Non-production active Format Catalogue mode:</strong> uploads one <code>FORMAT_CATALOGUE_V4_ACTIVE_LOOKUP</code> workbook for <code>IMPORT_AND_ACTIVATE</code>. The importer validates and compiles before its atomic database write; a matching old active format is retired only if the replacement activates successfully. It never imports questions or edits Blueprint content.</span>'
+        : blueprint
+          ? '<span>✓</span><span><strong>Blueprint upgrade:</strong> the file supplies <code>BLUEPRINT_ID</code>, <code>Subject_Code</code>, per-row <code>Chapter_Code</code>, and <code>Subtopic_ID</code>. For Class X Mathematics, use <code>10-mat-s</code> or <code>10-mat-b</code>. Find an existing Blueprint below, reuse its ID, and leave Revision Label blank for a safe new <code>DRAFT</code> replacement revision. Each <code>Subtopic_ID</code> is checked against physical <code>10-MAT</code> Question Bank rows before write.</span>'
+          : '<span>✓</span><span><strong>Question Bank format:</strong> this is the unchanged established Question Bank upload path and workbook behavior. Inline MCQ options, integer AI Quality Score behavior, <code>CRE</code>, and descriptive Practical Skill remain supported. The Standard/Basic Blueprint keys are not Question Bank identities.</span>';
     }
-    async function postForm(url, data) {
-      const response = await fetch(url, { method: 'POST', body: data });
-      const text = await response.text();
-      let body;
-      try { body = text ? JSON.parse(text) : {}; } catch { body = text; }
-      if (!response.ok) throw requestError(response, body);
-      return body?.result ?? body;
-    }
-    function setBusy(button, busy, label) {
-      button.disabled = busy;
-      button.dataset.label ||= button.textContent;
-      button.textContent = busy ? label : button.dataset.label;
-    }
-    function displayError(target, title, error) {
-      target.className = 'results error';
-      target.innerHTML = `<p class="result-title">${escape(title)}</p><p class="result-detail">${escape(error.message || error)}</p>`;
-    }
-    function statusBadge(status) {
-      const value = clean(status || 'UNKNOWN').toUpperCase();
-      return `<span class="badge ${escape(value.toLowerCase())}">${escape(value)}</span>`;
-    }
-    function date(value) {
-      if (!value) return '—';
-      const d = new Date(value);
-      return Number.isNaN(d.getTime()) ? escape(value) : escape(d.toLocaleString());
-    }
-
-    $('lookupButton').addEventListener('click', async () => {
-      const target = $('lookupResult');
-      const secret = clean($('secret').value);
-      if (!secret) { displayError(target, 'Shared secret required', 'Enter the n8n shared secret before looking up Blueprints.'); return; }
-      const session = clean($('lookupSession').value);
-      if (session && !/^\d{4}-\d{2}$/.test(session)) { displayError(target, 'Invalid session', 'Use YYYY-YY, for example 2026-27.'); return; }
-      const data = new FormData();
-      data.append('importSecret', secret);
-      data.append('academicSession', session);
-      data.append('academicSubjectKey', clean($('lookupKey').value));
-      data.append('search', clean($('lookupSearch').value));
-      data.append('limit', '100');
-      setBusy($('lookupButton'), true, 'Finding…');
-      target.className = 'hidden';
-      try {
-        const result = await postForm(LOOKUP_URL, data);
-        const items = Array.isArray(result?.items) ? result.items : [];
-        const rows = items.map(item => `<tr>
-          <td><code>${escape(item.blueprintId)}</code></td>
-          <td><code>${escape(item.revisionLabel)}</code></td>
-          <td>${escape(item.academicSubjectKey)}<br><small>${escape(item.academicSession)}</small></td>
-          <td>${statusBadge(item.approvalStatus)}</td>
-          <td>${date(item.createdAt)}<br><small>${escape(item.uploadedBy || item.createdBy || '—')}</small></td>
-          <td>${escape(item.sourceFile || '—')}<br><small>Upload log: ${escape(item.uploadLogId || '—')}</small></td>
-          <td><button class="use" type="button" data-blueprint-id="${escape(item.blueprintId)}" data-key="${escape(item.academicSubjectKey)}" data-session="${escape(item.academicSession)}">Use for replacement</button></td>
-        </tr>`).join('');
-        target.className = 'results';
-        target.innerHTML = `<p class="result-title">${number(result?.count)} Blueprint revision${number(result?.count) === 1 ? '' : 's'} found</p>
-          ${items.length ? `<div class="table-wrap"><table><thead><tr><th>Blueprint ID</th><th>Revision</th><th>Identity / session</th><th>Status</th><th>Created</th><th>Source</th><th>Replace</th></tr></thead><tbody>${rows}</tbody></table></div>` : '<p class="result-detail">No matching Blueprint revisions were found.</p>'}`;
-        target.querySelectorAll('button.use').forEach(button => button.addEventListener('click', () => {
-          $('blueprintId').value = button.dataset.blueprintId;
-          $('academicSubjectKey').value = button.dataset.key;
-          $('academicSession').value = button.dataset.session;
-          $('revisionLabel').value = '';
-          window.scrollTo({ top: $('uploadForm').getBoundingClientRect().top + window.scrollY - 20, behavior: 'smooth' });
-          $('file').focus();
-        }));
-      } catch (error) { displayError(target, 'Blueprint lookup could not be completed', error); }
-      finally { setBusy($('lookupButton'), false); }
+    $('questionTab').addEventListener('click', () => selectKind('question_bank'));
+    $('blueprintTab').addEventListener('click', () => selectKind('blueprint'));
+    $('formatCatalogueTab').addEventListener('click', () => selectKind('format_catalogue'));
+    selectKind('question_bank');
+    $('file').addEventListener('change', () => {
+      const file = $('file').files[0];
+      const catalogue = $('uploadKind').value === 'format_catalogue';
+      $('fileHint').textContent = file ? `${file.name} · ${(file.size / 1024 / 1024).toFixed(2)} MB` : catalogue ? 'Choose one genuine multi-tab .xlsx FORMAT_CATALOGUE_V4_ACTIVE_LOOKUP workbook, maximum 10 MB.' : 'Choose a UTF-8 CSV or genuine XLSX file, maximum 10 MB.';
     });
 
-    $('uploadForm').addEventListener('submit', async event => {
-      event.preventDefault();
-      const target = $('uploadResult');
+    function showError(error) {
+      $('summaryCard').classList.add('hidden'); $('issuesCard').classList.add('hidden');
+      $('errorCard').classList.remove('hidden');
+      $('errorOutput').textContent = typeof error === 'string' ? error : JSON.stringify(error, null, 2);
+      window.scrollTo({ top: $('errorCard').offsetTop - 18, behavior: 'smooth' });
+    }
+    function scopeText(issue) {
+      const chapterScopes = Array.isArray(issue.unresolved_chapters) ? issue.unresolved_chapters.map((item) => item.chapter_code).filter(Boolean) : [];
+      return [issue.subject_code, issue.chapter_code, ...chapterScopes].filter(Boolean).join(' / ') || '—';
+    }
+    function reasonText(issue) {
+      const details = Array.isArray(issue.validation_errors) ? issue.validation_errors
+        .map((item) => [item.code, item.field, item.message].filter(Boolean).join(': ')).filter(Boolean) : [];
+      return details.length ? details.join(' | ') : clean(issue.reason || issue.code) || '—';
+    }
+    function statusClass(status) {
+      const value = clean(status).toLowerCase();
+      if (value.includes('unresolved')) return 'unresolved';
+      if (value.includes('duplicate') || value.includes('unchanged')) return 'duplicate';
+      if (value.includes('stage')) return 'staged';
+      if (value.includes('reject')) return 'rejected';
+      return '';
+    }
+    function showFormatCatalogueSummary(result) {
+      const validation = result.validation || {};
+      const errors = Array.isArray(validation.errors) ? validation.errors : [];
+      const warnings = Array.isArray(validation.warnings) ? validation.warnings : [];
+      const profiles = Array.isArray(result.compiledProfiles) ? result.compiledProfiles : [];
+      const staged = result.outcome === 'STAGED_DRAFT';
+      const activated = result.outcome === 'ACTIVATED';
+      const persisted = staged || activated;
+      $('errorCard').classList.add('hidden'); $('summaryCard').classList.remove('hidden');
+      $('summaryTitle').textContent = `Format Catalogue ${result.outcome || 'result'} · ${result.packageId || 'package'}`;
+      $('summaryDescription').textContent = errors.length
+        ? 'The workbook was not written. Correct every listed tab, row, column, and validation reason.'
+        : activated
+          ? result.reason === 'ALREADY_ACTIVATED_SAME_PACKAGE_AND_SOURCE'
+            ? 'This exact package and source file are already active. No second database write or replacement was performed.'
+            : 'The format was atomically written and activated in non-production. Any earlier active format with the same lookup key was retired only as part of this successful transaction.'
+          : staged
+            ? 'The validated workbook was staged as DRAFT configuration only. No active profile or binding was created.'
+            : 'Workbook validation completed.';
+      $('summaryState').textContent = result.status || result.outcome || 'COMPLETED';
+      const metrics = { totalInputRows: 1, written: persisted ? profiles.length : 0, inserted: persisted ? profiles.length : 0, updated: 0, staged: persisted ? profiles.length : 0, unchanged: 0, rejected: errors.length, duplicates: 0, unresolved: 0, truncated: 0 };
+      Object.entries(metrics).forEach(([name, value]) => { $(name).textContent = String(value); });
+      $('scopeBlock').classList.add('hidden'); $('issuesBody').innerHTML = '';
+      $('issuesCard').classList.toggle('hidden', errors.length === 0);
+      for (const issue of errors) {
+        const row = document.createElement('tr');
+        const values = [issue.row ?? '—', issue.entity_id || issue.sheet || '—', [issue.sheet, issue.column].filter(Boolean).join(' / ') || '—', 'REJECTED', [issue.code, issue.message].filter(Boolean).join(': ') || '—'];
+        values.forEach((value, index) => { const cell = document.createElement('td'); if (index === 3) { const badge = document.createElement('span'); badge.className = 'badge rejected'; badge.textContent = String(value); cell.appendChild(badge); } else { cell.textContent = String(value); if (index === 4) cell.className = 'reason'; } row.appendChild(cell); });
+        $('issuesBody').appendChild(row);
+      }
+      if (warnings.length && !errors.length) {
+        const row = document.createElement('tr'); const cell = document.createElement('td'); cell.colSpan = 5; cell.className = 'reason'; cell.textContent = `Warnings: ${warnings.map((warning) => [warning.code, warning.message].filter(Boolean).join(': ')).join(' | ')}`; row.appendChild(cell); $('issuesBody').appendChild(row); $('issuesCard').classList.remove('hidden');
+      }
+      window.scrollTo({ top: $('summaryCard').offsetTop - 18, behavior: 'smooth' });
+    }
+    function showSummary(raw) {
+      const result = raw?.result || raw || {};
+      if (result.status === 'FAILED' || result.error) return showError(result);
+      if (result.packageId || result.requestedAction || result.compiledProfiles) return showFormatCatalogueSummary(result);
+      $('errorCard').classList.add('hidden'); $('summaryCard').classList.remove('hidden');
+      $('summaryTitle').textContent = result.status === 'COMPLETED' ? `Import completed · batch ${result.batchId}` : 'Import result';
+      const baseDescription = numeric(result.rejected) || numeric(result.unresolved)
+        ? 'Some rows were not written. Review every listed reason below.'
+        : 'All processed rows completed without a reported validation rejection.';
+      const chapterSync = numeric(result.chapterMastersDeclared)
+        ? ` Blueprint chapter catalog: ${numeric(result.chapterMastersDeclared)} declared; ${numeric(result.chapterMastersChanged)} created or renamed.`
+        : '';
+      $('summaryDescription').textContent = baseDescription + chapterSync;
+      $('summaryState').textContent = result.status || 'COMPLETED';
+      for (const key of ['totalInputRows','written','inserted','updated','staged','unchanged','rejected','duplicates','unresolved','truncated']) {
+        $(key).textContent = numeric(result[key]);
+      }
+      const scopes = Array.isArray(result.unresolvedScopes) ? result.unresolvedScopes : [];
+      $('scopeList').innerHTML = '';
+      $('scopeBlock').classList.toggle('hidden', scopes.length === 0);
+      for (const item of scopes) {
+        const chip = document.createElement('span'); chip.className = 'scope';
+        chip.textContent = [item.subject_code, item.chapter_code, item.chapter_name, item.reason].filter(Boolean).join(' · ');
+        $('scopeList').appendChild(chip);
+      }
+      const issues = Array.isArray(result.issues) ? result.issues : [];
+      $('issuesBody').innerHTML = '';
+      $('issuesCard').classList.toggle('hidden', issues.length === 0);
+      for (const issue of issues) {
+        const row = document.createElement('tr');
+        const values = [
+          issue.row ?? '—',
+          issue.question_id || issue.blueprint_id || issue.subtopic_id || '—',
+          scopeText(issue),
+          issue.status || '—',
+          reasonText(issue)
+        ];
+        values.forEach((value, index) => {
+          const cell = document.createElement('td');
+          if (index === 3) { const badge = document.createElement('span'); badge.className = `badge ${statusClass(value)}`; badge.textContent = String(value); cell.appendChild(badge); }
+          else { cell.textContent = String(value); if (index === 4) cell.className = 'reason'; }
+          row.appendChild(cell);
+        });
+        $('issuesBody').appendChild(row);
+      }
+      window.scrollTo({ top: $('summaryCard').offsetTop - 18, behavior: 'smooth' });
+    }
+
+    async function sha256Prefix(file) {
+      if (!window.crypto?.subtle) throw new Error('This browser cannot calculate the required SHA-256 workbook hash. Use a modern HTTPS browser.');
+      const digest = await window.crypto.subtle.digest('SHA-256', await file.arrayBuffer());
+      return `sha256:${Array.from(new Uint8Array(digest)).map((value) => value.toString(16).padStart(2, '0')).join('')}`;
+    }
+    async function catalogueWorkbookPayload(file) {
+      if (!window.XLSX) throw new Error('The workbook reader did not load. Check your network connection and retry, or use the secure /format-catalogue portal route.');
+      const workbook = window.XLSX.read(await file.arrayBuffer(), { type: 'array', cellDates: true });
+      const sheets = {}; const headers = {};
+      workbook.SheetNames.forEach((sheetName) => {
+        const sheet = workbook.Sheets[sheetName];
+        const matrix = window.XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '', raw: false });
+        headers[sheetName] = (matrix[0] || []).map((header) => String(header ?? '').normalize('NFC').trim()).filter(Boolean);
+        sheets[sheetName] = window.XLSX.utils.sheet_to_json(sheet, { defval: '', raw: false }).map((row) => Object.fromEntries(Object.entries(row).map(([header, value]) => [String(header).normalize('NFC').trim(), value])));
+      });
+      const manifest = sheets.MANIFEST?.[0] || {};
+      if (clean(manifest.package_schema_version) !== 'FORMAT_CATALOGUE_V4_ACTIVE_LOOKUP'
+          || clean(manifest.requested_action).toUpperCase() !== 'IMPORT_AND_ACTIVATE') {
+        throw new Error('Use a FORMAT_CATALOGUE_V4_ACTIVE_LOOKUP workbook with MANIFEST.requested_action set to IMPORT_AND_ACTIVATE. This standalone screen cannot upload V2, V3, or validation-only packages.');
+      }
+      return { sheets, headers };
+    }
+
+    function clearLookup() {
+      const output = $('lookupOutput');
+      output.innerHTML = '';
+      output.classList.remove('hidden');
+      return output;
+    }
+    function lookupError(message) {
+      const output = clearLookup();
+      const text = document.createElement('p'); text.className = 'empty'; text.textContent = message;
+      output.appendChild(text);
+    }
+    function lookupDate(value) {
+      if (!value) return '—';
+      const date = new Date(value);
+      return Number.isNaN(date.getTime()) ? String(value) : date.toLocaleString();
+    }
+    function renderBlueprintLookup(result) {
+      const output = clearLookup();
+      const items = Array.isArray(result?.items) ? result.items : [];
+      if (!items.length) {
+        const empty = document.createElement('p'); empty.className = 'empty'; empty.textContent = 'No matching Class X Mathematics Blueprint revisions were found.';
+        output.appendChild(empty); return;
+      }
+      const table = document.createElement('table');
+      const head = document.createElement('thead'); const headRow = document.createElement('tr');
+      ['Blueprint ID', 'Revision', 'Identity / session', 'Status', 'Created / uploader', 'Source', 'Replace'].forEach((title) => { const cell = document.createElement('th'); cell.textContent = title; headRow.appendChild(cell); });
+      head.appendChild(headRow); table.appendChild(head);
+      const body = document.createElement('tbody');
+      items.forEach((item) => {
+        const row = document.createElement('tr');
+        const cells = [
+          item.blueprintId || '—', item.revisionLabel || '—',
+          [item.academicSubjectKey, item.academicSession].filter(Boolean).join(' / ') || '—',
+          item.approvalStatus || '—',
+          [lookupDate(item.createdAt), item.uploadedBy || item.createdBy].filter(Boolean).join(' · '),
+          [item.sourceFile, item.uploadLogId ? `Upload log ${item.uploadLogId}` : ''].filter(Boolean).join(' · ')
+        ];
+        cells.forEach((value, index) => { const cell = document.createElement('td'); if (index === 3) { const badge = document.createElement('span'); badge.className = `badge ${clean(value).toLowerCase()}`; badge.textContent = value; cell.appendChild(badge); } else cell.textContent = value; row.appendChild(cell); });
+        const action = document.createElement('td'); const use = document.createElement('button'); use.type = 'button'; use.className = 'primary'; use.style.padding = '7px 9px'; use.style.fontSize = '.78rem'; use.textContent = 'Use for replacement';
+        use.addEventListener('click', () => {
+          $('classNumber').value = '10'; $('subject').value = 'Mathematics'; $('subjectCode').value = '10-MAT';
+          $('academicSubjectKey').value = item.academicSubjectKey || ''; $('academicSession').value = item.academicSession || '2026-27';
+          $('blueprintId').value = item.blueprintId || ''; $('revisionLabel').value = '';
+          window.scrollTo({ top: $('uploadForm').offsetTop - 18, behavior: 'smooth' });
+          $('file').focus();
+        });
+        action.appendChild(use); row.appendChild(action); body.appendChild(row);
+      });
+      table.appendChild(body); output.appendChild(table);
+    }
+    $('lookupButton').addEventListener('click', async () => {
       const secret = clean($('secret').value);
-      const blueprintId = clean($('blueprintId').value);
-      const key = clean($('academicSubjectKey').value);
-      const session = clean($('academicSession').value);
-      const file = $('file').files[0];
-      if (!secret || !blueprintId || !file) { displayError(target, 'Required information missing', 'Enter the shared secret, exact Blueprint ID, and Blueprint file.'); return; }
-      if (!/^\d{4}-\d{2}$/.test(session)) { displayError(target, 'Invalid session', 'Use YYYY-YY, for example 2026-27.'); return; }
-      if (!['10-mat-s','10-mat-b'].includes(key)) { displayError(target, 'Invalid identity', 'Select Standard 10-mat-s or Basic 10-mat-b.'); return; }
-      if (!/\.(csv|xlsx)$/i.test(file.name) || file.size > 10 * 1024 * 1024) { displayError(target, 'Invalid file', 'Choose a CSV or XLSX Blueprint file no larger than 10 MB.'); return; }
+      const session = clean($('lookupSession').value);
+      if (!secret) return lookupError('Enter the private n8n shared secret before looking up Blueprints.');
+      if (session && !/^\d{4}-\d{2}$/.test(session)) return lookupError('Academic session must be blank or use YYYY-YY form, for example 2026-27.');
+      const data = new FormData();
+      data.append('importSecret', secret); data.append('academicSession', session);
+      data.append('academicSubjectKey', clean($('lookupKey').value)); data.append('search', clean($('lookupSearch').value)); data.append('limit', '100');
+      const button = $('lookupButton'); const original = button.textContent; button.disabled = true; button.textContent = 'Finding Blueprints…';
+      try {
+        const response = await fetch(BLUEPRINT_LOOKUP_WEBHOOK_URL, { method: 'POST', body: data });
+        const payload = await response.json().catch(() => ({ error: `The lookup returned HTTP ${response.status} without a JSON report.` }));
+        if (!response.ok || payload?.error) return lookupError(payload?.error || 'Blueprint lookup was not accepted.');
+        renderBlueprintLookup(payload?.result || payload);
+      } catch (error) { lookupError(`Could not reach the Blueprint lookup webhook: ${String(error)}`); }
+      finally { button.disabled = false; button.textContent = original; }
+    });
+
+    $('uploadForm').addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const file = $('file').files[0]; const secret = clean($('secret').value);
+      const kind = $('uploadKind').value; const formatCatalogue = kind === 'format_catalogue';
+      const classNumber = clean($('classNumber').value); const subject = clean($('subject').value);
+      const subjectCode = clean($('subjectCode').value); const academicSubjectKey = clean($('academicSubjectKey').value).toLowerCase(); const academicSession = clean($('academicSession').value);
+      const validQuestionBankContext = /^(?:[1-9]|1[0-2])$/.test(classNumber) && Boolean(subject);
+      const validBlueprintContext = validQuestionBankContext
+        && /^[A-Za-z0-9][A-Za-z0-9._/-]{0,127}$/.test(subjectCode)
+        && /^(10|11|12)-[a-z][a-z0-9-]{1,61}$/.test(academicSubjectKey)
+        && Number(academicSubjectKey.split('-')[0]) === Number(classNumber)
+        && /^\d{4}-\d{2}$/.test(academicSession);
+      const activeContextValid = kind === 'blueprint' ? validBlueprintContext : validQuestionBankContext;
+      if (!file || (!formatCatalogue && (!secret || !activeContextValid))) {
+        return showError({ error: formatCatalogue
+          ? 'Select the reviewed V4 .xlsx Format Catalogue workbook.'
+          : kind === 'blueprint'
+            ? 'For a Blueprint, enter the shared secret, Class, subject name, Subject Code, Academic Subject Key, Academic Session, and a file.'
+            : 'For a Question Bank upload, enter the shared secret, choose a valid Class 1–12, provide a subject display name, and select a file.' });
+      }
+      if (formatCatalogue ? !/\.xlsx$/i.test(file.name) : !/\.(csv|xlsx)$/i.test(file.name)) return showError({ error: formatCatalogue ? 'Format Catalogue mode accepts one .xlsx workbook only.' : 'Only .csv and .xlsx files are accepted.' });
+      if (file.size > 10 * 1024 * 1024) return showError({ error: 'The selected file exceeds the 10 MB limit.' });
       const data = new FormData();
       data.append('file', file);
-      data.append('importSecret', secret);
-      data.append('uploadKind', 'blueprint');
-      data.append('board', 'CBSE');
-      data.append('classNumber', '10');
-      data.append('subject', 'Mathematics');
-      data.append('subjectCode', '10-MAT');
-      data.append('academicSubjectKey', key);
-      data.append('academicSession', session);
-      data.append('academicYear', session.slice(0, 4));
-      data.append('blueprintId', blueprintId);
-      data.append('revisionLabel', clean($('revisionLabel').value));
-      data.append('uploadedBy', clean($('uploadedBy').value));
-      data.append('schemaVersion', 'uploader-backend-formula-v3');
-      setBusy($('uploadButton'), true, 'Validating and replacing…');
-      target.className = 'hidden';
+      if (!formatCatalogue) data.append('importSecret', secret);
+      const submit = $('submitButton'); submit.disabled = true; submit.textContent = formatCatalogue ? 'Checking Format Catalogue…' : 'Checking and importing…';
       try {
-        const result = await postForm(IMPORT_URL, data);
-        const updated = number(result?.updated), inserted = number(result?.inserted), rejected = number(result?.rejected);
-        target.className = rejected ? 'results error' : 'results';
-        target.innerHTML = `<p class="result-title">${rejected ? 'Blueprint was not replaced' : (updated ? 'Blueprint safely replaced' : 'Blueprint imported')}</p>
-          <p class="result-detail">Status: <strong>${escape(result?.status || 'UNKNOWN')}</strong>. ${updated ? 'The current Blueprint row was updated and a new DRAFT revision was recorded.' : inserted ? 'A new Blueprint and DRAFT revision were recorded.' : 'Review the returned metrics and any n8n execution detail.'}</p>
-          <div class="metrics"><div class="metric"><span>Source rows</span><strong>${number(result?.totalInputRows)}</strong></div><div class="metric"><span>Written</span><strong>${number(result?.written)}</strong></div><div class="metric"><span>Inserted</span><strong>${inserted}</strong></div><div class="metric blue"><span>Updated</span><strong>${updated}</strong></div><div class="metric bad"><span>Rejected</span><strong>${rejected}</strong></div></div>`;
-      } catch (error) { displayError(target, 'Blueprint upload could not be completed', error); }
-      finally { setBusy($('uploadButton'), false); }
+        let webhookUrl = kind === 'question_bank' ? QUESTION_BANK_WEBHOOK_URL : IMPORT_WEBHOOK_URL;
+        if (formatCatalogue) {
+          submit.textContent = 'Validating and activating Format Catalogue…';
+          const cataloguePayload = await catalogueWorkbookPayload(file);
+          data.append('requestedAction', 'IMPORT_AND_ACTIVATE');
+          data.append('uploadedBy', clean($('uploadedBy').value));
+          data.append('sourceFileSha256', await sha256Prefix(file));
+          data.append('cataloguePayload', JSON.stringify(cataloguePayload));
+          data.append('packageIdHint', String(cataloguePayload.sheets.MANIFEST?.[0]?.package_id ?? '').trim());
+          data.append('portalSource', 'mytst-standalone-format-catalogue-uploader');
+          webhookUrl = FORMAT_CATALOGUE_WEBHOOK_URL;
+        } else {
+          const fields = {
+            uploadKind: kind,
+            board: 'CBSE',
+            classNumber,
+            subject,
+            subjectCode,
+            academicSubjectKey: kind === 'blueprint' ? academicSubjectKey : '',
+            academicSession: kind === 'blueprint' ? academicSession : '',
+            academicYear: clean($('academicYear').value) || (academicSession ? academicSession.slice(0, 4) : '2026'),
+            uploadedBy: clean($('uploadedBy').value),
+            schemaVersion: kind === 'blueprint' ? 'uploader-backend-formula-v3' : 'unified-question-v5',
+            blueprintId: kind === 'blueprint' ? clean($('blueprintId').value) : '',
+            revisionLabel: kind === 'blueprint' ? clean($('revisionLabel').value) : '',
+            subpartOverride: ''
+          };
+          Object.entries(fields).forEach(([key, value]) => data.append(key, value));
+        }
+        // Keep this cross-origin request header-free. importSecret is already included in FormData.
+        // The deployed n8n CORS policy permits multipart Content-Type but not custom x-import-* headers.
+        const response = await fetch(webhookUrl, { method: 'POST', body: data });
+        const result = await response.json().catch(() => ({ error: `The server returned HTTP ${response.status} without a JSON report.` }));
+        if (!response.ok) return showError(result);
+        showSummary(result);
+      } catch (error) {
+        showError({ error: formatCatalogue ? 'Could not reach the Format Catalogue webhook.' : 'Could not reach the import webhook.', details: String(error) });
+      } finally {
+        submit.disabled = false; submit.textContent = formatCatalogue ? 'Import and activate Format Catalogue' : 'Validate and import';
+      }
     });
   })();
   </script>
-<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a531515adf5a3c33',t:'MTc5MzQzNTYzNg=='};var l=window.parent.location,o;try{o=new URL(l.origin).origin}catch(e){try{o=new URL(new URL(l.href).origin).origin}catch(e){o=''}}var u='/cdn-cgi/challenge-platform/scripts/jsd/main.js?ray=a531515adf5a3c33',a=document.createElement('script');a.src=o?new URL(u,o).href:u;document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a5316d3eddbdd04b',t:'MTc5MzQzNjc3OQ=='};var l=window.parent.location,o;try{o=new URL(l.origin).origin}catch(e){try{o=new URL(new URL(l.href).origin).origin}catch(e){o=''}}var u='/cdn-cgi/challenge-platform/scripts/jsd/main.js?ray=a5316d3eddbdd04b',a=document.createElement('script');a.src=o?new URL(u,o).href:u;document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
