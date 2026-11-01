@@ -21,7 +21,7 @@
     <div class="title-row">
       <div>
         <h1>Question Bank, Blueprint, and Format uploads.</h1>
-        <p class="intro">Keep the established Question Bank and Format Catalogue upload paths, while the Blueprint tab adds direct Class X Mathematics Question Bank validation, revision lookup, and safe replacement.</p>
+        <p class="intro">Keep the established Question Bank and Format Catalogue upload paths, while the Blueprint tab adds registered-context validation, authored demand-row syntax checks, revision lookup, and safe replacement.</p>
       </div>
       <span class="status-chip">CBSE · Formula v3</span>
     </div>
@@ -56,7 +56,7 @@
           </label>
           <label class="content-scope">Subject Code
             <input id="subjectCode" placeholder="e.g. 10-MAT">
-            <small>Required for Blueprint uploads; it identifies the physical Question Bank source where applicable.</small>
+            <small>Required for Blueprint uploads; it must agree with the registered academic-subject context.</small>
           </label>
           <label class="blueprint-only">Blueprint preset <span style="font-weight:500;color:var(--muted)">optional convenience</span>
             <select id="blueprintPreset">
@@ -223,7 +223,7 @@
     function setBlueprintContextNotice(preset) {
       const special = CLASS_X_MATHEMATICS_PRESETS[preset];
       $('blueprintContext').innerHTML = special
-        ? `<span>✓</span><span><strong>Class X Mathematics ${special.label} preset:</strong> this sends CBSE · Class 10 · Mathematics · <code>10-MAT</code> · <code>${special.academicSubjectKey}</code>. The Blueprint identity remains separate, but every <code>Subtopic_ID</code> is checked against the one physical <code>10-MAT</code> Question Bank source.</span>`
+        ? `<span>✓</span><span><strong>Class X Mathematics ${special.label} preset:</strong> this sends CBSE · Class 10 · Mathematics · <code>10-MAT</code> · <code>${special.academicSubjectKey}</code>. The Blueprint identity remains separate. Demand identifiers are syntax-validated and stored as authored Blueprint metadata; they are not checked against Question Bank content.</span>`
         : '<span>✓</span><span><strong>Universal Blueprint upload:</strong> supply the real CBSE Class, canonical subject name, Subject Code, class-scoped Academic Subject Key, Academic Session, and file. The importer accepts only contexts already registered by the backend; it never creates a registry entry from portal input.</span>';
     }
     function applyBlueprintPreset() {
@@ -583,5 +583,5 @@
     });
   })();
   </script>
-<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a53827260e89b6f1',t:'MTc5MzUwNzMwOA=='};var l=window.parent.location,o;try{o=new URL(l.origin).origin}catch(e){try{o=new URL(new URL(l.href).origin).origin}catch(e){o=''}}var u='/cdn-cgi/challenge-platform/scripts/jsd/main.js?ray=a53827260e89b6f1',a=document.createElement('script');a.src=o?new URL(u,o).href:u;document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a53b755d7f9d8aec',t:'MTc5MzU0MTk2OQ=='};var l=window.parent.location,o;try{o=new URL(l.origin).origin}catch(e){try{o=new URL(new URL(l.href).origin).origin}catch(e){o=''}}var u='/cdn-cgi/challenge-platform/scripts/jsd/main.js?ray=a53b755d7f9d8aec',a=document.createElement('script');a.src=o?new URL(u,o).href:u;document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
