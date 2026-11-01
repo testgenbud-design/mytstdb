@@ -48,25 +48,34 @@
           </label>
           <label class="content-scope">Class
             <select id="classNumber" required></select>
-            <small>Used to establish the Class scope for a blueprint or question bank.</small>
+            <small>Required Class scope for Question Bank and Blueprint uploads.</small>
           </label>
           <label class="content-scope">Subject display name
             <input id="subject" placeholder="e.g. Mathematics" required>
-            <small>Must agree exactly with the master subject display name.</small>
+            <small>Use the canonical display name registered for this Class and subject.</small>
           </label>
-          <label class="content-scope">Subject code <span style="font-weight:500;color:var(--muted)">Question Bank portal metadata; required for Blueprint</span>
+          <label class="content-scope">Subject Code
             <input id="subjectCode" placeholder="e.g. 10-MAT">
-            <small>Question Bank retains the established file-driven behavior. Blueprint requires the canonical backend code to agree with its source.</small>
+            <small>Required for Blueprint uploads; it identifies the physical Question Bank source where applicable.</small>
           </label>
-          <label class="content-scope blueprint-context">Academic subject key
-            <input id="academicSubjectKey" placeholder="e.g. 10-mat-s or 10-mat-b" pattern="(10|11|12)-[a-z][a-z0-9-]{1,61}">
-            <small>Blueprint-only Formula identity. For Class X Mathematics use <code>10-mat-s</code> (Standard) or <code>10-mat-b</code> (Basic).</small>
+          <label class="blueprint-only">Blueprint preset <span style="font-weight:500;color:var(--muted)">optional convenience</span>
+            <select id="blueprintPreset">
+              <option value="custom" selected>Custom registered Blueprint context</option>
+              <option value="10-mat-s">Class X Mathematics Standard · 10-mat-s</option>
+              <option value="10-mat-b">Class X Mathematics Basic · 10-mat-b</option>
+            </select>
+            <small>Use a Mathematics preset to fill its protected context, or choose Custom for any registered Class 1–12 context.</small>
           </label>
-          <label class="content-scope blueprint-context">Academic session
+          <p id="blueprintContext" class="notice blueprint-only wide"><span>✓</span><span><strong>Universal Blueprint upload:</strong> supply the real CBSE Class, canonical subject name, Subject Code, class-scoped Academic Subject Key, Academic Session, and file. The importer accepts only contexts already registered by the backend; it never creates a registry entry from portal input.</span></p>
+          <label class="content-scope blueprint-context">Academic Subject Key
+            <input id="academicSubjectKey" placeholder="e.g. 9-sci, 10-mat-s, or 12-phy" pattern="(?:[1-9]|1[0-2])-[a-z][a-z0-9-]{1,61}">
+            <small>Required for Blueprint uploads. It must have the selected Class prefix and already exist in the backend registry.</small>
+          </label>
+          <label class="content-scope blueprint-context">Academic Session
             <input id="academicSession" value="2026-27" placeholder="YYYY-YY" pattern="[0-9]{4}-[0-9]{2}">
             <small>Required immutable Blueprint context.</small>
           </label>
-          <label class="content-scope">Academic year <span style="font-weight:500;color:var(--muted)">optional</span>
+          <label class="content-scope blueprint-auto">Academic year <span style="font-weight:500;color:var(--muted)">optional</span>
             <input id="academicYear" value="2026" placeholder="2026 or 2026-27">
           </label>
           <label>Uploader name <span style="font-weight:500;color:var(--muted)">optional</span>
@@ -101,14 +110,17 @@
     </section>
 
     <section id="blueprintLookupCard" class="card hidden" aria-live="polite">
-      <h2>Find existing Class X Mathematics Blueprints</h2>
-      <p>Blueprint-only, read-only lookup. It lists Standard and Basic revision metadata, not Blueprint matrices or snapshots.</p>
+      <h2>Find existing Blueprints</h2>
+      <p>Blueprint-only, private, read-only lookup. It returns revision metadata for registered CBSE contexts, never matrices or snapshots.</p>
       <div class="grid">
+        <label>Class <span style="font-weight:500;color:var(--muted)">optional</span>
+          <select id="lookupClass"></select>
+        </label>
         <label>Academic session <span style="font-weight:500;color:var(--muted)">optional</span>
           <input id="lookupSession" value="2026-27" placeholder="YYYY-YY" pattern="[0-9]{4}-[0-9]{2}">
         </label>
-        <label>Blueprint identity
-          <select id="lookupKey"><option value="">Standard and Basic</option><option value="10-mat-s">Standard · 10-mat-s</option><option value="10-mat-b">Basic · 10-mat-b</option></select>
+        <label>Academic Subject Key <span style="font-weight:500;color:var(--muted)">optional</span>
+          <input id="lookupKey" maxlength="64" placeholder="e.g. 9-sci or 10-mat-s" pattern="(?:[1-9]|1[0-2])-[a-z][a-z0-9-]{1,61}">
         </label>
         <label class="wide">Search Blueprint ID or revision label <span style="font-weight:500;color:var(--muted)">optional</span>
           <input id="lookupSearch" maxlength="120" placeholder="e.g. CBSE-X-MAT-STANDARD or IMPORT-123">
@@ -180,20 +192,53 @@
 
     const chooseClass = document.createElement('option'); chooseClass.value = ''; chooseClass.textContent = 'Select class'; chooseClass.disabled = true; chooseClass.selected = true;
     $('classNumber').appendChild(chooseClass);
+    const lookupAnyClass = document.createElement('option'); lookupAnyClass.value = ''; lookupAnyClass.textContent = 'All Classes';
+    $('lookupClass').appendChild(lookupAnyClass);
     for (const number of classes) {
       const option = document.createElement('option'); option.value = String(number); option.textContent = `Class ${number}`;
       $('classNumber').appendChild(option);
+      const lookupOption = option.cloneNode(true); $('lookupClass').appendChild(lookupOption);
     }
+    $('classNumber').value = localStorage.getItem('mytst.formulaV3.classNumber') || '';
     $('subject').value = localStorage.getItem('mytst.formulaV3.subject') || '';
     $('subjectCode').value = localStorage.getItem('mytst.formulaV3.subjectCode') || '';
     $('academicSubjectKey').value = localStorage.getItem('mytst.formulaV3.academicSubjectKey') || '';
     $('academicSession').value = localStorage.getItem('mytst.formulaV3.academicSession') || '2026-27';
     $('secret').value = sessionStorage.getItem('mytst.formulaV3.secret') || '';
     $('secret').addEventListener('input', () => sessionStorage.setItem('mytst.formulaV3.secret', $('secret').value));
+    $('classNumber').addEventListener('change', () => localStorage.setItem('mytst.formulaV3.classNumber', $('classNumber').value));
     $('subject').addEventListener('input', () => localStorage.setItem('mytst.formulaV3.subject', $('subject').value));
     $('subjectCode').addEventListener('input', () => localStorage.setItem('mytst.formulaV3.subjectCode', $('subjectCode').value));
     $('academicSubjectKey').addEventListener('input', () => localStorage.setItem('mytst.formulaV3.academicSubjectKey', $('academicSubjectKey').value.toLowerCase()));
     $('academicSession').addEventListener('input', () => localStorage.setItem('mytst.formulaV3.academicSession', $('academicSession').value));
+
+    const CLASS_X_MATHEMATICS_PRESETS = {
+      '10-mat-s': { classNumber: '10', subject: 'Mathematics', subjectCode: '10-MAT', academicSubjectKey: '10-mat-s', label: 'Standard' },
+      '10-mat-b': { classNumber: '10', subject: 'Mathematics', subjectCode: '10-MAT', academicSubjectKey: '10-mat-b', label: 'Basic' }
+    };
+    function setBlueprintContextLock(locked) {
+      $('classNumber').disabled = locked;
+      ['subject', 'subjectCode', 'academicSubjectKey'].forEach((id) => { $(id).readOnly = locked; });
+    }
+    function setBlueprintContextNotice(preset) {
+      const special = CLASS_X_MATHEMATICS_PRESETS[preset];
+      $('blueprintContext').innerHTML = special
+        ? `<span>✓</span><span><strong>Class X Mathematics ${special.label} preset:</strong> this sends CBSE · Class 10 · Mathematics · <code>10-MAT</code> · <code>${special.academicSubjectKey}</code>. The Blueprint identity remains separate, but every <code>Subtopic_ID</code> is checked against the one physical <code>10-MAT</code> Question Bank source.</span>`
+        : '<span>✓</span><span><strong>Universal Blueprint upload:</strong> supply the real CBSE Class, canonical subject name, Subject Code, class-scoped Academic Subject Key, Academic Session, and file. The importer accepts only contexts already registered by the backend; it never creates a registry entry from portal input.</span>';
+    }
+    function applyBlueprintPreset() {
+      const preset = $('blueprintPreset').value;
+      const values = CLASS_X_MATHEMATICS_PRESETS[preset];
+      if (values) {
+        $('classNumber').value = values.classNumber;
+        $('subject').value = values.subject;
+        $('subjectCode').value = values.subjectCode;
+        $('academicSubjectKey').value = values.academicSubjectKey;
+      }
+      setBlueprintContextLock(Boolean(values));
+      setBlueprintContextNotice(preset);
+    }
+    $('blueprintPreset').addEventListener('change', applyBlueprintPreset);
 
     function selectKind(kind) {
       const blueprint = kind === 'blueprint';
@@ -203,6 +248,7 @@
       $('blueprintTab').classList.toggle('active', blueprint);
       $('formatCatalogueTab').classList.toggle('active', formatCatalogue);
       document.querySelectorAll('.content-scope').forEach((field) => field.classList.toggle('hidden', formatCatalogue));
+      document.querySelectorAll('.blueprint-auto').forEach((field) => field.classList.toggle('hidden', blueprint));
       document.querySelectorAll('.blueprint-context').forEach((field) => field.classList.toggle('hidden', !blueprint));
       document.querySelectorAll('.blueprint-only').forEach((field) => field.classList.toggle('hidden', !blueprint));
       $('blueprintLookupCard').classList.toggle('hidden', !blueprint);
@@ -211,6 +257,8 @@
       $('subjectCode').required = blueprint;
       $('academicSubjectKey').required = blueprint;
       $('academicSession').required = blueprint;
+      if (blueprint) applyBlueprintPreset();
+      else setBlueprintContextLock(false);
       // The existing V4 Format Catalogue path intentionally remains separate.
       // Question Bank and Blueprint retain their established shared-secret gate.
       $('secretField').classList.toggle('hidden', formatCatalogue);
@@ -223,7 +271,7 @@
       $('formatNotice').innerHTML = formatCatalogue
         ? '<span>✓</span><span><strong>Non-production active Format Catalogue mode:</strong> uploads one <code>FORMAT_CATALOGUE_V4_ACTIVE_LOOKUP</code> workbook for <code>IMPORT_AND_ACTIVATE</code>. The importer validates and compiles before its atomic database write; a matching old active format is retired only if the replacement activates successfully. It never imports questions or edits Blueprint content.</span>'
         : blueprint
-          ? '<span>✓</span><span><strong>Blueprint upgrade:</strong> the file supplies <code>BLUEPRINT_ID</code>, <code>Subject_Code</code>, per-row <code>Chapter_Code</code>, and <code>Subtopic_ID</code>. For Class X Mathematics, use <code>10-mat-s</code> or <code>10-mat-b</code>. Find an existing Blueprint below, reuse its ID, and leave Revision Label blank for a safe new <code>DRAFT</code> replacement revision. Each <code>Subtopic_ID</code> is checked against physical <code>10-MAT</code> Question Bank rows before write.</span>'
+          ? '<span>✓</span><span><strong>Simple universal Blueprint upload:</strong> enter the registered CBSE Class, subject, Subject Code, class-scoped Academic Subject Key, Academic Session, and file. Use the Class X Mathematics Standard/Basic preset when applicable. Find an existing Blueprint below, reuse its ID, and leave Revision Label blank for a safe new <code>DRAFT</code> replacement revision. Unknown contexts are rejected before any write.</span>'
           : '<span>✓</span><span><strong>Question Bank format:</strong> this is the unchanged established Question Bank upload path and workbook behavior. Inline MCQ options, integer AI Quality Score behavior, <code>CRE</code>, and descriptive Practical Skill remain supported. The Standard/Basic Blueprint keys are not Question Bank identities.</span>';
     }
     $('questionTab').addEventListener('click', () => selectKind('question_bank'));
@@ -396,7 +444,7 @@
       const output = clearLookup();
       const items = Array.isArray(result?.items) ? result.items : [];
       if (!items.length) {
-        const empty = document.createElement('p'); empty.className = 'empty'; empty.textContent = 'No matching Class X Mathematics Blueprint revisions were found.';
+        const empty = document.createElement('p'); empty.className = 'empty'; empty.textContent = 'No matching Blueprint revisions were found.';
         output.appendChild(empty); return;
       }
       const table = document.createElement('table');
@@ -408,7 +456,7 @@
         const row = document.createElement('tr');
         const cells = [
           item.blueprintId || '—', item.revisionLabel || '—',
-          [item.academicSubjectKey, item.academicSession].filter(Boolean).join(' / ') || '—',
+          [item.classNumber ? `Class ${item.classNumber}` : '', item.subject, item.subjectCode, item.academicSubjectKey, item.academicSession].filter(Boolean).join(' / ') || '—',
           item.approvalStatus || '—',
           [lookupDate(item.createdAt), item.uploadedBy || item.createdBy].filter(Boolean).join(' · '),
           [item.sourceFile, item.uploadLogId ? `Upload log ${item.uploadLogId}` : ''].filter(Boolean).join(' · ')
@@ -416,8 +464,17 @@
         cells.forEach((value, index) => { const cell = document.createElement('td'); if (index === 3) { const badge = document.createElement('span'); badge.className = `badge ${clean(value).toLowerCase()}`; badge.textContent = value; cell.appendChild(badge); } else cell.textContent = value; row.appendChild(cell); });
         const action = document.createElement('td'); const use = document.createElement('button'); use.type = 'button'; use.className = 'primary'; use.style.padding = '7px 9px'; use.style.fontSize = '.78rem'; use.textContent = 'Use for replacement';
         use.addEventListener('click', () => {
-          $('classNumber').value = '10'; $('subject').value = 'Mathematics'; $('subjectCode').value = '10-MAT';
-          $('academicSubjectKey').value = item.academicSubjectKey || ''; $('academicSession').value = item.academicSession || '2026-27';
+          const key = clean(item.academicSubjectKey).toLowerCase();
+          const special = Object.prototype.hasOwnProperty.call(CLASS_X_MATHEMATICS_PRESETS, key);
+          $('blueprintPreset').value = special ? key : 'custom';
+          applyBlueprintPreset();
+          if (!special) {
+            $('classNumber').value = item.classNumber ? String(item.classNumber) : '';
+            $('subject').value = item.subject || '';
+            $('subjectCode').value = item.subjectCode || '';
+            $('academicSubjectKey').value = key;
+          }
+          $('academicSession').value = item.academicSession || '2026-27';
           $('blueprintId').value = item.blueprintId || ''; $('revisionLabel').value = '';
           window.scrollTo({ top: $('uploadForm').offsetTop - 18, behavior: 'smooth' });
           $('file').focus();
@@ -429,11 +486,15 @@
     $('lookupButton').addEventListener('click', async () => {
       const secret = clean($('secret').value);
       const session = clean($('lookupSession').value);
+      const lookupClass = clean($('lookupClass').value);
+      const lookupKey = clean($('lookupKey').value).toLowerCase();
       if (!secret) return lookupError('Enter the private n8n shared secret before looking up Blueprints.');
       if (session && !/^\d{4}-\d{2}$/.test(session)) return lookupError('Academic session must be blank or use YYYY-YY form, for example 2026-27.');
+      if (lookupKey && !/^(?:[1-9]|1[0-2])-[a-z][a-z0-9-]{1,61}$/.test(lookupKey)) return lookupError('Academic Subject Key must be blank or use a lowercase class-scoped key such as 9-sci, 10-mat-s, or 12-phy.');
+      if (lookupKey && lookupClass && Number(lookupKey.split('-')[0]) !== Number(lookupClass)) return lookupError('Academic Subject Key must have the same Class prefix as the lookup Class.');
       const data = new FormData();
-      data.append('importSecret', secret); data.append('academicSession', session);
-      data.append('academicSubjectKey', clean($('lookupKey').value)); data.append('search', clean($('lookupSearch').value)); data.append('limit', '100');
+      data.append('importSecret', secret); data.append('classNumber', lookupClass); data.append('academicSession', session);
+      data.append('academicSubjectKey', lookupKey); data.append('search', clean($('lookupSearch').value)); data.append('limit', '100');
       const button = $('lookupButton'); const original = button.textContent; button.disabled = true; button.textContent = 'Finding Blueprints…';
       try {
         const response = await fetch(BLUEPRINT_LOOKUP_WEBHOOK_URL, { method: 'POST', body: data });
@@ -447,13 +508,18 @@
     $('uploadForm').addEventListener('submit', async (event) => {
       event.preventDefault();
       const file = $('file').files[0]; const secret = clean($('secret').value);
-      const kind = $('uploadKind').value; const formatCatalogue = kind === 'format_catalogue';
-      const classNumber = clean($('classNumber').value); const subject = clean($('subject').value);
-      const subjectCode = clean($('subjectCode').value); const academicSubjectKey = clean($('academicSubjectKey').value).toLowerCase(); const academicSession = clean($('academicSession').value);
+      const kind = $('uploadKind').value; const formatCatalogue = kind === 'format_catalogue'; const blueprintUpload = kind === 'blueprint';
+      // Blueprint uploads send the operator-selected registered context. The two
+      // Class X Mathematics presets merely fill this same complete context.
+      const classNumber = clean($('classNumber').value);
+      const subject = clean($('subject').value);
+      const subjectCode = clean($('subjectCode').value);
+      const academicSubjectKey = clean($('academicSubjectKey').value).toLowerCase();
+      const academicSession = clean($('academicSession').value);
       const validQuestionBankContext = /^(?:[1-9]|1[0-2])$/.test(classNumber) && Boolean(subject);
       const validBlueprintContext = validQuestionBankContext
         && /^[A-Za-z0-9][A-Za-z0-9._/-]{0,127}$/.test(subjectCode)
-        && /^(10|11|12)-[a-z][a-z0-9-]{1,61}$/.test(academicSubjectKey)
+        && /^(?:[1-9]|1[0-2])-[a-z][a-z0-9-]{1,61}$/.test(academicSubjectKey)
         && Number(academicSubjectKey.split('-')[0]) === Number(classNumber)
         && /^\d{4}-\d{2}$/.test(academicSession);
       const activeContextValid = kind === 'blueprint' ? validBlueprintContext : validQuestionBankContext;
@@ -517,5 +583,5 @@
     });
   })();
   </script>
-<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a53456992bfa2141',t:'MTc5MzQ2NzMwOA=='};var l=window.parent.location,o;try{o=new URL(l.origin).origin}catch(e){try{o=new URL(new URL(l.href).origin).origin}catch(e){o=''}}var u='/cdn-cgi/challenge-platform/scripts/jsd/main.js?ray=a53456992bfa2141',a=document.createElement('script');a.src=o?new URL(u,o).href:u;document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a53827260e89b6f1',t:'MTc5MzUwNzMwOA=='};var l=window.parent.location,o;try{o=new URL(l.origin).origin}catch(e){try{o=new URL(new URL(l.href).origin).origin}catch(e){o=''}}var u='/cdn-cgi/challenge-platform/scripts/jsd/main.js?ray=a53827260e89b6f1',a=document.createElement('script');a.src=o?new URL(u,o).href:u;document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
