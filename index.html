@@ -125,8 +125,12 @@
         <label class="wide">Search Blueprint ID or revision label <span style="font-weight:500;color:var(--muted)">optional</span>
           <input id="lookupSearch" maxlength="120" placeholder="e.g. CBSE-X-MAT-STANDARD or IMPORT-123">
         </label>
+        <label class="wide">Approver name for a historical DRAFT <span style="font-weight:500;color:var(--muted)">only needed to approve a listed DRAFT</span>
+          <input id="legacyDraftApprover" maxlength="120" placeholder="Name recorded as the approver">
+          <small>New successful Formula v3 uploads are already approved. This action is only for a legacy DRAFT shown below and cannot be performed by its recorded uploader.</small>
+        </label>
       </div>
-      <div class="actions"><button class="primary" id="lookupButton" type="button">Find Blueprints</button><span class="file-note">Uses the same private uploader secret.</span></div>
+      <div class="actions"><button class="primary" id="lookupButton" type="button">Find Blueprints</button><span class="file-note">Uses the same private uploader secret. Lookup itself remains read-only.</span></div>
       <div id="lookupOutput" class="table-wrap hidden"></div>
     </section>
 
@@ -184,6 +188,7 @@
     const QUESTION_BANK_WEBHOOK_URL = 'https://n8n.mytst.cloud/webhook/mytst-import';
     const IMPORT_WEBHOOK_URL = 'https://n8n.mytst.cloud/webhook/mytst-import-formula-v3-nonprod';
     const BLUEPRINT_LOOKUP_WEBHOOK_URL = 'https://n8n.mytst.cloud/webhook/mytst-blueprint-lookup-formula-v3-nonprod';
+    const BLUEPRINT_APPROVAL_WEBHOOK_URL = 'https://n8n.mytst.cloud/webhook/mytst-blueprint-approve-formula-v3-nonprod';
     const FORMAT_CATALOGUE_WEBHOOK_URL = 'https://n8n.mytst.cloud/webhook/mytst-format-catalogue-activate-nonprod';
     const $ = (id) => document.getElementById(id);
     const numeric = (value) => Number(value ?? 0) || 0;
@@ -449,7 +454,7 @@
       }
       const table = document.createElement('table');
       const head = document.createElement('thead'); const headRow = document.createElement('tr');
-      ['Blueprint ID', 'Revision', 'Identity / session', 'Status', 'Created / uploader', 'Source', 'Replace'].forEach((title) => { const cell = document.createElement('th'); cell.textContent = title; headRow.appendChild(cell); });
+      ['Blueprint ID', 'Revision', 'Identity / session', 'Status', 'Created / uploader', 'Source', 'Actions'].forEach((title) => { const cell = document.createElement('th'); cell.textContent = title; headRow.appendChild(cell); });
       head.appendChild(headRow); table.appendChild(head);
       const body = document.createElement('tbody');
       items.forEach((item) => {
@@ -479,10 +484,43 @@
           window.scrollTo({ top: $('uploadForm').offsetTop - 18, behavior: 'smooth' });
           $('file').focus();
         });
-        action.appendChild(use); row.appendChild(action); body.appendChild(row);
+        action.appendChild(use);
+        if (clean(item.approvalStatus).toUpperCase() === 'DRAFT') {
+          const approve = document.createElement('button'); approve.type = 'button'; approve.className = 'primary';
+          approve.style.padding = '7px 9px'; approve.style.fontSize = '.78rem'; approve.style.marginTop = '7px'; approve.textContent = 'Approve DRAFT';
+          approve.addEventListener('click', () => approveLegacyDraft(item, approve));
+          action.appendChild(approve);
+        }
+        row.appendChild(action); body.appendChild(row);
       });
       table.appendChild(body); output.appendChild(table);
     }
+    async function approveLegacyDraft(item, button) {
+      const secret = clean($('secret').value);
+      const approvedBy = clean($('legacyDraftApprover').value);
+      if (!secret) return lookupError('Enter the private n8n shared secret before approving a historical DRAFT.');
+      if (approvedBy.length < 2) return lookupError('Enter the approver name before approving a historical DRAFT.');
+      const revisionId = clean(item.blueprintImportRevisionId);
+      if (!/^[1-9][0-9]*$/.test(revisionId)) return lookupError('This lookup result has no valid Blueprint revision ID to approve. Refresh lookup and retry.');
+      const label = `${item.blueprintId || 'Blueprint'} / ${item.revisionLabel || `revision ${revisionId}`}`;
+      if (!window.confirm(`Approve the historical DRAFT revision ${label}? This makes its frozen snapshot available to the Paper Generator.`)) return;
+      const data = new FormData();
+      data.append('importSecret', secret);
+      data.append('blueprintImportRevisionId', revisionId);
+      data.append('approvedBy', approvedBy);
+      const original = button.textContent; button.disabled = true; button.textContent = 'Approving…';
+      try {
+        const response = await fetch(BLUEPRINT_APPROVAL_WEBHOOK_URL, { method: 'POST', body: data });
+        const payload = await response.json().catch(() => ({ error: `The approval route returned HTTP ${response.status} without a JSON report.` }));
+        const result = payload?.result || payload;
+        if (!response.ok || payload?.error || result?.error) return lookupError(result?.error || payload?.error || 'Blueprint approval was not accepted.');
+        const revision = result?.revision || {};
+        window.alert(`Approved ${revision.blueprintId || item.blueprintId} / ${revision.revisionLabel || item.revisionLabel} as ${revision.approvedBy || approvedBy}.`);
+        $('lookupButton').click();
+      } catch (error) { lookupError(`Could not reach the Blueprint approval webhook: ${String(error)}`); }
+      finally { button.disabled = false; button.textContent = original; }
+    }
+
     $('lookupButton').addEventListener('click', async () => {
       const secret = clean($('secret').value);
       const session = clean($('lookupSession').value);
@@ -583,5 +621,5 @@
     });
   })();
   </script>
-<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a55a402fd9998af8',t:'MTc5Mzg2NDg0OQ=='};var l=window.parent.location,o;try{o=new URL(l.origin).origin}catch(e){try{o=new URL(new URL(l.href).origin).origin}catch(e){o=''}}var u='/cdn-cgi/challenge-platform/scripts/jsd/main.js?ray=a55a402fd9998af8',a=document.createElement('script');a.src=o?new URL(u,o).href:u;document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a55a56e6abb69648',t:'MTc5Mzg2NTc4MA=='};var l=window.parent.location,o;try{o=new URL(l.origin).origin}catch(e){try{o=new URL(new URL(l.href).origin).origin}catch(e){o=''}}var u='/cdn-cgi/challenge-platform/scripts/jsd/main.js?ray=a55a56e6abb69648',a=document.createElement('script');a.src=o?new URL(u,o).href:u;document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
