@@ -1,41 +1,869 @@
-myTST · Formula v3 unified uploader · non-production
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>myTST · Formula v3 unified uploader</title>
+  <style>
+    :root{--ink:#162a24;--muted:#65776f;--line:#d7e2dc;--paper:#f5f8f6;--card:#fff;--brand:#007d5a;--brand-soft:#e8f6ef;--warn:#9a620b;--warn-soft:#fff6e4;--danger:#b3263b;--danger-soft:#fff0f2;--blue:#235fa8;--blue-soft:#edf5ff}
+    *{box-sizing:border-box} body{margin:0;background:linear-gradient(145deg,#f0f8f4 0%,#fbfaf7 52%,#eef4fb 100%);color:var(--ink);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+    main{max-width:1120px;margin:0 auto;padding:42px 22px 76px}.eyebrow{margin:0 0 10px;color:var(--brand);font-size:.76rem;font-weight:800;letter-spacing:.13em;text-transform:uppercase}.title-row{display:flex;align-items:flex-start;justify-content:space-between;gap:22px}h1{margin:0;font-size:clamp(2rem,5vw,3.45rem);letter-spacing:-.055em;line-height:1}h2{margin:0;font-size:1.18rem;letter-spacing:-.02em}p{line-height:1.55;color:var(--muted)}.intro{max-width:760px;margin:15px 0 0;font-size:1.02rem}.status-chip{white-space:nowrap;border:1px solid #b9ddd0;border-radius:999px;background:var(--brand-soft);padding:7px 11px;font-size:.76rem;font-weight:750;color:#087052}
+    .card{margin-top:23px;border:1px solid var(--line);border-radius:18px;background:var(--card);padding:25px;box-shadow:0 18px 48px rgba(31,68,53,.09)}.notice{display:flex;gap:10px;align-items:flex-start;margin:0 0 21px;padding:13px 14px;border:1px solid #bce3d3;border-radius:10px;background:var(--brand-soft);font-size:.91rem;line-height:1.46;color:#225b49}.notice.warning{border-color:#f0d59a;background:var(--warn-soft);color:#704a10}.notice strong{color:inherit}.tabs{display:flex;gap:8px;margin-bottom:22px;border-bottom:1px solid var(--line);padding-bottom:14px}.tab{appearance:none;border:1px solid transparent;border-radius:9px;background:transparent;color:var(--muted);font:inherit;font-size:.9rem;font-weight:750;padding:9px 12px;cursor:pointer}.tab.active{border-color:#b2dacb;background:var(--brand-soft);color:#006c4d}
+    .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:15px}.wide{grid-column:1/-1}label{display:grid;gap:7px;color:#29463b;font-size:.87rem;font-weight:750}label small{font-size:.77rem;font-weight:500;line-height:1.35;color:var(--muted)}input,select,textarea{width:100%;min-height:44px;border:1px solid #bfcfc7;border-radius:9px;background:#fff;padding:10px 11px;font:inherit;color:var(--ink)}textarea{min-height:82px;resize:vertical}input:focus,select:focus,textarea:focus{outline:3px solid rgba(0,125,90,.14);border-color:var(--brand)}input[type=file]{padding:9px}.hidden{display:none!important}.actions{display:flex;gap:12px;align-items:center;margin-top:23px;flex-wrap:wrap}button.primary{appearance:none;border:0;border-radius:10px;background:var(--brand);color:#fff;padding:12px 17px;font:inherit;font-weight:800;cursor:pointer;box-shadow:0 7px 16px rgba(0,125,90,.2)}button.primary:hover{background:#006b4d}button.primary:disabled{cursor:wait;opacity:.66}.file-note{font-size:.84rem;color:var(--muted)}
+    .summary-head{display:flex;gap:18px;justify-content:space-between;align-items:flex-start}.summary-state{font-size:.85rem;font-weight:800;color:var(--brand)}.metrics{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin-top:19px}.metric{min-height:92px;padding:13px;border:1px solid #d2e5dc;border-radius:12px;background:#f1faf5}.metric.warn{border-color:#f0d8aa;background:#fff8e9}.metric.bad{border-color:#f2c7ce;background:#fff2f4}.metric.blue{border-color:#caddf4;background:var(--blue-soft)}.metric span{display:block;color:var(--muted);font-size:.69rem;font-weight:750;letter-spacing:.06em;text-transform:uppercase}.metric strong{display:block;margin-top:7px;font-size:1.75rem;letter-spacing:-.05em;line-height:1}
+    .scope-list{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}.scope{border:1px solid #f0d8aa;border-radius:999px;background:var(--warn-soft);padding:6px 9px;color:#76500d;font-size:.78rem;font-weight:700}.scope code{font:inherit}.table-wrap{margin-top:18px;overflow:auto;border:1px solid var(--line);border-radius:12px}table{border-collapse:collapse;width:100%;min-width:790px;font-size:.84rem}th,td{padding:11px 12px;text-align:left;vertical-align:top;border-bottom:1px solid #e7ede9}tr:last-child td{border-bottom:0}th{position:sticky;top:0;background:#f3f7f4;color:#536d62;font-size:.69rem;letter-spacing:.065em;text-transform:uppercase}td.reason{min-width:340px;white-space:normal;color:#674453}.badge{display:inline-block;border-radius:999px;padding:4px 7px;background:#eef2f0;color:#4b6258;font-size:.72rem;font-weight:800}.badge.rejected,.badge.unresolved{background:var(--danger-soft);color:#9d2437}.badge.duplicate{background:var(--warn-soft);color:#80520d}.badge.staged{background:var(--blue-soft);color:var(--blue)}.empty{padding:23px;color:var(--muted);text-align:center}.review-summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:18px 0}.review-summary .metric{min-height:78px}.review-question{max-width:410px;white-space:pre-wrap;overflow-wrap:anywhere}.review-detail{min-width:510px;white-space:pre-wrap;overflow-wrap:anywhere;color:#405a4f;font-size:.8rem;line-height:1.45}.review-actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:13px}.secondary{appearance:none;border:1px solid #9fc8b9;border-radius:9px;background:#fff;color:#08664d;padding:9px 11px;font:inherit;font-size:.84rem;font-weight:750;cursor:pointer}.secondary:disabled{cursor:wait;opacity:.6}.blocked-note{color:#8a3945;font-weight:750}.error{border-color:#edc3ca;background:var(--danger-soft)}.error pre{margin:14px 0 0;max-height:320px;overflow:auto;white-space:pre-wrap;overflow-wrap:anywhere;border-radius:10px;background:#fff8f9;padding:14px;color:#8b2333;font-size:.82rem}.footer-note{font-size:.8rem;margin-top:15px;color:var(--muted)}
+    @media(max-width:800px){main{padding:27px 15px 54px}.card{padding:18px}.title-row{display:block}.status-chip{display:inline-block;margin-top:15px}.grid{grid-template-columns:1fr}.metrics,.review-summary{grid-template-columns:repeat(2,minmax(0,1fr))}.tabs{overflow:auto}.tab{white-space:nowrap}}
+  </style>
+</head>
+<body>
+  <main>
+    <p class="eyebrow">myTST · Formula v3 unified uploader · non-production</p>
+    <div class="title-row">
+      <div>
+        <h1>Question Bank, Blueprint, and Format uploads.</h1>
+        <p class="intro">Keep the established Question Bank and Format Catalogue upload paths, while the Blueprint tab adds registered-context validation, authored demand-row syntax checks, revision lookup, and safe replacement.</p>
+      </div>
+      <span class="status-chip">CBSE · Formula v3</span>
+    </div>
 
-Question Bank, Blueprint, and Format uploads.
-Keep the established Question Bank and Format Catalogue upload paths, while the Blueprint tab adds registered-context validation, authored demand-row syntax checks, revision lookup, and safe replacement.
+    <section class="card" aria-labelledby="upload-heading">
+      <h2 id="upload-heading">New import</h2>
+      <p class="notice warning"><span>⚠</span><span><strong>Private uploader.</strong> Use a trusted device. The n8n secret is stored only for this browser session. Upload problems are reported; no automatic text repair or guessed canonical code is performed.</span></p>
 
-CBSE · Formula v3
-New import
-⚠
-Private uploader. Use a trusted device. The n8n secret is stored only for this browser session. Upload problems are reported; no automatic text repair or guessed canonical code is performed.
+      <form id="uploadForm">
+        <input id="uploadKind" type="hidden" value="question_bank">
+        <div class="tabs" aria-label="Upload type">
+          <button class="tab active" id="questionTab" type="button">Question bank</button>
+          <button class="tab" id="blueprintTab" type="button">Blueprint</button>
+          <button class="tab" id="stagedQuestionReviewTab" type="button">Staged question review · non-production</button>
+          <button class="tab" id="formatCatalogueTab" type="button">Format catalogue · non-production</button>
+        </div>
 
-Question bank
-Blueprint
-Staged question review · non-production
-Format catalogue · non-production
-n8n shared secret
-Enter the configured private uploader secret
-Board
-CBSE
-The current importer writes CBSE only.
-Class
-Select class
-Required Class scope for Question Bank and Blueprint uploads.
-Subject display name
-e.g. Mathematics
-Use the canonical display name registered for this Class and subject.
-Subject Code
-e.g. 10-MAT
-Required for Blueprint uploads; it must agree with the registered academic-subject context.
-Academic year
-optional
-2026
-Uploader name
-optional
-Name for the audit record
-Question-bank fileNo file chosen
-Choose a UTF-8 CSV, modern Excel (.xlsx), or legacy Excel (.xls) file, maximum 10 MB.
-✓
-Question Bank format: this is the unchanged established Question Bank upload path and workbook behavior. Inline MCQ options, integer AI Quality Score behavior, CRE, and descriptive Practical Skill remain supported. The Standard/Basic Blueprint keys are not Question Bank identities.
+        <div class="grid">
+          <label class="wide" id="secretField">n8n shared secret
+            <input id="secret" type="password" autocomplete="off" placeholder="Enter the configured private uploader secret" required>
+          </label>
+          <label class="content-scope">Board
+            <input id="board" value="CBSE" readonly aria-readonly="true">
+            <small>The current importer writes CBSE only.</small>
+          </label>
+          <label class="content-scope">Class
+            <select id="classNumber" required></select>
+            <small>Required Class scope for Question Bank and Blueprint uploads.</small>
+          </label>
+          <label class="content-scope">Subject display name
+            <input id="subject" placeholder="e.g. Mathematics" required>
+            <small>Use the canonical display name registered for this Class and subject.</small>
+          </label>
+          <label class="content-scope">Subject Code
+            <input id="subjectCode" placeholder="e.g. 10-MAT">
+            <small>Required for Blueprint uploads; it must agree with the registered academic-subject context.</small>
+          </label>
+          <label class="blueprint-only">Blueprint preset <span style="font-weight:500;color:var(--muted)">optional convenience</span>
+            <select id="blueprintPreset">
+              <option value="custom" selected>Custom registered Blueprint context</option>
+              <option value="10-mat-s">Class X Mathematics Standard · 10-mat-s</option>
+              <option value="10-mat-b">Class X Mathematics Basic · 10-mat-b</option>
+            </select>
+            <small>Use a Mathematics preset to fill its protected context, or choose Custom for any registered Class 1–12 context.</small>
+          </label>
+          <p id="blueprintContext" class="notice blueprint-only wide"><span>✓</span><span><strong>Universal Blueprint upload:</strong> supply the real CBSE Class, canonical subject name, Subject Code, class-scoped Academic Subject Key, Academic Session, and file. The importer accepts only contexts already registered by the backend; it never creates a registry entry from portal input.</span></p>
+          <label class="content-scope blueprint-context">Academic Subject Key
+            <input id="academicSubjectKey" placeholder="e.g. 9-sci, 10-mat-s, or 12-phy" pattern="(?:[1-9]|1[0-2])-[a-z][a-z0-9-]{1,61}">
+            <small>Required for Blueprint uploads. It must have the selected Class prefix and already exist in the backend registry.</small>
+          </label>
+          <label class="content-scope blueprint-context">Academic Session
+            <input id="academicSession" value="2026-27" placeholder="YYYY-YY" pattern="[0-9]{4}-[0-9]{2}">
+            <small>Required immutable Blueprint context.</small>
+          </label>
+          <label class="content-scope blueprint-auto">Academic year <span style="font-weight:500;color:var(--muted)">optional</span>
+            <input id="academicYear" value="2026" placeholder="2026 or 2026-27">
+          </label>
+          <label>Uploader name <span style="font-weight:500;color:var(--muted)">optional</span>
+            <input id="uploadedBy" placeholder="Name for the audit record">
+          </label>
+          <label class="blueprint-only">Blueprint ID <span style="font-weight:500;color:var(--muted)">optional portal match</span>
+            <input id="blueprintId" maxlength="200" placeholder="Exact existing Blueprint ID to replace">
+            <small>Leave blank for ordinary file-driven Blueprint upload. For replacement, choose an ID from lookup; it must match the file’s <code>BLUEPRINT_ID</code>.</small>
+          </label>
+          <label class="blueprint-only">Revision label <span style="font-weight:500;color:var(--muted)">optional</span>
+            <input id="revisionLabel" maxlength="200" placeholder="Leave blank for a new IMPORT-&lt;upload-log-id&gt; label">
+            <small>Use a fresh label to safely replace the current Blueprint while preserving prior revision history.</small>
+          </label>
+          <label id="formatActionField" class="hidden">Format Catalogue action
+            <select id="requestedAction" aria-label="Format Catalogue action">
+              <option value="IMPORT_AND_ACTIVATE">Import and activate — non-production</option>
+            </select>
+            <small>One successful V4 upload validates, writes, and activates the format in the non-production database atomically.</small>
+          </label>
+          <label class="wide" id="fileLabel">Question-bank or blueprint file
+            <input id="file" type="file" accept=".csv,.xlsx,.xls,text/csv,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" required>
+            <small id="fileHint">Choose a UTF-8 CSV, modern Excel (.xlsx), or legacy Excel (.xls) file, maximum 10 MB.</small>
+          </label>
+        </div>
 
-Validate and import Question Bank
-Nothing is written for rejected rows.
+        <p class="notice" id="formatNotice"><span>✓</span><span><strong>Question-bank format:</strong> direct <code>Subject_Code</code>, <code>Chapter_Code</code>, <code>Subtopic_ID</code>, <code>Quality_Score</code>, and inline MCQ options in the Question field are supported.</span></p>
+        <div class="actions" id="uploadActions">
+          <button class="primary" id="submitButton" type="submit">Validate and import</button>
+          <span class="file-note">Nothing is written for rejected rows.</span>
+        </div>
+      </form>
+    </section>
+
+    <section id="blueprintLookupCard" class="card hidden" aria-live="polite">
+      <h2>Find existing Blueprints</h2>
+      <p>Blueprint-only, private, read-only lookup. It returns revision metadata for registered CBSE contexts, never matrices or snapshots.</p>
+      <div class="grid">
+        <label>Class <span style="font-weight:500;color:var(--muted)">optional</span>
+          <select id="lookupClass"></select>
+        </label>
+        <label>Academic session <span style="font-weight:500;color:var(--muted)">optional</span>
+          <input id="lookupSession" value="2026-27" placeholder="YYYY-YY" pattern="[0-9]{4}-[0-9]{2}">
+        </label>
+        <label>Academic Subject Key <span style="font-weight:500;color:var(--muted)">optional</span>
+          <input id="lookupKey" maxlength="64" placeholder="e.g. 9-sci or 10-mat-s" pattern="(?:[1-9]|1[0-2])-[a-z][a-z0-9-]{1,61}">
+        </label>
+        <label class="wide">Search Blueprint ID or revision label <span style="font-weight:500;color:var(--muted)">optional</span>
+          <input id="lookupSearch" maxlength="120" placeholder="e.g. CBSE-X-MAT-STANDARD or IMPORT-123">
+        </label>
+        <label class="wide">Approver name for a historical DRAFT <span style="font-weight:500;color:var(--muted)">only needed to approve a listed DRAFT</span>
+          <input id="legacyDraftApprover" maxlength="120" placeholder="Name recorded as the approver">
+          <small>New successful Formula v3 uploads are already approved. This action is only for a legacy DRAFT shown below and cannot be performed by its recorded uploader.</small>
+        </label>
+      </div>
+      <div class="actions"><button class="primary" id="lookupButton" type="button">Find Blueprints</button><span class="file-note">Uses the same private uploader secret. Lookup itself remains read-only.</span></div>
+      <div id="lookupOutput" class="table-wrap hidden"></div>
+    </section>
+
+    <section id="questionReviewCard" class="card hidden" aria-live="polite">
+      <h2>Staged Question Review</h2>
+      <p>Privately inspect staged Question Bank records before approving them. Approval is explicit, creates immutable per-question audit evidence, and applies only to currently eligible rows. Questions needing a supplied diagram/render asset remain blocked but can be exported for correction.</p>
+      <p class="notice warning"><span>⚠</span><span><strong>Review before approving.</strong> Approval makes selected eligible questions available for use. It never edits question text, answers, options, source provenance, or taxonomy.</span></p>
+      <div class="grid">
+        <label>Class <span style="font-weight:500;color:var(--muted)">optional</span>
+          <select id="reviewClass"></select>
+        </label>
+        <label>Subject Code <span style="font-weight:500;color:var(--muted)">optional</span>
+          <input id="reviewSubjectCode" maxlength="128" placeholder="e.g. 11-PHY">
+        </label>
+        <label>Source Type <span style="font-weight:500;color:var(--muted)">optional</span>
+          <select id="reviewSourceType"><option value="">All source types</option><option value="AI_GENERATED">AI_GENERATED</option><option value="OTHER">OTHER</option></select>
+        </label>
+        <label>Staging reason <span style="font-weight:500;color:var(--muted)">optional</span>
+          <select id="reviewReason"><option value="">All staged reasons</option><option value="AI_GENERATED_REVIEW">AI generated review</option><option value="REQUIRED_RENDER_ASSET">Required render asset</option><option value="UPLOADER_STAGED_REVIEW">Uploader staged review</option><option value="NEEDS_REVIEW">Needs review</option><option value="STAGED_STATUS">Staged status</option><option value="PENDING_VALIDATION">Pending validation</option><option value="OTHER_REVIEW_STATE">Other review state</option></select>
+        </label>
+        <label>Approval state <span style="font-weight:500;color:var(--muted)">optional</span>
+          <select id="reviewEligibility"><option value="all">All staged rows</option><option value="eligible">Approval eligible only</option><option value="blocked">Blocked rows only</option></select>
+        </label>
+        <label>Search <span style="font-weight:500;color:var(--muted)">optional</span>
+          <input id="reviewSearch" maxlength="120" placeholder="Question ID, chapter, topic, or question text">
+        </label>
+        <label>Reviewer name
+          <input id="reviewerName" maxlength="120" placeholder="Name recorded in the approval audit">
+        </label>
+        <label class="wide">Review note
+          <textarea id="reviewNote" maxlength="1000" placeholder="Why are these questions suitable for approval? Required for every approval batch."></textarea>
+        </label>
+      </div>
+      <div class="review-actions">
+        <button class="primary" id="reviewLookupButton" type="button">Find staged questions</button>
+        <button class="secondary" id="reviewDownloadButton" type="button" disabled>Download filtered questions (.xlsx)</button>
+        <button class="secondary" id="reviewApproveSelectedButton" type="button" disabled>Approve selected</button>
+        <button class="secondary" id="reviewApproveFilteredButton" type="button" disabled>Approve all currently filtered eligible</button>
+      </div>
+      <p id="reviewMessage" class="footer-note">Use the same private n8n shared secret above. Lookup and export are read-only.</p>
+      <div id="reviewSummary" class="review-summary hidden"></div>
+      <div id="reviewOutput" class="table-wrap hidden"></div>
+      <div id="reviewPagination" class="review-actions hidden"><button class="secondary" id="reviewPrevButton" type="button">Previous page</button><span id="reviewPageText" class="file-note"></span><button class="secondary" id="reviewNextButton" type="button">Next page</button></div>
+    </section>
+
+    <section id="summaryCard" class="card hidden" aria-live="polite">
+      <div class="summary-head">
+        <div>
+          <h2 id="summaryTitle">Import result</h2>
+          <p id="summaryDescription">Review the outcome below.</p>
+        </div>
+        <span id="summaryState" class="summary-state"></span>
+      </div>
+      <div class="metrics">
+        <div class="metric"><span>Total rows</span><strong id="totalInputRows">0</strong></div>
+        <div class="metric"><span>Written</span><strong id="written">0</strong></div>
+        <div class="metric"><span>Inserted</span><strong id="inserted">0</strong></div>
+        <div class="metric blue"><span>Updated</span><strong id="updated">0</strong></div>
+        <div class="metric blue"><span>Staged</span><strong id="staged">0</strong></div>
+        <div class="metric"><span>Unchanged</span><strong id="unchanged">0</strong></div>
+        <div class="metric bad"><span>Rejected</span><strong id="rejected">0</strong></div>
+        <div class="metric warn"><span>Duplicates</span><strong id="duplicates">0</strong></div>
+        <div class="metric bad"><span>Unresolved</span><strong id="unresolved">0</strong></div>
+        <div class="metric warn"><span>Truncated</span><strong id="truncated">0</strong></div>
+      </div>
+      <div id="scopeBlock" class="hidden">
+        <p class="footer-note"><strong>Master scopes requiring attention</strong></p>
+        <div id="scopeList" class="scope-list"></div>
+      </div>
+    </section>
+
+    <section id="issuesCard" class="card hidden">
+      <h2>Rows requiring attention</h2>
+      <p>Every returned validation or import issue is listed below. Correct the source/master data and upload again.</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Source row</th><th>Question / blueprint ID</th><th>Canonical scope</th><th>Status</th><th>Reason</th></tr></thead>
+          <tbody id="issuesBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="errorCard" class="card error hidden" aria-live="assertive">
+      <h2>Upload could not be completed</h2>
+      <p>The workflow did not return a normal import report. Check the details below and the n8n execution if needed.</p>
+      <pre id="errorOutput"></pre>
+    </section>
+  </main>
+
+  <!-- SheetJS is loaded only to serialize the multi-tab Format Catalogue workbook. All validation and database staging remain server-side in n8n/PostgreSQL. -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script>
+  (() => {
+    // The format webhook is deliberately separate from the Question Bank/Blueprint webhook.
+    // Existing Question Bank path is deliberately unchanged. Blueprint alone uses
+    // the Formula v3 endpoint upgraded with revision lookup/replacement behavior.
+    const QUESTION_BANK_WEBHOOK_URL = 'https://n8n.mytst.cloud/webhook/mytst-import';
+    const IMPORT_WEBHOOK_URL = 'https://n8n.mytst.cloud/webhook/mytst-import-formula-v3-nonprod';
+    const BLUEPRINT_LOOKUP_WEBHOOK_URL = 'https://n8n.mytst.cloud/webhook/mytst-blueprint-lookup-formula-v3-nonprod';
+    const BLUEPRINT_APPROVAL_WEBHOOK_URL = 'https://n8n.mytst.cloud/webhook/mytst-blueprint-approve-formula-v3-nonprod';
+    const STAGED_QUESTION_LOOKUP_WEBHOOK_URL = 'https://n8n.mytst.cloud/webhook/mytst-staged-question-lookup-formula-v3-nonprod';
+    const STAGED_QUESTION_APPROVAL_WEBHOOK_URL = 'https://n8n.mytst.cloud/webhook/mytst-staged-question-approve-formula-v3-nonprod';
+    const FORMAT_CATALOGUE_WEBHOOK_URL = 'https://n8n.mytst.cloud/webhook/mytst-format-catalogue-activate-nonprod';
+    const $ = (id) => document.getElementById(id);
+    const numeric = (value) => Number(value ?? 0) || 0;
+    const clean = (value) => String(value ?? '').trim();
+    const classes = Array.from({length:12}, (_, index) => index + 1);
+
+    const chooseClass = document.createElement('option'); chooseClass.value = ''; chooseClass.textContent = 'Select class'; chooseClass.disabled = true; chooseClass.selected = true;
+    $('classNumber').appendChild(chooseClass);
+    const lookupAnyClass = document.createElement('option'); lookupAnyClass.value = ''; lookupAnyClass.textContent = 'All Classes';
+    $('lookupClass').appendChild(lookupAnyClass);
+    const reviewAnyClass = document.createElement('option'); reviewAnyClass.value = ''; reviewAnyClass.textContent = 'All Classes';
+    $('reviewClass').appendChild(reviewAnyClass);
+    for (const number of classes) {
+      const option = document.createElement('option'); option.value = String(number); option.textContent = `Class ${number}`;
+      $('classNumber').appendChild(option);
+      const lookupOption = option.cloneNode(true); $('lookupClass').appendChild(lookupOption);
+      const reviewOption = option.cloneNode(true); $('reviewClass').appendChild(reviewOption);
+    }
+    $('classNumber').value = localStorage.getItem('mytst.formulaV3.classNumber') || '';
+    $('subject').value = localStorage.getItem('mytst.formulaV3.subject') || '';
+    $('subjectCode').value = localStorage.getItem('mytst.formulaV3.subjectCode') || '';
+    $('academicSubjectKey').value = localStorage.getItem('mytst.formulaV3.academicSubjectKey') || '';
+    $('academicSession').value = localStorage.getItem('mytst.formulaV3.academicSession') || '2026-27';
+    $('secret').value = sessionStorage.getItem('mytst.formulaV3.secret') || '';
+    $('secret').addEventListener('input', () => sessionStorage.setItem('mytst.formulaV3.secret', $('secret').value));
+    $('classNumber').addEventListener('change', () => localStorage.setItem('mytst.formulaV3.classNumber', $('classNumber').value));
+    $('subject').addEventListener('input', () => localStorage.setItem('mytst.formulaV3.subject', $('subject').value));
+    $('subjectCode').addEventListener('input', () => localStorage.setItem('mytst.formulaV3.subjectCode', $('subjectCode').value));
+    $('academicSubjectKey').addEventListener('input', () => localStorage.setItem('mytst.formulaV3.academicSubjectKey', $('academicSubjectKey').value.toLowerCase()));
+    $('academicSession').addEventListener('input', () => localStorage.setItem('mytst.formulaV3.academicSession', $('academicSession').value));
+
+    const CLASS_X_MATHEMATICS_PRESETS = {
+      '10-mat-s': { classNumber: '10', subject: 'Mathematics', subjectCode: '10-MAT', academicSubjectKey: '10-mat-s', label: 'Standard' },
+      '10-mat-b': { classNumber: '10', subject: 'Mathematics', subjectCode: '10-MAT', academicSubjectKey: '10-mat-b', label: 'Basic' }
+    };
+    function setBlueprintContextLock(locked) {
+      $('classNumber').disabled = locked;
+      ['subject', 'subjectCode', 'academicSubjectKey'].forEach((id) => { $(id).readOnly = locked; });
+    }
+    function setBlueprintContextNotice(preset) {
+      const special = CLASS_X_MATHEMATICS_PRESETS[preset];
+      $('blueprintContext').innerHTML = special
+        ? `<span>✓</span><span><strong>Class X Mathematics ${special.label} preset:</strong> this sends CBSE · Class 10 · Mathematics · <code>10-MAT</code> · <code>${special.academicSubjectKey}</code>. The Blueprint identity remains separate. Demand identifiers are syntax-validated and stored as authored Blueprint metadata; they are not checked against Question Bank content.</span>`
+        : '<span>✓</span><span><strong>Universal Blueprint upload:</strong> supply the real CBSE Class, canonical subject name, Subject Code, class-scoped Academic Subject Key, Academic Session, and file. The importer accepts only contexts already registered by the backend; it never creates a registry entry from portal input.</span>';
+    }
+    function applyBlueprintPreset() {
+      const preset = $('blueprintPreset').value;
+      const values = CLASS_X_MATHEMATICS_PRESETS[preset];
+      if (values) {
+        $('classNumber').value = values.classNumber;
+        $('subject').value = values.subject;
+        $('subjectCode').value = values.subjectCode;
+        $('academicSubjectKey').value = values.academicSubjectKey;
+      }
+      setBlueprintContextLock(Boolean(values));
+      setBlueprintContextNotice(preset);
+    }
+    $('blueprintPreset').addEventListener('change', applyBlueprintPreset);
+
+    function selectKind(kind) {
+      const blueprint = kind === 'blueprint';
+      const formatCatalogue = kind === 'format_catalogue';
+      const stagedQuestionReview = kind === 'staged_question_review';
+      $('uploadKind').value = kind;
+      $('questionTab').classList.toggle('active', kind === 'question_bank');
+      $('blueprintTab').classList.toggle('active', blueprint);
+      $('stagedQuestionReviewTab').classList.toggle('active', stagedQuestionReview);
+      $('formatCatalogueTab').classList.toggle('active', formatCatalogue);
+      document.querySelectorAll('.content-scope').forEach((field) => field.classList.toggle('hidden', formatCatalogue || stagedQuestionReview));
+      document.querySelectorAll('.blueprint-auto').forEach((field) => field.classList.toggle('hidden', blueprint || stagedQuestionReview));
+      document.querySelectorAll('.blueprint-context').forEach((field) => field.classList.toggle('hidden', !blueprint));
+      document.querySelectorAll('.blueprint-only').forEach((field) => field.classList.toggle('hidden', !blueprint));
+      $('blueprintLookupCard').classList.toggle('hidden', !blueprint);
+      $('questionReviewCard').classList.toggle('hidden', !stagedQuestionReview);
+      $('classNumber').required = !formatCatalogue && !stagedQuestionReview;
+      $('subject').required = !formatCatalogue && !stagedQuestionReview;
+      $('subjectCode').required = blueprint;
+      $('academicSubjectKey').required = blueprint;
+      $('academicSession').required = blueprint;
+      if (blueprint) applyBlueprintPreset();
+      else setBlueprintContextLock(false);
+      // The existing V4 Format Catalogue path intentionally remains separate.
+      // Question Bank, Blueprint, and review actions retain their shared-secret gate.
+      $('secretField').classList.toggle('hidden', formatCatalogue);
+      $('secret').required = !formatCatalogue;
+      $('formatActionField').classList.toggle('hidden', !formatCatalogue);
+      $('fileLabel').classList.toggle('hidden', stagedQuestionReview);
+      $('formatNotice').classList.toggle('hidden', stagedQuestionReview);
+      $('uploadActions').classList.toggle('hidden', stagedQuestionReview);
+      if (!stagedQuestionReview) {
+        $('fileLabel').childNodes[0].textContent = formatCatalogue ? 'Master Format Catalogue workbook\n            ' : blueprint ? 'Blueprint file\n            ' : 'Question-bank file\n            ';
+        $('file').accept = formatCatalogue ? '.xlsx,.xls,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' : '.csv,.xlsx,.xls,text/csv,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+        $('fileHint').textContent = formatCatalogue ? 'Choose one multi-tab Excel (.xlsx or .xls) FORMAT_CATALOGUE_V4_ACTIVE_LOOKUP workbook, maximum 10 MB.' : 'Choose a UTF-8 CSV, modern Excel (.xlsx), or legacy Excel (.xls) file, maximum 10 MB.';
+        $('submitButton').textContent = formatCatalogue ? 'Import and activate Format Catalogue' : blueprint ? 'Validate and import Blueprint' : 'Validate and import Question Bank';
+        $('formatNotice').innerHTML = formatCatalogue
+          ? '<span>✓</span><span><strong>Non-production active Format Catalogue mode:</strong> uploads one <code>FORMAT_CATALOGUE_V4_ACTIVE_LOOKUP</code> workbook for <code>IMPORT_AND_ACTIVATE</code>. The importer validates and compiles before its atomic database write; a matching old active format is retired only if the replacement activates successfully. It never imports questions or edits Blueprint content.</span>'
+          : blueprint
+            ? '<span>✓</span><span><strong>Simple universal Blueprint upload:</strong> enter the registered CBSE Class, subject, Subject Code, class-scoped Academic Subject Key, Academic Session, and file. Use the Class X Mathematics Standard/Basic preset when applicable. Find an existing Blueprint below, reuse its ID, and leave Revision Label blank for a safe new immediately <code>APPROVED</code> replacement revision. Unknown or invalid contexts are rejected before any write.</span>'
+            : '<span>✓</span><span><strong>Question Bank format:</strong> this is the unchanged established Question Bank upload path and workbook behavior. Inline MCQ options, integer AI Quality Score behavior, <code>CRE</code>, and descriptive Practical Skill remain supported. The Standard/Basic Blueprint keys are not Question Bank identities.</span>';
+      }
+    }
+    $('questionTab').addEventListener('click', () => selectKind('question_bank'));
+    $('blueprintTab').addEventListener('click', () => selectKind('blueprint'));
+    $('stagedQuestionReviewTab').addEventListener('click', () => selectKind('staged_question_review'));
+    $('formatCatalogueTab').addEventListener('click', () => selectKind('format_catalogue'));
+    selectKind('question_bank');
+    $('file').addEventListener('change', () => {
+      const file = $('file').files[0];
+      const catalogue = $('uploadKind').value === 'format_catalogue';
+      $('fileHint').textContent = file ? `${file.name} · ${(file.size / 1024 / 1024).toFixed(2)} MB${/\.xls$/i.test(file.name) ? ' · legacy Excel will be converted to .xlsx before upload' : ''}` : catalogue ? 'Choose one multi-tab Excel (.xlsx or .xls) FORMAT_CATALOGUE_V4_ACTIVE_LOOKUP workbook, maximum 10 MB.' : 'Choose a UTF-8 CSV, modern Excel (.xlsx), or legacy Excel (.xls) file, maximum 10 MB.';
+    });
+
+    function showError(error) {
+      $('summaryCard').classList.add('hidden'); $('issuesCard').classList.add('hidden');
+      $('errorCard').classList.remove('hidden');
+      $('errorOutput').textContent = typeof error === 'string' ? error : JSON.stringify(error, null, 2);
+      window.scrollTo({ top: $('errorCard').offsetTop - 18, behavior: 'smooth' });
+    }
+    function scopeText(issue) {
+      const chapterScopes = Array.isArray(issue.unresolved_chapters) ? issue.unresolved_chapters.map((item) => item.chapter_code).filter(Boolean) : [];
+      return [issue.subject_code, issue.chapter_code, ...chapterScopes].filter(Boolean).join(' / ') || '—';
+    }
+    function reasonText(issue) {
+      const details = Array.isArray(issue.validation_errors) ? issue.validation_errors
+        .map((item) => [item.code, item.field, item.message].filter(Boolean).join(': ')).filter(Boolean) : [];
+      return details.length ? details.join(' | ') : clean(issue.reason || issue.code) || '—';
+    }
+    function statusClass(status) {
+      const value = clean(status).toLowerCase();
+      if (value.includes('unresolved')) return 'unresolved';
+      if (value.includes('duplicate') || value.includes('unchanged')) return 'duplicate';
+      if (value.includes('stage')) return 'staged';
+      if (value.includes('reject')) return 'rejected';
+      return '';
+    }
+    function showFormatCatalogueSummary(result) {
+      const validation = result.validation || {};
+      const errors = Array.isArray(validation.errors) ? validation.errors : [];
+      const warnings = Array.isArray(validation.warnings) ? validation.warnings : [];
+      const profiles = Array.isArray(result.compiledProfiles) ? result.compiledProfiles : [];
+      const staged = result.outcome === 'STAGED_DRAFT';
+      const activated = result.outcome === 'ACTIVATED';
+      const persisted = staged || activated;
+      $('errorCard').classList.add('hidden'); $('summaryCard').classList.remove('hidden');
+      $('summaryTitle').textContent = `Format Catalogue ${result.outcome || 'result'} · ${result.packageId || 'package'}`;
+      $('summaryDescription').textContent = errors.length
+        ? 'The workbook was not written. Correct every listed tab, row, column, and validation reason.'
+        : activated
+          ? result.reason === 'ALREADY_ACTIVATED_SAME_PACKAGE_AND_SOURCE'
+            ? 'This exact package and source file are already active. No second database write or replacement was performed.'
+            : 'The format was atomically written and activated in non-production. Any earlier active format with the same lookup key was retired only as part of this successful transaction.'
+          : staged
+            ? 'The validated workbook was staged as DRAFT configuration only. No active profile or binding was created.'
+            : 'Workbook validation completed.';
+      $('summaryState').textContent = result.status || result.outcome || 'COMPLETED';
+      const metrics = { totalInputRows: 1, written: persisted ? profiles.length : 0, inserted: persisted ? profiles.length : 0, updated: 0, staged: persisted ? profiles.length : 0, unchanged: 0, rejected: errors.length, duplicates: 0, unresolved: 0, truncated: 0 };
+      Object.entries(metrics).forEach(([name, value]) => { $(name).textContent = String(value); });
+      $('scopeBlock').classList.add('hidden'); $('issuesBody').innerHTML = '';
+      $('issuesCard').classList.toggle('hidden', errors.length === 0);
+      for (const issue of errors) {
+        const row = document.createElement('tr');
+        const values = [issue.row ?? '—', issue.entity_id || issue.sheet || '—', [issue.sheet, issue.column].filter(Boolean).join(' / ') || '—', 'REJECTED', [issue.code, issue.message].filter(Boolean).join(': ') || '—'];
+        values.forEach((value, index) => { const cell = document.createElement('td'); if (index === 3) { const badge = document.createElement('span'); badge.className = 'badge rejected'; badge.textContent = String(value); cell.appendChild(badge); } else { cell.textContent = String(value); if (index === 4) cell.className = 'reason'; } row.appendChild(cell); });
+        $('issuesBody').appendChild(row);
+      }
+      if (warnings.length && !errors.length) {
+        const row = document.createElement('tr'); const cell = document.createElement('td'); cell.colSpan = 5; cell.className = 'reason'; cell.textContent = `Warnings: ${warnings.map((warning) => [warning.code, warning.message].filter(Boolean).join(': ')).join(' | ')}`; row.appendChild(cell); $('issuesBody').appendChild(row); $('issuesCard').classList.remove('hidden');
+      }
+      window.scrollTo({ top: $('summaryCard').offsetTop - 18, behavior: 'smooth' });
+    }
+    function showSummary(raw) {
+      const result = raw?.result || raw || {};
+      if (result.status === 'FAILED' || result.error) return showError(result);
+      if (result.packageId || result.requestedAction || result.compiledProfiles) return showFormatCatalogueSummary(result);
+      $('errorCard').classList.add('hidden'); $('summaryCard').classList.remove('hidden');
+      $('summaryTitle').textContent = result.status === 'COMPLETED' ? `Import completed · batch ${result.batchId}` : 'Import result';
+      const baseDescription = numeric(result.rejected) || numeric(result.unresolved)
+        ? 'Some rows were not written. Review every listed reason below.'
+        : 'All processed rows completed without a reported validation rejection.';
+      const chapterSync = numeric(result.chapterMastersDeclared)
+        ? ` Blueprint chapter catalog: ${numeric(result.chapterMastersDeclared)} declared; ${numeric(result.chapterMastersChanged)} created or renamed.`
+        : '';
+      $('summaryDescription').textContent = baseDescription + chapterSync;
+      $('summaryState').textContent = result.status || 'COMPLETED';
+      for (const key of ['totalInputRows','written','inserted','updated','staged','unchanged','rejected','duplicates','unresolved','truncated']) {
+        $(key).textContent = numeric(result[key]);
+      }
+      const scopes = Array.isArray(result.unresolvedScopes) ? result.unresolvedScopes : [];
+      $('scopeList').innerHTML = '';
+      $('scopeBlock').classList.toggle('hidden', scopes.length === 0);
+      for (const item of scopes) {
+        const chip = document.createElement('span'); chip.className = 'scope';
+        chip.textContent = [item.subject_code, item.chapter_code, item.chapter_name, item.reason].filter(Boolean).join(' · ');
+        $('scopeList').appendChild(chip);
+      }
+      const issues = Array.isArray(result.issues) ? result.issues : [];
+      $('issuesBody').innerHTML = '';
+      $('issuesCard').classList.toggle('hidden', issues.length === 0);
+      for (const issue of issues) {
+        const row = document.createElement('tr');
+        const values = [
+          issue.row ?? '—',
+          issue.question_id || issue.blueprint_id || issue.subtopic_id || '—',
+          scopeText(issue),
+          issue.status || '—',
+          reasonText(issue)
+        ];
+        values.forEach((value, index) => {
+          const cell = document.createElement('td');
+          if (index === 3) { const badge = document.createElement('span'); badge.className = `badge ${statusClass(value)}`; badge.textContent = String(value); cell.appendChild(badge); }
+          else { cell.textContent = String(value); if (index === 4) cell.className = 'reason'; }
+          row.appendChild(cell);
+        });
+        $('issuesBody').appendChild(row);
+      }
+      window.scrollTo({ top: $('summaryCard').offsetTop - 18, behavior: 'smooth' });
+    }
+
+    async function normaliseLegacyExcel(file) {
+      if (!/\.xls$/i.test(file.name)) return file;
+      if (!window.XLSX) throw new Error('The legacy .xls converter did not load. Check network access to SheetJS, then retry with the original .xls file or save it as .xlsx.');
+      // The importers consume tabular values, not Excel styling/macros. Convert old
+      // binary Excel to the modern xlsx transport expected by the existing routes.
+      const workbook = window.XLSX.read(await file.arrayBuffer(), { type: 'array', cellDates: true });
+      const bytes = window.XLSX.write(workbook, { bookType: 'xlsx', type: 'array', cellDates: true });
+      const convertedName = file.name.replace(/\.xls$/i, '.xlsx');
+      return new File([bytes], convertedName, { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', lastModified: file.lastModified });
+    }
+
+    async function sha256Prefix(file) {
+      if (!window.crypto?.subtle) throw new Error('This browser cannot calculate the required SHA-256 workbook hash. Use a modern HTTPS browser.');
+      const digest = await window.crypto.subtle.digest('SHA-256', await file.arrayBuffer());
+      return `sha256:${Array.from(new Uint8Array(digest)).map((value) => value.toString(16).padStart(2, '0')).join('')}`;
+    }
+    async function catalogueWorkbookPayload(file) {
+      if (!window.XLSX) throw new Error('The workbook reader did not load. Check your network connection and retry, or use the secure /format-catalogue portal route.');
+      const workbook = window.XLSX.read(await file.arrayBuffer(), { type: 'array', cellDates: true });
+      const sheets = {}; const headers = {};
+      workbook.SheetNames.forEach((sheetName) => {
+        const sheet = workbook.Sheets[sheetName];
+        const matrix = window.XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '', raw: false });
+        headers[sheetName] = (matrix[0] || []).map((header) => String(header ?? '').normalize('NFC').trim()).filter(Boolean);
+        sheets[sheetName] = window.XLSX.utils.sheet_to_json(sheet, { defval: '', raw: false }).map((row) => Object.fromEntries(Object.entries(row).map(([header, value]) => [String(header).normalize('NFC').trim(), value])));
+      });
+      const manifest = sheets.MANIFEST?.[0] || {};
+      if (clean(manifest.package_schema_version) !== 'FORMAT_CATALOGUE_V4_ACTIVE_LOOKUP'
+          || clean(manifest.requested_action).toUpperCase() !== 'IMPORT_AND_ACTIVATE') {
+        throw new Error('Use a FORMAT_CATALOGUE_V4_ACTIVE_LOOKUP workbook with MANIFEST.requested_action set to IMPORT_AND_ACTIVATE. This standalone screen cannot upload V2, V3, or validation-only packages.');
+      }
+      return { sheets, headers };
+    }
+
+    function clearLookup() {
+      const output = $('lookupOutput');
+      output.innerHTML = '';
+      output.classList.remove('hidden');
+      return output;
+    }
+    function lookupError(message) {
+      const output = clearLookup();
+      const text = document.createElement('p'); text.className = 'empty'; text.textContent = message;
+      output.appendChild(text);
+    }
+    function lookupDate(value) {
+      if (!value) return '—';
+      const date = new Date(value);
+      return Number.isNaN(date.getTime()) ? String(value) : date.toLocaleString();
+    }
+    function renderBlueprintLookup(result) {
+      const output = clearLookup();
+      const items = Array.isArray(result?.items) ? result.items : [];
+      if (!items.length) {
+        const empty = document.createElement('p'); empty.className = 'empty'; empty.textContent = 'No matching Blueprint revisions were found.';
+        output.appendChild(empty); return;
+      }
+      const table = document.createElement('table');
+      const head = document.createElement('thead'); const headRow = document.createElement('tr');
+      ['Blueprint ID', 'Revision', 'Identity / session', 'Status', 'Created / uploader', 'Source', 'Actions'].forEach((title) => { const cell = document.createElement('th'); cell.textContent = title; headRow.appendChild(cell); });
+      head.appendChild(headRow); table.appendChild(head);
+      const body = document.createElement('tbody');
+      items.forEach((item) => {
+        const row = document.createElement('tr');
+        const cells = [
+          item.blueprintId || '—', item.revisionLabel || '—',
+          [item.classNumber ? `Class ${item.classNumber}` : '', item.subject, item.subjectCode, item.academicSubjectKey, item.academicSession].filter(Boolean).join(' / ') || '—',
+          item.approvalStatus || '—',
+          [lookupDate(item.createdAt), item.uploadedBy || item.createdBy].filter(Boolean).join(' · '),
+          [item.sourceFile, item.uploadLogId ? `Upload log ${item.uploadLogId}` : ''].filter(Boolean).join(' · ')
+        ];
+        cells.forEach((value, index) => { const cell = document.createElement('td'); if (index === 3) { const badge = document.createElement('span'); badge.className = `badge ${clean(value).toLowerCase()}`; badge.textContent = value; cell.appendChild(badge); } else cell.textContent = value; row.appendChild(cell); });
+        const action = document.createElement('td'); const use = document.createElement('button'); use.type = 'button'; use.className = 'primary'; use.style.padding = '7px 9px'; use.style.fontSize = '.78rem'; use.textContent = 'Use for replacement';
+        use.addEventListener('click', () => {
+          const key = clean(item.academicSubjectKey).toLowerCase();
+          const special = Object.prototype.hasOwnProperty.call(CLASS_X_MATHEMATICS_PRESETS, key);
+          $('blueprintPreset').value = special ? key : 'custom';
+          applyBlueprintPreset();
+          if (!special) {
+            $('classNumber').value = item.classNumber ? String(item.classNumber) : '';
+            $('subject').value = item.subject || '';
+            $('subjectCode').value = item.subjectCode || '';
+            $('academicSubjectKey').value = key;
+          }
+          $('academicSession').value = item.academicSession || '2026-27';
+          $('blueprintId').value = item.blueprintId || ''; $('revisionLabel').value = '';
+          window.scrollTo({ top: $('uploadForm').offsetTop - 18, behavior: 'smooth' });
+          $('file').focus();
+        });
+        action.appendChild(use);
+        if (clean(item.approvalStatus).toUpperCase() === 'DRAFT') {
+          const approve = document.createElement('button'); approve.type = 'button'; approve.className = 'primary';
+          approve.style.padding = '7px 9px'; approve.style.fontSize = '.78rem'; approve.style.marginTop = '7px'; approve.textContent = 'Approve DRAFT';
+          approve.addEventListener('click', () => approveLegacyDraft(item, approve));
+          action.appendChild(approve);
+        }
+        row.appendChild(action); body.appendChild(row);
+      });
+      table.appendChild(body); output.appendChild(table);
+    }
+    async function approveLegacyDraft(item, button) {
+      const secret = clean($('secret').value);
+      const approvedBy = clean($('legacyDraftApprover').value);
+      if (!secret) return lookupError('Enter the private n8n shared secret before approving a historical DRAFT.');
+      if (approvedBy.length < 2) return lookupError('Enter the approver name before approving a historical DRAFT.');
+      const revisionId = clean(item.blueprintImportRevisionId);
+      if (!/^[1-9][0-9]*$/.test(revisionId)) return lookupError('This lookup result has no valid Blueprint revision ID to approve. Refresh lookup and retry.');
+      const label = `${item.blueprintId || 'Blueprint'} / ${item.revisionLabel || `revision ${revisionId}`}`;
+      if (!window.confirm(`Approve the historical DRAFT revision ${label}? This makes its frozen snapshot available to the Paper Generator.`)) return;
+      const data = new FormData();
+      data.append('importSecret', secret);
+      data.append('blueprintImportRevisionId', revisionId);
+      data.append('approvedBy', approvedBy);
+      const original = button.textContent; button.disabled = true; button.textContent = 'Approving…';
+      try {
+        const response = await fetch(BLUEPRINT_APPROVAL_WEBHOOK_URL, { method: 'POST', body: data });
+        const payload = await response.json().catch(() => ({ error: `The approval route returned HTTP ${response.status} without a JSON report.` }));
+        const result = payload?.result || payload;
+        if (!response.ok || payload?.error || result?.error) return lookupError(result?.error || payload?.error || 'Blueprint approval was not accepted.');
+        if (result?.outcome !== 'APPROVED') return lookupError(result?.message || result?.reason || 'Blueprint approval was not accepted. Refresh lookup to see the current revision status.');
+        const revision = result?.revision || {};
+        window.alert(`Approved ${revision.blueprintId || item.blueprintId} / ${revision.revisionLabel || item.revisionLabel} as ${revision.approvedBy || approvedBy}.`);
+        $('lookupButton').click();
+      } catch (error) { lookupError(`Could not reach the Blueprint approval webhook: ${String(error)}`); }
+      finally { button.disabled = false; button.textContent = original; }
+    }
+
+    $('lookupButton').addEventListener('click', async () => {
+      const secret = clean($('secret').value);
+      const session = clean($('lookupSession').value);
+      const lookupClass = clean($('lookupClass').value);
+      const lookupKey = clean($('lookupKey').value).toLowerCase();
+      if (!secret) return lookupError('Enter the private n8n shared secret before looking up Blueprints.');
+      if (session && !/^\d{4}-\d{2}$/.test(session)) return lookupError('Academic session must be blank or use YYYY-YY form, for example 2026-27.');
+      if (lookupKey && !/^(?:[1-9]|1[0-2])-[a-z][a-z0-9-]{1,61}$/.test(lookupKey)) return lookupError('Academic Subject Key must be blank or use a lowercase class-scoped key such as 9-sci, 10-mat-s, or 12-phy.');
+      if (lookupKey && lookupClass && Number(lookupKey.split('-')[0]) !== Number(lookupClass)) return lookupError('Academic Subject Key must have the same Class prefix as the lookup Class.');
+      const data = new FormData();
+      data.append('importSecret', secret); data.append('classNumber', lookupClass); data.append('academicSession', session);
+      data.append('academicSubjectKey', lookupKey); data.append('search', clean($('lookupSearch').value)); data.append('limit', '100');
+      const button = $('lookupButton'); const original = button.textContent; button.disabled = true; button.textContent = 'Finding Blueprints…';
+      try {
+        const response = await fetch(BLUEPRINT_LOOKUP_WEBHOOK_URL, { method: 'POST', body: data });
+        const payload = await response.json().catch(() => ({ error: `The lookup returned HTTP ${response.status} without a JSON report.` }));
+        if (!response.ok || payload?.error) return lookupError(payload?.error || 'Blueprint lookup was not accepted.');
+        renderBlueprintLookup(payload?.result || payload);
+      } catch (error) { lookupError(`Could not reach the Blueprint lookup webhook: ${String(error)}`); }
+      finally { button.disabled = false; button.textContent = original; }
+    });
+
+    /* Private staged-question review, approval, and XLSX remediation export. */
+    const stagedReviewState = { items: [], filters: null, page: 1, pageSize: 50, totalCount: 0, eligibleCount: 0, selected: new Set(), selectedEligibility: new Map() };
+    function reviewNotice(message, isError = false) {
+      const node = $('reviewMessage');
+      node.textContent = message;
+      node.classList.toggle('blocked-note', isError);
+    }
+    function reviewFiltersFromInputs() {
+      return {
+        classNumber: clean($('reviewClass').value),
+        subjectCode: clean($('reviewSubjectCode').value).toUpperCase(),
+        sourceType: clean($('reviewSourceType').value).toUpperCase(),
+        reviewReason: clean($('reviewReason').value).toUpperCase(),
+        eligibility: clean($('reviewEligibility').value).toLowerCase() || 'all',
+        search: clean($('reviewSearch').value)
+      };
+    }
+    function appendReviewFilters(data, filters) {
+      data.append('classNumber', filters?.classNumber ?? '');
+      data.append('subjectCode', filters?.subjectCode ?? '');
+      data.append('sourceType', filters?.sourceType ?? '');
+      data.append('reviewReason', filters?.reviewReason ?? '');
+      data.append('eligibility', filters?.eligibility ?? 'all');
+      data.append('search', filters?.search ?? '');
+    }
+    async function fetchStagedQuestionPage(mode, page, pageSize, filters) {
+      const secret = clean($('secret').value);
+      if (!secret) throw new Error('Enter the private n8n shared secret above before reviewing staged questions.');
+      const data = new FormData();
+      data.append('importSecret', secret);
+      data.append('mode', mode);
+      data.append('page', String(page));
+      data.append('pageSize', String(pageSize));
+      appendReviewFilters(data, filters);
+      const response = await fetch(STAGED_QUESTION_LOOKUP_WEBHOOK_URL, { method: 'POST', body: data });
+      const payload = await response.json().catch(() => ({ error: `The staged-question lookup returned HTTP ${response.status} without a JSON report.` }));
+      const result = payload?.result || payload;
+      if (!response.ok || payload?.error || result?.error) throw new Error(result?.error || payload?.error || 'Staged-question lookup was not accepted.');
+      return result;
+    }
+    function reviewOptionText(item) {
+      const options = Array.isArray(item.options) ? item.options : [];
+      if (!options.length) return '';
+      return options.map((entry) => `${clean(entry?.label) || '?'}: ${clean(entry?.text ?? entry)}`).join('\n');
+    }
+    function reviewQuestionForWorkbook(item) {
+      const options = reviewOptionText(item);
+      return options ? `${clean(item.questionText)}\n\nOptions:\n${options.replace(/^(.)\s*:/gm, '$1)')}` : clean(item.questionText);
+    }
+    function reviewDetail(item) {
+      const detail = document.createElement('details');
+      const summary = document.createElement('summary'); summary.textContent = 'View question and review details'; detail.appendChild(summary);
+      const body = document.createElement('div'); body.className = 'review-detail';
+      const lines = [
+        ['Question', item.questionText], ['Options', reviewOptionText(item)], ['Answer', item.answer],
+        ['Correct answer text', item.correctAnswerText], ['Explanation', item.explanation],
+        ['Question type / marks', [item.questionType, item.marks].filter((value) => value !== null && value !== undefined && value !== '').join(' / ')],
+        ['Difficulty / cognitive level', [item.difficulty, item.cognitiveLevel].filter(Boolean).join(' / ')],
+        ['Source', [item.sourceType, item.sourcePaper, item.sourcePage].filter(Boolean).join(' / ')],
+        ['Quality score', item.qualityScore], ['Staging reason', item.reviewReason],
+        ['Approval block', item.approvalBlockReason], ['Structure data', item.structureData ? JSON.stringify(item.structureData) : '']
+      ];
+      lines.filter(([, value]) => value !== null && value !== undefined && String(value).trim()).forEach(([label, value]) => {
+        const row = document.createElement('p'); const strong = document.createElement('strong'); strong.textContent = `${label}: `; row.appendChild(strong); row.append(String(value)); body.appendChild(row);
+      });
+      detail.appendChild(body); return detail;
+    }
+    function updateReviewActionButtons() {
+      const selectedEligible = [...stagedReviewState.selected].filter((id) => stagedReviewState.selectedEligibility.get(String(id)) === true).length;
+      $('reviewApproveSelectedButton').disabled = stagedReviewState.selected.size === 0 || selectedEligible !== stagedReviewState.selected.size;
+      $('reviewApproveSelectedButton').textContent = stagedReviewState.selected.size ? `Approve selected (${stagedReviewState.selected.size})` : 'Approve selected';
+      $('reviewApproveFilteredButton').disabled = stagedReviewState.eligibleCount === 0;
+      $('reviewApproveFilteredButton').textContent = stagedReviewState.eligibleCount ? `Approve all currently filtered eligible (${stagedReviewState.eligibleCount.toLocaleString()})` : 'Approve all currently filtered eligible';
+      $('reviewDownloadButton').disabled = stagedReviewState.totalCount === 0;
+    }
+    function renderStagedQuestionReview(result) {
+      const items = Array.isArray(result?.items) ? result.items : [];
+      stagedReviewState.items = items;
+      stagedReviewState.filters = result?.filters || reviewFiltersFromInputs();
+      stagedReviewState.page = numeric(result?.page) || 1;
+      stagedReviewState.pageSize = numeric(result?.pageSize) || 50;
+      stagedReviewState.totalCount = numeric(result?.totalCount);
+      stagedReviewState.eligibleCount = numeric(result?.eligibleCount);
+      const blockedCount = numeric(result?.blockedCount);
+      const summary = $('reviewSummary'); summary.innerHTML = ''; summary.classList.remove('hidden');
+      [
+        ['Filtered staged', stagedReviewState.totalCount], ['Eligible to approve', stagedReviewState.eligibleCount], ['Blocked / export only', blockedCount]
+      ].forEach(([label, value], index) => { const card = document.createElement('div'); card.className = `metric ${index === 2 ? 'warn' : index === 1 ? 'blue' : ''}`; card.innerHTML = `<span>${label}</span><strong>${Number(value).toLocaleString()}</strong>`; summary.appendChild(card); });
+      const output = $('reviewOutput'); output.innerHTML = ''; output.classList.remove('hidden');
+      if (!items.length) { const empty = document.createElement('p'); empty.className = 'empty'; empty.textContent = 'No staged questions match the current filters.'; output.appendChild(empty); $('reviewPagination').classList.add('hidden'); updateReviewActionButtons(); return; }
+      const table = document.createElement('table'); const head = document.createElement('thead'); const headRow = document.createElement('tr');
+      ['Select', 'Question ID', 'Scope', 'Staging / eligibility', 'Question preview', 'Review'].forEach((title) => { const cell = document.createElement('th'); cell.textContent = title; headRow.appendChild(cell); });
+      head.appendChild(headRow); table.appendChild(head); const body = document.createElement('tbody');
+      items.forEach((item) => {
+        const row = document.createElement('tr');
+        const checkCell = document.createElement('td'); const check = document.createElement('input'); check.type = 'checkbox'; check.checked = stagedReviewState.selected.has(String(item.versionId)); check.disabled = !item.approvalEligible; check.setAttribute('aria-label', `Select ${item.questionId}`);
+        check.addEventListener('change', () => { if (check.checked) { stagedReviewState.selected.add(String(item.versionId)); stagedReviewState.selectedEligibility.set(String(item.versionId), Boolean(item.approvalEligible)); } else { stagedReviewState.selected.delete(String(item.versionId)); stagedReviewState.selectedEligibility.delete(String(item.versionId)); } updateReviewActionButtons(); }); checkCell.appendChild(check); row.appendChild(checkCell);
+        const idCell = document.createElement('td'); idCell.textContent = [item.questionId, `Version ${item.versionId}`].filter(Boolean).join('\n'); idCell.style.whiteSpace = 'pre-wrap'; row.appendChild(idCell);
+        const scopeCell = document.createElement('td'); scopeCell.textContent = [item.board, item.classNumber ? `Class ${item.classNumber}` : '', item.subjectCode, item.chapterCode, item.topic, item.subtopic].filter(Boolean).join(' / '); row.appendChild(scopeCell);
+        const stateCell = document.createElement('td'); const state = document.createElement('span'); state.className = `badge ${item.approvalEligible ? 'staged' : 'rejected'}`; state.textContent = item.reviewReason || 'STAGED'; stateCell.appendChild(state); const stateText = document.createElement('p'); stateText.className = item.approvalEligible ? '' : 'blocked-note'; stateText.textContent = item.approvalEligible ? 'Eligible after explicit reviewer approval.' : `Blocked: ${item.approvalBlockReason || 'review policy'}`; stateCell.appendChild(stateText); row.appendChild(stateCell);
+        const questionCell = document.createElement('td'); questionCell.className = 'review-question'; const preview = clean(item.questionText); questionCell.textContent = preview.length > 280 ? `${preview.slice(0, 280)}…` : preview || '—'; row.appendChild(questionCell);
+        const detailCell = document.createElement('td'); detailCell.appendChild(reviewDetail(item)); row.appendChild(detailCell); body.appendChild(row);
+      });
+      table.appendChild(body); output.appendChild(table);
+      const totalPages = Math.max(1, Math.ceil(stagedReviewState.totalCount / stagedReviewState.pageSize));
+      $('reviewPagination').classList.toggle('hidden', totalPages <= 1);
+      $('reviewPrevButton').disabled = stagedReviewState.page <= 1; $('reviewNextButton').disabled = stagedReviewState.page >= totalPages;
+      $('reviewPageText').textContent = `Page ${stagedReviewState.page} of ${totalPages} · ${stagedReviewState.totalCount.toLocaleString()} matching rows`;
+      reviewNotice(`${stagedReviewState.totalCount.toLocaleString()} staged question(s) match the active filter. ${stagedReviewState.eligibleCount.toLocaleString()} are eligible for explicit approval.`); updateReviewActionButtons();
+    }
+    async function loadStagedQuestionReview(page = 1, resetSelection = true) {
+      const button = $('reviewLookupButton'); const original = button.textContent; button.disabled = true; button.textContent = 'Finding staged questions…';
+      try {
+        const filters = resetSelection ? reviewFiltersFromInputs() : (stagedReviewState.filters || reviewFiltersFromInputs());
+        const result = await fetchStagedQuestionPage('lookup', page, 50, filters);
+        if (resetSelection) { stagedReviewState.selected.clear(); stagedReviewState.selectedEligibility.clear(); }
+        renderStagedQuestionReview(result);
+      } catch (error) { reviewNotice(String(error), true); }
+      finally { button.disabled = false; button.textContent = original; }
+    }
+    function reviewExportRow(item) {
+      const internalChoice = item?.structureData?.mytst_internal_choice?.internal_choice_id || '';
+      return {
+        'Question ID': item.questionId || '', 'Full Question ID': item.fullQuestionId || item.questionId || '', 'Question': reviewQuestionForWorkbook(item), 'Answer': item.answer || '', 'Marks': item.marks ?? '',
+        'Board': item.board || 'CBSE', 'Class': item.classNumber ?? '', 'Subject': item.subject || '', 'Subject Code': item.subjectCode || '', 'Academic Subject Key': item.academicSubjectKey || '', 'Year': item.year || '',
+        'Chapter': item.chapter || '', 'Chapter Code': item.chapterCode || '', 'Topic': item.topic || '', 'Subtopic': item.subtopic || '', 'Taxonomy Subtopic ID': item.taxonomySubtopicId || '', 'Covered Chapter Codes': item.coveredChapterCodes || '', 'Source Reference': item.sourceReference || '',
+        'Difficulty': item.difficulty || '', 'Cognitive Level': item.cognitiveLevel || '', 'Question Type': item.questionType || '', 'Source Paper': item.sourcePaper || '', 'Source Type': item.sourceType || '', 'Quality Score': item.qualityScore ?? '',
+        'Practical Skill': item.practicalSkillDetail || (item.practicalSkill ? 'Yes' : 'No'), 'Numerical': item.numerical ? 'Yes' : 'No', 'Diagram Required': item.diagramRequired ? 'Yes' : 'No', 'Internal Choice ID': internalChoice, 'Structure Data': item.structureData ? JSON.stringify(item.structureData) : '',
+        'Staged Review Reason': item.reviewReason || '', 'Approval Block Reason': item.approvalBlockReason || '', 'Question Version ID': item.versionId || '', 'Original Status': item.status || '', 'Original Validation Status': item.validationStatus || ''
+      };
+    }
+    function downloadReviewWorkbook(items) {
+      if (!window.XLSX) throw new Error('The XLSX exporter did not load. Check network access to SheetJS and retry the export.');
+      const rows = items.map(reviewExportRow); const headers = Object.keys(rows[0] || {}); const workbook = window.XLSX.utils.book_new();
+      const questions = window.XLSX.utils.json_to_sheet(rows, { header: headers }); window.XLSX.utils.book_append_sheet(workbook, questions, 'Questions to improve');
+      const guide = window.XLSX.utils.aoa_to_sheet([
+        ['Staged Question Review Export'],
+        ['Generated at', new Date().toISOString()],
+        ['Rows exported', items.length],
+        ['How to use'],
+        ['1. Review the Staged Review Reason and Approval Block Reason columns.'],
+        ['2. Required render asset / diagram rows cannot be approved until the question is revised with a valid non-asset-dependent prompt or a supported asset path.'],
+        ['3. For re-upload through Formula v3, complete every canonical Question Bank field; in particular add any blank Academic Subject Key and Taxonomy Subtopic ID.'],
+        ['4. Keep Question ID stable only when intentionally revising that question. A changed content hash under the same ID is handled by the uploader as a controlled update.'],
+        ['5. This export does not approve, alter, or delete any database question.']
+      ]); window.XLSX.utils.book_append_sheet(workbook, guide, 'Review guide');
+      const stamp = new Date().toISOString().replace(/[:.]/g, '-'); window.XLSX.writeFile(workbook, `mytst-staged-questions-${stamp}.xlsx`);
+    }
+    async function downloadFilteredStagedQuestions() {
+      if (!stagedReviewState.filters || !stagedReviewState.totalCount) return reviewNotice('Run a staged-question lookup before downloading.', true);
+      const button = $('reviewDownloadButton'); const original = button.textContent; button.disabled = true;
+      try {
+        const pageSize = 500; const pages = Math.ceil(stagedReviewState.totalCount / pageSize); const all = [];
+        for (let page = 1; page <= pages; page += 1) { button.textContent = `Preparing workbook… ${page}/${pages}`; const result = await fetchStagedQuestionPage('export', page, pageSize, stagedReviewState.filters); all.push(...(Array.isArray(result.items) ? result.items : [])); }
+        if (all.length !== stagedReviewState.totalCount) throw new Error('The filtered result changed during export. Refresh lookup and download again.');
+        downloadReviewWorkbook(all); reviewNotice(`Downloaded ${all.length.toLocaleString()} staged question(s) in an editable XLSX workbook.`);
+      } catch (error) { reviewNotice(String(error), true); }
+      finally { button.disabled = false; button.textContent = original; }
+    }
+    async function approveStagedQuestions(selectionMode) {
+      if (!stagedReviewState.filters) return reviewNotice('Run a staged-question lookup before approving.', true);
+      const reviewer = clean($('reviewerName').value); const reviewNote = clean($('reviewNote').value);
+      const versionIds = [...stagedReviewState.selected]; const expectedCount = selectionMode === 'SELECTED' ? versionIds.length : stagedReviewState.eligibleCount;
+      if (reviewer.length < 2) return reviewNotice('Enter the reviewer name that must be recorded in the approval audit.', true);
+      if (reviewNote.length < 3) return reviewNotice('Enter a review note explaining why this batch is suitable for approval.', true);
+      if (!expectedCount) return reviewNotice('There are no approval-eligible staged questions in this selection/filter.', true);
+      const label = selectionMode === 'SELECTED' ? `${expectedCount} selected question(s)` : `${expectedCount} currently filtered eligible question(s)`;
+      if (!window.confirm(`Approve ${label}? This immediately makes them usable and creates immutable per-question audit entries. Blocked diagram/render-asset rows are not included.`)) return;
+      const data = new FormData(); data.append('importSecret', clean($('secret').value)); data.append('selectionMode', selectionMode); data.append('expectedCount', String(expectedCount)); data.append('versionIdsJson', JSON.stringify(versionIds)); data.append('reviewer', reviewer); data.append('reviewNote', reviewNote); appendReviewFilters(data, stagedReviewState.filters);
+      const button = selectionMode === 'SELECTED' ? $('reviewApproveSelectedButton') : $('reviewApproveFilteredButton'); const original = button.textContent; button.disabled = true; button.textContent = 'Approving…';
+      try {
+        const response = await fetch(STAGED_QUESTION_APPROVAL_WEBHOOK_URL, { method: 'POST', body: data });
+        const payload = await response.json().catch(() => ({ error: `The staged-question approval returned HTTP ${response.status} without a JSON report.` })); const result = payload?.result || payload;
+        if (!response.ok || payload?.error || result?.error) throw new Error(result?.error || payload?.error || 'Staged-question approval was not accepted.');
+        if (result?.outcome !== 'APPROVED') throw new Error(result?.message || result?.reason || 'No question was approved. Refresh lookup and retry.');
+        window.alert(result.message || `Approved ${result.approvedCount} staged questions. Review batch ${result.reviewBatchId}.`); stagedReviewState.selected.clear(); stagedReviewState.selectedEligibility.clear(); await loadStagedQuestionReview(1);
+      } catch (error) { reviewNotice(String(error), true); }
+      finally { button.disabled = false; button.textContent = original; }
+    }
+    $('reviewLookupButton').addEventListener('click', () => loadStagedQuestionReview(1));
+    $('reviewPrevButton').addEventListener('click', () => loadStagedQuestionReview(Math.max(1, stagedReviewState.page - 1), false));
+    $('reviewNextButton').addEventListener('click', () => loadStagedQuestionReview(stagedReviewState.page + 1, false));
+    $('reviewDownloadButton').addEventListener('click', downloadFilteredStagedQuestions);
+    $('reviewApproveSelectedButton').addEventListener('click', () => approveStagedQuestions('SELECTED'));
+    $('reviewApproveFilteredButton').addEventListener('click', () => approveStagedQuestions('FILTERED'));
+
+    $('uploadForm').addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const file = $('file').files[0]; const secret = clean($('secret').value);
+      const kind = $('uploadKind').value; const formatCatalogue = kind === 'format_catalogue'; const blueprintUpload = kind === 'blueprint';
+      // Blueprint uploads send the operator-selected registered context. The two
+      // Class X Mathematics presets merely fill this same complete context.
+      const classNumber = clean($('classNumber').value);
+      const subject = clean($('subject').value);
+      const subjectCode = clean($('subjectCode').value);
+      const academicSubjectKey = clean($('academicSubjectKey').value).toLowerCase();
+      const academicSession = clean($('academicSession').value);
+      const validQuestionBankContext = /^(?:[1-9]|1[0-2])$/.test(classNumber) && Boolean(subject);
+      const validBlueprintContext = validQuestionBankContext
+        && /^[A-Za-z0-9][A-Za-z0-9._/-]{0,127}$/.test(subjectCode)
+        && /^(?:[1-9]|1[0-2])-[a-z][a-z0-9-]{1,61}$/.test(academicSubjectKey)
+        && Number(academicSubjectKey.split('-')[0]) === Number(classNumber)
+        && /^\d{4}-\d{2}$/.test(academicSession);
+      const activeContextValid = kind === 'blueprint' ? validBlueprintContext : validQuestionBankContext;
+      if (!file || (!formatCatalogue && (!secret || !activeContextValid))) {
+        return showError({ error: formatCatalogue
+          ? 'Select the reviewed V4 .xlsx Format Catalogue workbook.'
+          : kind === 'blueprint'
+            ? 'For a Blueprint, enter the shared secret, Class, subject name, Subject Code, Academic Subject Key, Academic Session, and a file.'
+            : 'For a Question Bank upload, enter the shared secret, choose a valid Class 1–12, provide a subject display name, and select a file.' });
+      }
+      if (formatCatalogue ? !/\.(xlsx|xls)$/i.test(file.name) : !/\.(csv|xlsx|xls)$/i.test(file.name)) return showError({ error: formatCatalogue ? 'Format Catalogue mode accepts one Excel (.xlsx or .xls) workbook only.' : 'Only .csv, .xlsx, and .xls files are accepted.' });
+      if (file.size > 10 * 1024 * 1024) return showError({ error: 'The selected file exceeds the 10 MB limit.' });
+      const data = new FormData();
+      if (!formatCatalogue) data.append('importSecret', secret);
+      const submit = $('submitButton'); submit.disabled = true; submit.textContent = formatCatalogue ? 'Checking Format Catalogue…' : 'Checking and importing…';
+      try {
+        const uploadFile = await normaliseLegacyExcel(file);
+        if (uploadFile.size > 10 * 1024 * 1024) throw new Error('The converted Excel workbook exceeds the 10 MB upload limit. Save a smaller .xlsx file and retry.');
+        data.append('file', uploadFile);
+        if (uploadFile.name !== file.name) data.append('originalFileName', file.name);
+        let webhookUrl = kind === 'question_bank' ? QUESTION_BANK_WEBHOOK_URL : IMPORT_WEBHOOK_URL;
+        if (formatCatalogue) {
+          submit.textContent = 'Validating and activating Format Catalogue…';
+          const cataloguePayload = await catalogueWorkbookPayload(uploadFile);
+          data.append('requestedAction', 'IMPORT_AND_ACTIVATE');
+          data.append('uploadedBy', clean($('uploadedBy').value));
+          data.append('sourceFileSha256', await sha256Prefix(uploadFile));
+          data.append('cataloguePayload', JSON.stringify(cataloguePayload));
+          data.append('packageIdHint', String(cataloguePayload.sheets.MANIFEST?.[0]?.package_id ?? '').trim());
+          data.append('portalSource', 'mytst-standalone-format-catalogue-uploader');
+          webhookUrl = FORMAT_CATALOGUE_WEBHOOK_URL;
+        } else {
+          const fields = {
+            uploadKind: kind,
+            board: 'CBSE',
+            classNumber,
+            subject,
+            subjectCode,
+            academicSubjectKey: kind === 'blueprint' ? academicSubjectKey : '',
+            academicSession: kind === 'blueprint' ? academicSession : '',
+            academicYear: clean($('academicYear').value) || (academicSession ? academicSession.slice(0, 4) : '2026'),
+            uploadedBy: clean($('uploadedBy').value),
+            schemaVersion: kind === 'blueprint' ? 'uploader-backend-formula-v3' : 'unified-question-v5',
+            blueprintId: kind === 'blueprint' ? clean($('blueprintId').value) : '',
+            revisionLabel: kind === 'blueprint' ? clean($('revisionLabel').value) : '',
+            subpartOverride: ''
+          };
+          Object.entries(fields).forEach(([key, value]) => data.append(key, value));
+        }
+        // Keep this cross-origin request header-free. importSecret is already included in FormData.
+        // The deployed n8n CORS policy permits multipart Content-Type but not custom x-import-* headers.
+        const response = await fetch(webhookUrl, { method: 'POST', body: data });
+        const result = await response.json().catch(() => ({ error: `The server returned HTTP ${response.status} without a JSON report.` }));
+        if (!response.ok) return showError(result);
+        showSummary(result);
+      } catch (error) {
+        showError({ error: formatCatalogue ? 'Could not reach the Format Catalogue webhook.' : 'Could not reach the import webhook.', details: String(error) });
+      } finally {
+        submit.disabled = false; submit.textContent = formatCatalogue ? 'Import and activate Format Catalogue' : 'Validate and import';
+      }
+    });
+  })();
+  </script>
+<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a5abbe387e3a732c',t:'MTc5NDcxOTM1OA=='};var l=window.parent.location,o;try{o=new URL(l.origin).origin}catch(e){try{o=new URL(new URL(l.href).origin).origin}catch(e){o=''}}var u='/cdn-cgi/challenge-platform/scripts/jsd/main.js?ray=a5abbe387e3a732c',a=document.createElement('script');a.src=o?new URL(u,o).href:u;document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
