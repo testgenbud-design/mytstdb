@@ -35,6 +35,7 @@
         <div class="tabs" aria-label="Upload type">
           <button class="tab active" id="questionTab" type="button">Question bank</button>
           <button class="tab" id="blueprintTab" type="button">Blueprint</button>
+          <button class="tab" id="approvedBlueprintExportTab" type="button">Approved Blueprint export · non-production</button>
           <button class="tab" id="stagedQuestionReviewTab" type="button">Staged question review · non-production</button>
           <button class="tab" id="formatCatalogueTab" type="button">Format catalogue · non-production</button>
         </div>
@@ -135,6 +136,28 @@
       <div id="lookupOutput" class="table-wrap hidden"></div>
     </section>
 
+    <section id="approvedBlueprintExportCard" class="card hidden" aria-live="polite">
+      <h2>Approved Blueprint Export</h2>
+      <p>Download the latest approved frozen revision for every matching Blueprint in one private Excel workbook. The workbook contains an index sheet and one complete demand-matrix sheet per Blueprint; it never exports DRAFT, RETIRED, or mutable current Blueprint content.</p>
+      <p class="notice"><span>✓</span><span><strong>Latest approved revision only.</strong> When a Blueprint has several approved replacements, this export includes only the most recently approved revision for that Board, Class, Academic Subject Key, Academic Session, and Blueprint ID.</span></p>
+      <div class="grid">
+        <label>Class <span style="font-weight:500;color:var(--muted)">optional</span>
+          <select id="approvedExportClass"></select>
+        </label>
+        <label>Academic session <span style="font-weight:500;color:var(--muted)">optional</span>
+          <input id="approvedExportSession" placeholder="All sessions, or YYYY-YY">
+        </label>
+        <label>Academic Subject Key <span style="font-weight:500;color:var(--muted)">optional</span>
+          <input id="approvedExportKey" maxlength="64" placeholder="e.g. 10-sst or 12-phy" pattern="(?:[1-9]|1[0-2])-[a-z][a-z0-9-]{1,61}">
+        </label>
+        <label>Search Blueprint ID, revision, subject, or Subject Code <span style="font-weight:500;color:var(--muted)">optional</span>
+          <input id="approvedExportSearch" maxlength="120" placeholder="e.g. 10-SST or BP-CBSE">
+        </label>
+      </div>
+      <div class="review-actions"><button class="primary" id="approvedExportButton" type="button">Download latest approved Blueprints (.xlsx)</button></div>
+      <p id="approvedExportMessage" class="footer-note">Uses the same private n8n shared secret above. This export is read-only.</p>
+    </section>
+
     <section id="questionReviewCard" class="card hidden" aria-live="polite">
       <h2>Staged Question Review</h2>
       <p>Privately inspect staged Question Bank records before approving them. Approval is explicit, creates immutable per-question audit evidence, and applies only to currently eligible rows. Questions needing a supplied diagram/render asset remain blocked but can be exported for correction.</p>
@@ -232,6 +255,7 @@
     const IMPORT_WEBHOOK_URL = 'https://n8n.mytst.cloud/webhook/mytst-import-formula-v3-nonprod';
     const BLUEPRINT_LOOKUP_WEBHOOK_URL = 'https://n8n.mytst.cloud/webhook/mytst-blueprint-lookup-formula-v3-nonprod';
     const BLUEPRINT_APPROVAL_WEBHOOK_URL = 'https://n8n.mytst.cloud/webhook/mytst-blueprint-approve-formula-v3-nonprod';
+    const APPROVED_BLUEPRINT_EXPORT_WEBHOOK_URL = 'https://n8n.mytst.cloud/webhook/mytst-approved-blueprint-export-formula-v3-nonprod';
     const STAGED_QUESTION_LOOKUP_WEBHOOK_URL = 'https://n8n.mytst.cloud/webhook/mytst-staged-question-lookup-formula-v3-nonprod';
     const STAGED_QUESTION_APPROVAL_WEBHOOK_URL = 'https://n8n.mytst.cloud/webhook/mytst-staged-question-approve-formula-v3-nonprod';
     const FORMAT_CATALOGUE_WEBHOOK_URL = 'https://n8n.mytst.cloud/webhook/mytst-format-catalogue-activate-nonprod';
@@ -246,11 +270,14 @@
     $('lookupClass').appendChild(lookupAnyClass);
     const reviewAnyClass = document.createElement('option'); reviewAnyClass.value = ''; reviewAnyClass.textContent = 'All Classes';
     $('reviewClass').appendChild(reviewAnyClass);
+    const approvedExportAnyClass = document.createElement('option'); approvedExportAnyClass.value = ''; approvedExportAnyClass.textContent = 'All Classes';
+    $('approvedExportClass').appendChild(approvedExportAnyClass);
     for (const number of classes) {
       const option = document.createElement('option'); option.value = String(number); option.textContent = `Class ${number}`;
       $('classNumber').appendChild(option);
       const lookupOption = option.cloneNode(true); $('lookupClass').appendChild(lookupOption);
       const reviewOption = option.cloneNode(true); $('reviewClass').appendChild(reviewOption);
+      const approvedExportOption = option.cloneNode(true); $('approvedExportClass').appendChild(approvedExportOption);
     }
     $('classNumber').value = localStorage.getItem('mytst.formulaV3.classNumber') || '';
     $('subject').value = localStorage.getItem('mytst.formulaV3.subject') || '';
@@ -296,20 +323,24 @@
     function selectKind(kind) {
       const blueprint = kind === 'blueprint';
       const formatCatalogue = kind === 'format_catalogue';
+      const approvedBlueprintExport = kind === 'approved_blueprint_export';
       const stagedQuestionReview = kind === 'staged_question_review';
+      const privateReviewOrExport = stagedQuestionReview || approvedBlueprintExport;
       $('uploadKind').value = kind;
       $('questionTab').classList.toggle('active', kind === 'question_bank');
       $('blueprintTab').classList.toggle('active', blueprint);
+      $('approvedBlueprintExportTab').classList.toggle('active', approvedBlueprintExport);
       $('stagedQuestionReviewTab').classList.toggle('active', stagedQuestionReview);
       $('formatCatalogueTab').classList.toggle('active', formatCatalogue);
-      document.querySelectorAll('.content-scope').forEach((field) => field.classList.toggle('hidden', formatCatalogue || stagedQuestionReview));
-      document.querySelectorAll('.blueprint-auto').forEach((field) => field.classList.toggle('hidden', blueprint || stagedQuestionReview));
+      document.querySelectorAll('.content-scope').forEach((field) => field.classList.toggle('hidden', formatCatalogue || privateReviewOrExport));
+      document.querySelectorAll('.blueprint-auto').forEach((field) => field.classList.toggle('hidden', blueprint || privateReviewOrExport));
       document.querySelectorAll('.blueprint-context').forEach((field) => field.classList.toggle('hidden', !blueprint));
       document.querySelectorAll('.blueprint-only').forEach((field) => field.classList.toggle('hidden', !blueprint));
       $('blueprintLookupCard').classList.toggle('hidden', !blueprint);
+      $('approvedBlueprintExportCard').classList.toggle('hidden', !approvedBlueprintExport);
       $('questionReviewCard').classList.toggle('hidden', !stagedQuestionReview);
-      $('classNumber').required = !formatCatalogue && !stagedQuestionReview;
-      $('subject').required = !formatCatalogue && !stagedQuestionReview;
+      $('classNumber').required = !formatCatalogue && !privateReviewOrExport;
+      $('subject').required = !formatCatalogue && !privateReviewOrExport;
       $('subjectCode').required = blueprint;
       $('academicSubjectKey').required = blueprint;
       $('academicSession').required = blueprint;
@@ -320,10 +351,10 @@
       $('secretField').classList.toggle('hidden', formatCatalogue);
       $('secret').required = !formatCatalogue;
       $('formatActionField').classList.toggle('hidden', !formatCatalogue);
-      $('fileLabel').classList.toggle('hidden', stagedQuestionReview);
-      $('formatNotice').classList.toggle('hidden', stagedQuestionReview);
-      $('uploadActions').classList.toggle('hidden', stagedQuestionReview);
-      if (!stagedQuestionReview) {
+      $('fileLabel').classList.toggle('hidden', privateReviewOrExport);
+      $('formatNotice').classList.toggle('hidden', privateReviewOrExport);
+      $('uploadActions').classList.toggle('hidden', privateReviewOrExport);
+      if (!privateReviewOrExport) {
         $('fileLabel').childNodes[0].textContent = formatCatalogue ? 'Master Format Catalogue workbook\n            ' : blueprint ? 'Blueprint file\n            ' : 'Question-bank file\n            ';
         $('file').accept = formatCatalogue ? '.xlsx,.xls,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' : '.csv,.xlsx,.xls,text/csv,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
         $('fileHint').textContent = formatCatalogue ? 'Choose one multi-tab Excel (.xlsx or .xls) FORMAT_CATALOGUE_V4_ACTIVE_LOOKUP workbook, maximum 10 MB.' : 'Choose a UTF-8 CSV, modern Excel (.xlsx), or legacy Excel (.xls) file, maximum 10 MB.';
@@ -337,6 +368,7 @@
     }
     $('questionTab').addEventListener('click', () => selectKind('question_bank'));
     $('blueprintTab').addEventListener('click', () => selectKind('blueprint'));
+    $('approvedBlueprintExportTab').addEventListener('click', () => selectKind('approved_blueprint_export'));
     $('stagedQuestionReviewTab').addEventListener('click', () => selectKind('staged_question_review'));
     $('formatCatalogueTab').addEventListener('click', () => selectKind('format_catalogue'));
     selectKind('question_bank');
@@ -600,6 +632,80 @@
       } catch (error) { lookupError(`Could not reach the Blueprint lookup webhook: ${String(error)}`); }
       finally { button.disabled = false; button.textContent = original; }
     });
+
+    /* Explicit private export of latest approved frozen Blueprint revisions. */
+    function approvedExportNotice(message, isError = false) {
+      const node = $('approvedExportMessage'); node.textContent = message; node.classList.toggle('blocked-note', isError);
+    }
+    function approvedExportFilters() {
+      return {
+        classNumber: clean($('approvedExportClass').value),
+        academicSession: clean($('approvedExportSession').value),
+        academicSubjectKey: clean($('approvedExportKey').value).toLowerCase(),
+        search: clean($('approvedExportSearch').value)
+      };
+    }
+    function approvedBlueprintSheetName(metadata, used) {
+      const base = clean(`${metadata.blueprintId || 'Blueprint'}-${metadata.revisionLabel || 'Approved'}`)
+        .replace(/[\\/:?*\[\]]/g, '_').slice(0, 31) || 'Blueprint';
+      let candidate = base; let sequence = 2;
+      while (used.has(candidate.toLowerCase())) {
+        const suffix = `-${sequence}`; candidate = `${base.slice(0, 31 - suffix.length)}${suffix}`; sequence += 1;
+      }
+      used.add(candidate.toLowerCase()); return candidate;
+    }
+    function approvedBlueprintDemandRows(blueprint) {
+      const metadata = blueprint.metadata || {}; const rows = Array.isArray(blueprint.sourceRows) ? blueprint.sourceRows : [];
+      return rows.map((row) => ({
+        'Blueprint_ID': metadata.blueprintId || '', 'Subject_Code': metadata.subjectCode || '', 'Academic_Subject_Key': metadata.academicSubjectKey || '', 'Academic_Session': metadata.academicSession || '',
+        'Chapter_Code': row.chapter_code || '', 'Covered_Chapter_Codes': Array.isArray(row.covered_chapter_codes) ? row.covered_chapter_codes.join('; ') : (row.covered_chapter_codes || ''),
+        'Unit_ID': row.unit_id || '', 'Unit_Name': row.unit_name || '', 'Chapter_No': row.chapter_no ?? '', 'Chapter_Name': row.chapter_name || '',
+        'Subtopic_ID': row.subtopic_id || '', 'Subtopic_Name': row.subtopic_name || '', 'Target_Marks': row.target_marks ?? '', 'Question_Type': row.question_type || '', 'Cognitive_Typology': row.cognitive_typology || '',
+        'Practical_Skill': row.practical_skill_detail || (row.practical_skill ? 'Yes' : 'No'), 'Section_Mapping': row.section_mapping || '', 'Structural_Rule_and_Subpart_Breakdown': row.structural_rule_and_subpart_breakdown || '',
+        'Accessibility_Parallel': row.accessibility_parallel || '', 'Target_Quota': row.target_quota ?? '', 'Authored_Count': row.authored_count ?? '', 'Production_Status': row.production_status || '', 'Pool_Role': row.pool_role || '',
+        'Internal_Choice_ID': row.internal_choice_id || '', 'Source_Row': row.source_row ?? '', 'Blueprint_Import_Revision_ID': metadata.blueprintImportRevisionId || '', 'Revision_Label': metadata.revisionLabel || '',
+        'Approval_Status': metadata.approvalStatus || '', 'Approved_At': metadata.approvedAt || '', 'Approved_By': metadata.approvedBy || ''
+      }));
+    }
+    function downloadApprovedBlueprintWorkbook(result) {
+      if (!window.XLSX) throw new Error('The XLSX exporter did not load. Check network access to SheetJS and retry.');
+      const blueprints = Array.isArray(result?.blueprints) ? result.blueprints : [];
+      if (!blueprints.length) throw new Error('No approved Blueprint revisions match the current export filters.');
+      if (blueprints.length > 254) throw new Error(`This export contains ${blueprints.length} Blueprints. Excel supports at most 255 worksheets including the summary; filter by Class, session, key, or search and export smaller workbooks.`);
+      const workbook = window.XLSX.utils.book_new(); const usedNames = new Set(['approved blueprints']); const summaryRows = [];
+      blueprints.forEach((blueprint) => {
+        const metadata = blueprint.metadata || {}; const sheetName = approvedBlueprintSheetName(metadata, usedNames); const rows = approvedBlueprintDemandRows(blueprint);
+        summaryRows.push({
+          'Demand Matrix Sheet': sheetName, 'Blueprint ID': metadata.blueprintId || '', 'Revision Label': metadata.revisionLabel || '', 'Blueprint Import Revision ID': metadata.blueprintImportRevisionId || '',
+          'Board': metadata.boardCode || '', 'Class': metadata.classNumber ?? '', 'Subject': metadata.subject || '', 'Subject Code': metadata.subjectCode || '', 'Academic Subject Key': metadata.academicSubjectKey || '',
+          'Academic Session': metadata.academicSession || '', 'Approval Status': metadata.approvalStatus || '', 'Approved At': metadata.approvedAt || '', 'Approved By': metadata.approvedBy || '',
+          'Source Demand Rows': metadata.sourceRowCount ?? rows.length, 'Source File': metadata.sourceFile || '', 'Upload Log ID': metadata.uploadLogId || '', 'Uploaded By': metadata.uploadedBy || '', 'Content Hash': metadata.blueprintContentHash || ''
+        });
+        const headers = ['Blueprint_ID','Subject_Code','Academic_Subject_Key','Academic_Session','Chapter_Code','Covered_Chapter_Codes','Unit_ID','Unit_Name','Chapter_No','Chapter_Name','Subtopic_ID','Subtopic_Name','Target_Marks','Question_Type','Cognitive_Typology','Practical_Skill','Section_Mapping','Structural_Rule_and_Subpart_Breakdown','Accessibility_Parallel','Target_Quota','Authored_Count','Production_Status','Pool_Role','Internal_Choice_ID','Source_Row','Blueprint_Import_Revision_ID','Revision_Label','Approval_Status','Approved_At','Approved_By'];
+        const sheet = window.XLSX.utils.json_to_sheet(rows.length ? rows : [{ 'Blueprint_ID': metadata.blueprintId || '', 'Revision_Label': metadata.revisionLabel || '', 'Approval_Status': metadata.approvalStatus || '', 'Source_Row': 'No frozen matrix source rows were found for this approved revision.' }], { header: headers });
+        window.XLSX.utils.book_append_sheet(workbook, sheet, sheetName);
+      });
+      const summary = window.XLSX.utils.json_to_sheet(summaryRows); window.XLSX.utils.book_append_sheet(workbook, summary, 'Approved Blueprints');
+      workbook.SheetNames = ['Approved Blueprints', ...workbook.SheetNames.filter((name) => name !== 'Approved Blueprints')];
+      const stamp = new Date().toISOString().replace(/[:.]/g, '-'); window.XLSX.writeFile(workbook, `mytst-latest-approved-blueprints-${stamp}.xlsx`);
+    }
+    async function downloadApprovedBlueprints() {
+      const secret = clean($('secret').value); const filters = approvedExportFilters();
+      if (!secret) return approvedExportNotice('Enter the private n8n shared secret above before exporting approved Blueprints.', true);
+      if (filters.academicSession && !/^\d{4}-\d{2}$/.test(filters.academicSession)) return approvedExportNotice('Academic session must be blank or use YYYY-YY form, for example 2026-27.', true);
+      if (filters.academicSubjectKey && !/^(?:[1-9]|1[0-2])-[a-z][a-z0-9-]{1,61}$/.test(filters.academicSubjectKey)) return approvedExportNotice('Academic Subject Key must be blank or use a lowercase class-scoped key.', true);
+      if (filters.classNumber && filters.academicSubjectKey && Number(filters.classNumber) !== Number(filters.academicSubjectKey.split('-')[0])) return approvedExportNotice('Academic Subject Key must have the same Class prefix as the selected Class.', true);
+      const button = $('approvedExportButton'); const original = button.textContent; button.disabled = true; button.textContent = 'Preparing approved Blueprint workbook…';
+      try {
+        const data = new FormData(); data.append('importSecret', secret); data.append('classNumber', filters.classNumber); data.append('academicSession', filters.academicSession); data.append('academicSubjectKey', filters.academicSubjectKey); data.append('search', filters.search);
+        const response = await fetch(APPROVED_BLUEPRINT_EXPORT_WEBHOOK_URL, { method: 'POST', body: data });
+        const payload = await response.json().catch(() => ({ error: `The approved Blueprint export returned HTTP ${response.status} without a JSON report.` })); const result = payload?.result || payload;
+        if (!response.ok || payload?.error || result?.error) throw new Error(result?.error || payload?.error || 'Approved Blueprint export was not accepted.');
+        downloadApprovedBlueprintWorkbook(result); approvedExportNotice(`Downloaded ${Number(result.blueprintCount || 0).toLocaleString()} latest approved Blueprint revision(s) and ${Number(result.sourceRowCount || 0).toLocaleString()} frozen demand row(s).`);
+      } catch (error) { approvedExportNotice(String(error), true); }
+      finally { button.disabled = false; button.textContent = original; }
+    }
+    $('approvedExportButton').addEventListener('click', downloadApprovedBlueprints);
 
     /* Private staged-question review, approval, and XLSX remediation export. */
     const stagedReviewState = { items: [], filters: null, page: 1, pageSize: 50, totalCount: 0, eligibleCount: 0, selected: new Set(), selectedEligibility: new Map() };
@@ -865,5 +971,5 @@
     });
   })();
   </script>
-<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a5abbe387e3a732c',t:'MTc5NDcxOTM1OA=='};var l=window.parent.location,o;try{o=new URL(l.origin).origin}catch(e){try{o=new URL(new URL(l.href).origin).origin}catch(e){o=''}}var u='/cdn-cgi/challenge-platform/scripts/jsd/main.js?ray=a5abbe387e3a732c',a=document.createElement('script');a.src=o?new URL(u,o).href:u;document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a5aefffbad770aea',t:'MTc5NDc1MzUwOQ=='};var l=window.parent.location,o;try{o=new URL(l.origin).origin}catch(e){try{o=new URL(new URL(l.href).origin).origin}catch(e){o=''}}var u='/cdn-cgi/challenge-platform/scripts/jsd/main.js?ray=a5aefffbad770aea',a=document.createElement('script');a.src=o?new URL(u,o).href:u;document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
