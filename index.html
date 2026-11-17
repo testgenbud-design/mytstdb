@@ -70,7 +70,18 @@
             </select>
             <small>Use a Mathematics preset to fill its protected context, or choose Custom for any registered Class 1–12 context.</small>
           </label>
-          <p id="blueprintContext" class="notice blueprint-only wide"><span>✓</span><span><strong>Universal Blueprint upload:</strong> supply the real CBSE Class, canonical subject name, Subject Code, class-scoped Academic Subject Key, Academic Session, and file. The importer accepts only contexts already registered by the backend; it never creates a registry entry from portal input.</span></p>
+          <p id="blueprintContext" class="notice blueprint-only wide"><span>✓</span><span><strong>Universal Blueprint upload:</strong> supply the real CBSE Class, subject, Subject Code, class-scoped Academic Subject Key, Academic Session, and file. Use <strong>Find possible verified contexts</strong> below to see existing registered contexts and evidence-backed source candidates; upload itself never creates a registry entry.</span></p>
+          <div class="blueprint-only wide" id="blueprintContextDiscovery">
+            <label>Find possible verified contexts <span style="font-weight:500;color:var(--muted)">for the selected Class</span>
+              <input id="blueprintContextDiscoverySearch" maxlength="120" placeholder="Optional: filter by subject name, Subject Code, or key">
+              <small>Results are derived from current registry rows plus existing Subject/Question Bank source evidence. A suggested key is never auto-created.</small>
+            </label>
+            <div class="review-actions"><button class="secondary" id="discoverBlueprintContextsButton" type="button">Find possible verified contexts</button><button class="secondary" id="useBlueprintContextCandidateButton" type="button" disabled>Use selected registered context</button><button class="secondary" id="onboardBlueprintContextCandidateButton" type="button" disabled>Open selected context for onboarding</button></div>
+            <label style="margin-top:11px">Possible context
+              <select id="blueprintContextCandidate" disabled><option value="">Find contexts first</option></select>
+            </label>
+            <p id="blueprintContextDiscoveryMessage" class="footer-note">Uses the private shared secret. Only an active registered context can be used directly for Blueprint upload.</p>
+          </div>
           <label class="content-scope blueprint-context">Academic Subject Key
             <input id="academicSubjectKey" placeholder="e.g. 9-sci, 10-mat-s, or 12-phy" pattern="(?:[1-9]|1[0-2])-[a-z][a-z0-9-]{1,61}">
             <small>Required for Blueprint uploads. It must have the selected Class prefix and already exist in the backend registry.</small>
@@ -313,6 +324,7 @@
     const QUESTION_BANK_WEBHOOK_URL = 'https://n8n.mytst.cloud/webhook/mytst-import';
     const IMPORT_WEBHOOK_URL = 'https://n8n.mytst.cloud/webhook/mytst-import-formula-v3-nonprod';
     const BLUEPRINT_LOOKUP_WEBHOOK_URL = 'https://n8n.mytst.cloud/webhook/mytst-blueprint-lookup-formula-v3-nonprod';
+    const BLUEPRINT_CONTEXT_DISCOVERY_WEBHOOK_URL = 'https://n8n.mytst.cloud/webhook/mytst-blueprint-context-discovery-formula-v3-nonprod';
     const BLUEPRINT_APPROVAL_WEBHOOK_URL = 'https://n8n.mytst.cloud/webhook/mytst-blueprint-approve-formula-v3-nonprod';
     const REGISTRY_CONTEXT_INSPECT_WEBHOOK_URL = 'https://n8n.mytst.cloud/webhook/mytst-registry-context-inspect-formula-v3-nonprod';
     const REGISTRY_CONTEXT_REGISTER_WEBHOOK_URL = 'https://n8n.mytst.cloud/webhook/mytst-registry-context-register-formula-v3-nonprod';
@@ -387,6 +399,62 @@
       setBlueprintContextNotice(preset);
     }
     $('blueprintPreset').addEventListener('change', applyBlueprintPreset);
+
+    /* Discover existing Class/Subject combinations instead of asking operators to guess a key. */
+    const blueprintContextDiscoveryState = { items: [] };
+    function blueprintContextDiscoveryNotice(message, isError = false) {
+      const node = $('blueprintContextDiscoveryMessage'); node.textContent = message; node.classList.toggle('blocked-note', isError);
+    }
+    function resetBlueprintContextCandidateActions() {
+      const select = $('blueprintContextCandidate'); const item = select.value === '' ? null : blueprintContextDiscoveryState.items[Number(select.value)];
+      $('useBlueprintContextCandidateButton').disabled = !item || item.contextStatus !== 'REGISTERED_ACTIVE';
+      $('onboardBlueprintContextCandidateButton').disabled = !item || item.contextStatus !== 'UNREGISTERED_READY_FOR_ONBOARDING';
+    }
+    function renderBlueprintContextCandidates(result) {
+      const items = Array.isArray(result.items) ? result.items : []; blueprintContextDiscoveryState.items = items;
+      const select = $('blueprintContextCandidate'); select.innerHTML = ''; const initial = document.createElement('option'); initial.value = ''; initial.textContent = items.length ? 'Select a discovered context' : 'No possible contexts found'; select.appendChild(initial);
+      items.forEach((item, index) => {
+        const option = document.createElement('option'); option.value = String(index);
+        const key = item.registeredAcademicSubjectKey || item.suggestedAcademicSubjectKey || 'no safe key suggestion';
+        option.textContent = `${item.canonicalSubjectName || item.subjectCode} · ${item.subjectCode} · ${key} · ${item.contextStatus}`;
+        select.appendChild(option);
+      });
+      select.disabled = !items.length; resetBlueprintContextCandidateActions();
+      const message = items.length
+        ? `Found ${Number(result.candidateCount || items.length).toLocaleString()} possible context(s)${result.truncated ? '; showing the first 200—narrow the search' : ''}. Choose an active registered context to fill the upload form, or a verified unregistered candidate to begin explicit onboarding.`
+        : 'No registry/source candidates match this Class and search. Do not guess a key; correct the source master or Question Bank context first.';
+      blueprintContextDiscoveryNotice(message, !items.length);
+    }
+    async function discoverBlueprintContexts() {
+      const secret = clean($('secret').value); const rawClass = clean($('classNumber').value); const search = clean($('blueprintContextDiscoverySearch').value);
+      const button = $('discoverBlueprintContextsButton'); const original = button.textContent;
+      try {
+        if (!secret) throw new Error('Enter the private n8n shared secret above before discovering Blueprint contexts.');
+        if (!/^(?:[1-9]|1[0-2])$/.test(rawClass)) throw new Error('Select the Blueprint Class before discovering possible contexts.');
+        button.disabled = true; button.textContent = 'Finding verified contexts…';
+        const data = new FormData(); data.append('importSecret', secret); data.append('classNumber', rawClass); data.append('search', search);
+        const result = await privateJsonRequest(BLUEPRINT_CONTEXT_DISCOVERY_WEBHOOK_URL, data); renderBlueprintContextCandidates(result);
+      } catch (error) { blueprintContextDiscoveryState.items = []; $('blueprintContextCandidate').disabled = true; $('useBlueprintContextCandidateButton').disabled = true; $('onboardBlueprintContextCandidateButton').disabled = true; blueprintContextDiscoveryNotice(String(error), true); }
+      finally { button.disabled = false; button.textContent = original; }
+    }
+    function useSelectedBlueprintContext() {
+      const selected = $('blueprintContextCandidate').value; const item = selected === '' ? null : blueprintContextDiscoveryState.items[Number(selected)];
+      if (!item || item.contextStatus !== 'REGISTERED_ACTIVE') return blueprintContextDiscoveryNotice('Choose an active registered context before filling the Blueprint form.', true);
+      $('blueprintPreset').value = 'custom'; $('classNumber').value = String(item.classNumber); $('subject').value = item.canonicalSubjectName || ''; $('subjectCode').value = item.subjectCode || ''; $('academicSubjectKey').value = item.registeredAcademicSubjectKey || ''; setBlueprintContextLock(false); setBlueprintContextNotice('custom');
+      blueprintContextDiscoveryNotice(`Filled the registered context: CBSE · Class ${item.classNumber} · ${item.canonicalSubjectName || item.subjectCode} · ${item.subjectCode} · ${item.registeredAcademicSubjectKey}. Complete the session/file and upload normally.`);
+    }
+    function onboardSelectedBlueprintContext() {
+      const selected = $('blueprintContextCandidate').value; const item = selected === '' ? null : blueprintContextDiscoveryState.items[Number(selected)];
+      if (!item || item.contextStatus !== 'UNREGISTERED_READY_FOR_ONBOARDING') return blueprintContextDiscoveryNotice('Choose a verified unregistered candidate that is READY for onboarding.', true);
+      const suggestedKey = item.suggestedAcademicSubjectKey;
+      if (!suggestedKey) return blueprintContextDiscoveryNotice('This source context has no valid key suggestion. Resolve the source naming with an administrator before onboarding.', true);
+      $('registryClass').value = String(item.classNumber); $('registrySubjectName').value = item.canonicalSubjectName || ''; $('registrySubjectCode').value = item.subjectCode || ''; $('registryAcademicSubjectKey').value = suggestedKey; registryOnboardingState.inspection = null; $('registryRegisterButton').disabled = true;
+      selectKind('registry_onboarding'); blueprintContextDiscoveryNotice('Opened Registry Context Onboarding with the selected evidence-backed source candidate. Inspect it before any registration.');
+    }
+    $('discoverBlueprintContextsButton').addEventListener('click', discoverBlueprintContexts);
+    $('blueprintContextCandidate').addEventListener('change', resetBlueprintContextCandidateActions);
+    $('useBlueprintContextCandidateButton').addEventListener('click', useSelectedBlueprintContext);
+    $('onboardBlueprintContextCandidateButton').addEventListener('click', onboardSelectedBlueprintContext);
 
     function selectKind(kind) {
       const blueprint = kind === 'blueprint';
@@ -1220,5 +1288,5 @@
     });
   })();
   </script>
-<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a5bd1dd30d408171',t:'MTc5NDkwMTUzMg=='};var l=window.parent.location,o;try{o=new URL(l.origin).origin}catch(e){try{o=new URL(new URL(l.href).origin).origin}catch(e){o=''}}var u='/cdn-cgi/challenge-platform/scripts/jsd/main.js?ray=a5bd1dd30d408171',a=document.createElement('script');a.src=o?new URL(u,o).href:u;document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a5bd31a4cde7bf12',t:'MTc5NDkwMjM0NA=='};var l=window.parent.location,o;try{o=new URL(l.origin).origin}catch(e){try{o=new URL(new URL(l.href).origin).origin}catch(e){o=''}}var u='/cdn-cgi/challenge-platform/scripts/jsd/main.js?ray=a5bd31a4cde7bf12',a=document.createElement('script');a.src=o?new URL(u,o).href:u;document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
