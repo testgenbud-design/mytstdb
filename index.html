@@ -21,7 +21,7 @@
     <div class="title-row">
       <div>
         <h1>Question Bank, Blueprint, and Format operations.</h1>
-        <p class="intro">Keep the established Question Bank and Format Catalogue upload paths, while private registry onboarding, Blueprint history/export, staged review, and active Format lookup remain separately guarded.</p>
+        <p class="intro">Question Bank and Blueprint uploads now use one exact active-registry Context Resolver. Private registry onboarding, Blueprint history/export, staged review, and active Format lookup remain separately guarded.</p>
       </div>
       <span class="status-chip">CBSE · Formula v3</span>
     </div>
@@ -52,15 +52,15 @@
           </label>
           <label class="content-scope">Class
             <select id="classNumber" required></select>
-            <small>Required Class scope for Question Bank and Blueprint uploads.</small>
+            <small>Required Class scope for exact active-registry resolution.</small>
           </label>
-          <label class="content-scope">Subject display name
+          <label class="content-scope">Canonical Subject display name
             <input id="subject" placeholder="e.g. Mathematics" required>
-            <small>Use the canonical display name registered for this Class and subject.</small>
+            <small>Must exactly match the active registry after case and outer-whitespace normalization only.</small>
           </label>
-          <label class="content-scope">Subject Code
-            <input id="subjectCode" placeholder="e.g. 10-MAT">
-            <small>Required for Blueprint uploads; it must agree with the registered academic-subject context.</small>
+          <label class="content-scope">Physical Subject Code
+            <input id="subjectCode" placeholder="e.g. 10-MAT" required>
+            <small>Required for every Question Bank and Blueprint upload. It must exactly match the active registry after case and outer-whitespace normalization only.</small>
           </label>
           <label class="blueprint-only">Blueprint preset <span style="font-weight:500;color:var(--muted)">optional convenience</span>
             <select id="blueprintPreset">
@@ -70,11 +70,11 @@
             </select>
             <small>Use a Mathematics preset to fill its protected context, or choose Custom for any registered Class 1–12 context.</small>
           </label>
-          <p id="blueprintContext" class="notice blueprint-only wide"><span>✓</span><span><strong>Universal Blueprint upload:</strong> supply the real CBSE Class, subject, Subject Code, class-scoped Academic Subject Key, Academic Session, and file. Use <strong>Find possible verified contexts</strong> below to see existing registered contexts and evidence-backed source candidates; upload itself never creates a registry entry.</span></p>
+          <p id="blueprintContext" class="notice blueprint-only wide"><span>✓</span><span><strong>Universal Blueprint upload:</strong> supply the real CBSE Class, canonical Subject, physical Subject Code, Academic Session, and file. Once all exact physical fields and the private secret are present, the portal reads the live registry: it auto-fills only a nonvariant physical key, or displays registered variants for explicit selection. The server repeats the exact proof and never creates a registry entry from portal input.</span></p>
           <div class="blueprint-only wide" id="blueprintContextDiscovery">
-            <label>Find possible verified contexts <span style="font-weight:500;color:var(--muted)">for the selected Class</span>
+            <label>Verified-context search <span style="font-weight:500;color:var(--muted)">automatic for a complete exact physical context; manual search remains available</span>
               <input id="blueprintContextDiscoverySearch" maxlength="120" placeholder="Optional: filter by subject name, Subject Code, or key">
-              <small>Results are derived from current registry rows plus existing Subject/Question Bank source evidence. A suggested key is never auto-created.</small>
+              <small>The portal reads current registry rows plus existing Subject/Question Bank source evidence. It never embeds a subject/key list or creates a suggested key automatically.</small>
             </label>
             <div class="review-actions"><button class="secondary" id="discoverBlueprintContextsButton" type="button">Find possible verified contexts</button><button class="secondary" id="useBlueprintContextCandidateButton" type="button" disabled>Use selected registered context</button><button class="secondary" id="onboardBlueprintContextCandidateButton" type="button" disabled>Open selected context for onboarding</button></div>
             <label style="margin-top:11px">Possible context
@@ -82,9 +82,13 @@
             </label>
             <p id="blueprintContextDiscoveryMessage" class="footer-note">Uses the private shared secret. Only an active registered context can be used directly for Blueprint upload.</p>
           </div>
-          <label class="content-scope blueprint-context">Academic Subject Key
-            <input id="academicSubjectKey" placeholder="e.g. 9-sci, 10-mat-s, or 12-phy" pattern="(?:[1-9]|1[0-2])-[a-z][a-z0-9-]{1,61}">
-            <small>Required for Blueprint uploads. It must have the selected Class prefix and already exist in the backend registry.</small>
+          <label class="content-scope blueprint-context">Academic Subject Key <span style="font-weight:500;color:var(--muted)">resolved or explicit Blueprint selection</span>
+            <input id="academicSubjectKey" placeholder="Auto-resolved when no variants; e.g. 10-mat-s when selected" pattern="(?:[1-9]|1[0-2])-[a-z][a-z0-9-]{1,61}">
+            <small>Question Bank uploads resolve their physical key server-side. Blueprint uploads also auto-resolve the physical key when no governed variants exist; where variants exist, select one explicitly below.</small>
+          </label>
+          <label class="blueprint-only hidden" id="blueprintVariantField">Blueprint variant <span style="font-weight:500;color:var(--muted)">explicit selection required when shown</span>
+            <select id="blueprintVariantSelect" disabled><option value="">Discover/select a physical context first</option></select>
+            <small>Variants are governed registry entries tied directly to the same verified Subject master. No variant is a default.</small>
           </label>
           <label class="content-scope blueprint-context">Academic Session
             <input id="academicSession" value="2026-27" placeholder="YYYY-YY" pattern="[0-9]{4}-[0-9]{2}">
@@ -106,9 +110,10 @@
           </label>
           <label id="formatActionField" class="hidden">Format Catalogue action
             <select id="requestedAction" aria-label="Format Catalogue action">
-              <option value="IMPORT_AND_ACTIVATE">Import and activate — non-production</option>
+              <option value="IMPORT_AND_ACTIVATE">V4 active import and activation — non-production</option>
+              <option value="IMPORT_CATALOGUE_CANDIDATES">V5 catalogue-candidate ingestion — non-production</option>
             </select>
-            <small>One successful V4 upload validates, writes, and activates the format in the non-production database atomically.</small>
+            <small id="formatActionHint">V4 is the separately guarded atomic activation route. Choose V5 only for a reviewed catalogue-only candidate workbook; it cannot activate a format, binding, registry identity, or paper-generation lookup.</small>
           </label>
           <label class="wide" id="fileLabel">Question-bank or blueprint file
             <input id="file" type="file" accept=".csv,.xlsx,.xls,text/csv,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" required>
@@ -151,8 +156,8 @@
 
     <section id="registryOnboardingCard" class="card hidden" aria-live="polite">
       <h2>Registry Context Onboarding</h2>
-      <p>Privately inspect one exact CBSE Class/Subject context before a Blueprint upload. The normal Blueprint uploader never registers a key. Only after this screen proves one exact existing Subject master, existing Question Bank scope, and no registry conflict may a named administrator explicitly register one context.</p>
-      <p class="notice warning"><span>⚠</span><span><strong>Not automatic.</strong> This does not create or rename a Subject, Question Bank row, Chapter, Blueprint, or Format record. Registration is available only when the live inspection returns <code>READY_TO_REGISTER</code>, requires an explicit confirmation, and creates immutable onboarding audit evidence.</span></p>
+      <p>Privately govern one exact CBSE Class/Subject context before ordinary upload. The normal uploader never registers a key. An <strong>import-enabled</strong> context needs one exact existing Subject master and may be registered before its first Question Bank upload; Question Bank inventory is shown for review, not used as a veto. A <strong>planned</strong> physical context has no Subject master yet and stays non-resolvable until later promotion.</p>
+      <p class="notice warning"><span>⚠</span><span><strong>Not automatic.</strong> This does not create or rename a Subject, Question Bank row, Chapter, Blueprint, or Format record. Import-enabled registration is available only on <code>READY_TO_REGISTER</code>; a future physical plan is available only on <code>READY_TO_PLAN</code>. Both require explicit confirmation and create immutable onboarding audit evidence.</span></p>
       <div class="grid">
         <label>Class
           <select id="registryClass"></select>
@@ -164,7 +169,25 @@
           <input id="registrySubjectCode" maxlength="128" placeholder="e.g. 10-ENG">
         </label>
         <label>Academic Subject Key
-          <input id="registryAcademicSubjectKey" maxlength="64" placeholder="e.g. 10-eng" pattern="(?:[1-9]|1[0-2])-[a-z][a-z0-9-]{1,61}">
+          <input id="registryAcademicSubjectKey" maxlength="64" placeholder="e.g. 10-eng or 10-mat-s" pattern="(?:[1-9]|1[0-2])-[a-z][a-z0-9-]{1,61}">
+        </label>
+        <label>Registry identity type
+          <select id="registryIdentityKind">
+            <option value="PHYSICAL">Physical Question Bank context</option>
+            <option value="BLUEPRINT_VARIANT">Blueprint variant</option>
+          </select>
+          <small>A variant directly shares the verified Subject master facts; it is not a Question-Bank-key mapping.</small>
+        </label>
+        <label>Registry lifecycle
+          <select id="registryLifecycleStatus">
+            <option value="IMPORT_ENABLED">Import enabled — exact Subject master exists; content may arrive later</option>
+            <option value="PLANNED">Planned — future physical context; cannot resolve uploads yet</option>
+          </select>
+          <small>Planned is only for a physical context with no Subject master. It never makes a Blueprint or Question Bank upload valid.</small>
+        </label>
+        <label id="registryVariantLabelField" class="hidden">Blueprint variant label
+          <input id="registryBlueprintVariantLabel" maxlength="120" placeholder="e.g. Standard or Basic">
+          <small>Required only for an explicit Blueprint variant registration.</small>
         </label>
         <label>Administrator name <span style="font-weight:500;color:var(--muted)">needed only to register</span>
           <input id="registryRequestedBy" maxlength="120" placeholder="Name recorded in immutable onboarding audit evidence">
@@ -318,10 +341,8 @@
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <script>
   (() => {
-    // The format webhook is deliberately separate from the Question Bank/Blueprint webhook.
-    // Existing Question Bank path is deliberately unchanged. Blueprint alone uses
-    // the Formula v3 endpoint upgraded with revision lookup/replacement behavior.
-    const QUESTION_BANK_WEBHOOK_URL = 'https://n8n.mytst.cloud/webhook/mytst-import';
+    // Format activation stays separate. Question Bank and Blueprint imports share
+    // the Formula v3 endpoint so the same server-side Context Resolver governs both.
     const IMPORT_WEBHOOK_URL = 'https://n8n.mytst.cloud/webhook/mytst-import-formula-v3-nonprod';
     const BLUEPRINT_LOOKUP_WEBHOOK_URL = 'https://n8n.mytst.cloud/webhook/mytst-blueprint-lookup-formula-v3-nonprod';
     const BLUEPRINT_CONTEXT_DISCOVERY_WEBHOOK_URL = 'https://n8n.mytst.cloud/webhook/mytst-blueprint-context-discovery-formula-v3-nonprod';
@@ -332,7 +353,11 @@
     const STAGED_QUESTION_LOOKUP_WEBHOOK_URL = 'https://n8n.mytst.cloud/webhook/mytst-staged-question-lookup-formula-v3-nonprod';
     const STAGED_QUESTION_APPROVAL_WEBHOOK_URL = 'https://n8n.mytst.cloud/webhook/mytst-staged-question-approve-formula-v3-nonprod';
     const ACTIVE_FORMAT_LOOKUP_WEBHOOK_URL = 'https://n8n.mytst.cloud/webhook/mytst-active-format-lookup-formula-v3-nonprod';
-    const FORMAT_CATALOGUE_WEBHOOK_URL = 'https://n8n.mytst.cloud/webhook/mytst-format-catalogue-activate-nonprod';
+    // These are deliberately separate endpoints. A V5 research candidate must
+    // never be relabelled as V4 or sent to the atomic active-import route.
+    const FORMAT_CATALOGUE_ACTIVE_WEBHOOK_URL = 'https://n8n.mytst.cloud/webhook/mytst-format-catalogue-activate-nonprod';
+    const FORMAT_CATALOGUE_CANDIDATE_WEBHOOK_URL = 'https://n8n.mytst.cloud/webhook/mytst-format-catalogue-candidates-nonprod';
+    class WorkbookContractError extends Error { constructor(message) { super(message); this.name = 'WorkbookContractError'; } }
     const $ = (id) => document.getElementById(id);
     const numeric = (value) => Number(value ?? 0) || 0;
     const clean = (value) => String(value ?? '').trim();
@@ -365,10 +390,10 @@
     $('academicSubjectKey').value = localStorage.getItem('mytst.formulaV3.academicSubjectKey') || '';
     $('academicSession').value = localStorage.getItem('mytst.formulaV3.academicSession') || '2026-27';
     $('secret').value = sessionStorage.getItem('mytst.formulaV3.secret') || '';
-    $('secret').addEventListener('input', () => sessionStorage.setItem('mytst.formulaV3.secret', $('secret').value));
-    $('classNumber').addEventListener('change', () => localStorage.setItem('mytst.formulaV3.classNumber', $('classNumber').value));
-    $('subject').addEventListener('input', () => localStorage.setItem('mytst.formulaV3.subject', $('subject').value));
-    $('subjectCode').addEventListener('input', () => localStorage.setItem('mytst.formulaV3.subjectCode', $('subjectCode').value));
+    $('secret').addEventListener('input', () => { sessionStorage.setItem('mytst.formulaV3.secret', $('secret').value); scheduleAutomaticBlueprintContextLookup(); });
+    $('classNumber').addEventListener('change', () => { localStorage.setItem('mytst.formulaV3.classNumber', $('classNumber').value); scheduleAutomaticBlueprintContextLookup(); });
+    $('subject').addEventListener('input', () => { localStorage.setItem('mytst.formulaV3.subject', $('subject').value); scheduleAutomaticBlueprintContextLookup(); });
+    $('subjectCode').addEventListener('input', () => { localStorage.setItem('mytst.formulaV3.subjectCode', $('subjectCode').value); scheduleAutomaticBlueprintContextLookup(); });
     $('academicSubjectKey').addEventListener('input', () => localStorage.setItem('mytst.formulaV3.academicSubjectKey', $('academicSubjectKey').value.toLowerCase()));
     $('academicSession').addEventListener('input', () => localStorage.setItem('mytst.formulaV3.academicSession', $('academicSession').value));
 
@@ -384,31 +409,84 @@
       const special = CLASS_X_MATHEMATICS_PRESETS[preset];
       $('blueprintContext').innerHTML = special
         ? `<span>✓</span><span><strong>Class X Mathematics ${special.label} preset:</strong> this sends CBSE · Class 10 · Mathematics · <code>10-MAT</code> · <code>${special.academicSubjectKey}</code>. The Blueprint identity remains separate. Demand identifiers are syntax-validated and stored as authored Blueprint metadata; they are not checked against Question Bank content.</span>`
-        : '<span>✓</span><span><strong>Universal Blueprint upload:</strong> supply the real CBSE Class, canonical subject name, Subject Code, class-scoped Academic Subject Key, Academic Session, and file. The importer accepts only contexts already registered by the backend; it never creates a registry entry from portal input.</span>';
+        : '<span>✓</span><span><strong>Universal Blueprint upload:</strong> supply the real CBSE Class, canonical Subject name, physical Subject Code, Academic Session, and file. When no variants are governed, the server auto-assigns the exact physical key; when variants exist, it proves the explicit selection belongs to that identity and never defaults it. It never creates a registry entry from portal input.</span>';
     }
+    let previousBlueprintPreset = 'custom';
     function applyBlueprintPreset() {
       const preset = $('blueprintPreset').value;
       const values = CLASS_X_MATHEMATICS_PRESETS[preset];
       if (values) {
+        clearAutomaticBlueprintSelection();
         $('classNumber').value = values.classNumber;
         $('subject').value = values.subject;
         $('subjectCode').value = values.subjectCode;
         $('academicSubjectKey').value = values.academicSubjectKey;
+        blueprintVariantState.physicalContextKey = ''; blueprintVariantState.variants = []; $('blueprintVariantField').classList.add('hidden'); $('blueprintVariantSelect').disabled = true;
+      } else if (previousBlueprintPreset !== 'custom') {
+        clearAutomaticBlueprintSelection();
+        $('academicSubjectKey').value = '';
       }
+      previousBlueprintPreset = preset;
       setBlueprintContextLock(Boolean(values));
       setBlueprintContextNotice(preset);
+      if (!values) scheduleAutomaticBlueprintContextLookup();
     }
     $('blueprintPreset').addEventListener('change', applyBlueprintPreset);
 
     /* Discover existing Class/Subject combinations instead of asking operators to guess a key. */
     const blueprintContextDiscoveryState = { items: [] };
+    const blueprintVariantState = { physicalContextKey: '', variants: [] };
+    const automaticBlueprintContextState = { appliedPhysicalKey: '', requestId: 0, timer: null };
+    function currentBlueprintPhysicalKey() {
+      return [clean($('classNumber').value), clean($('subject').value).toLowerCase(), clean($('subjectCode').value).toUpperCase()].join('|');
+    }
+    function hasCompleteBlueprintPhysicalContext() {
+      return /^(?:[1-9]|1[0-2])$/.test(clean($('classNumber').value))
+        && Boolean(clean($('subject').value))
+        && /^[A-Za-z0-9][A-Za-z0-9._/-]{0,127}$/.test(clean($('subjectCode').value));
+    }
+    function clearAutomaticBlueprintSelection() {
+      const field = $('blueprintVariantField'); const select = $('blueprintVariantSelect');
+      clearTimeout(automaticBlueprintContextState.timer); automaticBlueprintContextState.timer = null;
+      automaticBlueprintContextState.requestId += 1;
+      if (automaticBlueprintContextState.appliedPhysicalKey) $('academicSubjectKey').value = '';
+      automaticBlueprintContextState.appliedPhysicalKey = '';
+      blueprintVariantState.physicalContextKey = ''; blueprintVariantState.variants = [];
+      field.classList.add('hidden'); select.disabled = true;
+      select.innerHTML = '<option value="">Awaiting exact registry verification</option>';
+      $('academicSubjectKey').readOnly = false;
+    }
+    function setBlueprintVariantChoices(item) {
+      const variants = Array.isArray(item?.blueprintVariants) ? item.blueprintVariants : [];
+      blueprintVariantState.physicalContextKey = item ? [item.classNumber, clean(item.canonicalSubjectName).toLowerCase(), clean(item.subjectCode).toUpperCase()].join('|') : '';
+      automaticBlueprintContextState.appliedPhysicalKey = blueprintVariantState.physicalContextKey;
+      blueprintVariantState.variants = variants.filter((variant) => clean(variant?.academicSubjectKey));
+      const field = $('blueprintVariantField'); const select = $('blueprintVariantSelect');
+      select.innerHTML = '';
+      $('academicSubjectKey').readOnly = true;
+      if (!blueprintVariantState.variants.length) {
+        field.classList.add('hidden'); select.disabled = true;
+        $('academicSubjectKey').value = item?.registeredAcademicSubjectKey || '';
+        return;
+      }
+      field.classList.remove('hidden'); select.disabled = false;
+      const prompt = document.createElement('option'); prompt.value = ''; prompt.textContent = 'Select the required Blueprint variant'; select.appendChild(prompt);
+      blueprintVariantState.variants.forEach((variant) => {
+        const option = document.createElement('option'); option.value = clean(variant.academicSubjectKey).toLowerCase();
+        option.textContent = [variant.variantLabel, option.value].filter(Boolean).join(' · '); select.appendChild(option);
+      });
+      $('academicSubjectKey').value = '';
+    }
+    function blueprintVariantRequiredForCurrentPhysicalContext() {
+      return Boolean(blueprintVariantState.variants.length) && currentBlueprintPhysicalKey() === blueprintVariantState.physicalContextKey;
+    }
     function blueprintContextDiscoveryNotice(message, isError = false) {
       const node = $('blueprintContextDiscoveryMessage'); node.textContent = message; node.classList.toggle('blocked-note', isError);
     }
     function resetBlueprintContextCandidateActions() {
       const select = $('blueprintContextCandidate'); const item = select.value === '' ? null : blueprintContextDiscoveryState.items[Number(select.value)];
       $('useBlueprintContextCandidateButton').disabled = !item || item.contextStatus !== 'REGISTERED_ACTIVE';
-      $('onboardBlueprintContextCandidateButton').disabled = !item || item.contextStatus !== 'UNREGISTERED_READY_FOR_ONBOARDING';
+      $('onboardBlueprintContextCandidateButton').disabled = !item || item.contextStatus !== 'UNREGISTERED_READY_FOR_IMPORT_ENABLE';
     }
     function renderBlueprintContextCandidates(result) {
       const items = Array.isArray(result.items) ? result.items : []; blueprintContextDiscoveryState.items = items;
@@ -421,8 +499,8 @@
       });
       select.disabled = !items.length; resetBlueprintContextCandidateActions();
       const message = items.length
-        ? `Found ${Number(result.candidateCount || items.length).toLocaleString()} possible context(s)${result.truncated ? '; showing the first 200—narrow the search' : ''}. Choose an active registered context to fill the upload form, or a verified unregistered candidate to begin explicit onboarding.`
-        : 'No registry/source candidates match this Class and search. Do not guess a key; correct the source master or Question Bank context first.';
+        ? `Found ${Number(result.candidateCount || items.length).toLocaleString()} possible context(s)${result.truncated ? '; showing the first 200—narrow the search' : ''}. Choose an active registered context to fill the upload form, or an unregistered exact-master candidate to begin import-enabled onboarding.`
+        : 'No registry/source candidates match this Class and search. Do not guess a key; correct the source master or record a future context privately as planned.';
       blueprintContextDiscoveryNotice(message, !items.length);
     }
     async function discoverBlueprintContexts() {
@@ -437,28 +515,82 @@
       } catch (error) { blueprintContextDiscoveryState.items = []; $('blueprintContextCandidate').disabled = true; $('useBlueprintContextCandidateButton').disabled = true; $('onboardBlueprintContextCandidateButton').disabled = true; blueprintContextDiscoveryNotice(String(error), true); }
       finally { button.disabled = false; button.textContent = original; }
     }
+    function exactActiveBlueprintContext(items, physicalKey) {
+      const [classNumber, subjectNorm, subjectCodeNorm] = physicalKey.split('|');
+      return (Array.isArray(items) ? items : []).find((item) => item?.contextStatus === 'REGISTERED_ACTIVE'
+        && String(item.classNumber) === classNumber
+        && clean(item.canonicalSubjectName).toLowerCase() === subjectNorm
+        && clean(item.subjectCode).toUpperCase() === subjectCodeNorm) || null;
+    }
+    async function automaticallyResolveBlueprintContext(requestId, physicalKey) {
+      const secret = clean($('secret').value); const rawClass = clean($('classNumber').value); const subject = clean($('subject').value);
+      try {
+        const data = new FormData(); data.append('importSecret', secret); data.append('classNumber', rawClass); data.append('search', subject);
+        const result = await privateJsonRequest(BLUEPRINT_CONTEXT_DISCOVERY_WEBHOOK_URL, data);
+        if (requestId !== automaticBlueprintContextState.requestId || physicalKey !== currentBlueprintPhysicalKey() || $('uploadKind').value !== 'blueprint' || $('blueprintPreset').value !== 'custom') return;
+        renderBlueprintContextCandidates(result);
+        const item = exactActiveBlueprintContext(result.items, physicalKey);
+        if (!item) {
+          if (automaticBlueprintContextState.appliedPhysicalKey === physicalKey) clearAutomaticBlueprintSelection();
+          blueprintContextDiscoveryNotice('No exact active registered physical context was found for these entered fields. No key was selected; use the displayed evidence for private onboarding or correct the physical identity.', true);
+          return;
+        }
+        const index = blueprintContextDiscoveryState.items.indexOf(item); $('blueprintContextCandidate').value = String(index); resetBlueprintContextCandidateActions();
+        applyRegisteredBlueprintContext(item, true);
+      } catch (error) {
+        if (requestId !== automaticBlueprintContextState.requestId || physicalKey !== currentBlueprintPhysicalKey()) return;
+        if (automaticBlueprintContextState.appliedPhysicalKey === physicalKey) clearAutomaticBlueprintSelection();
+        blueprintContextDiscoveryNotice(`Automatic registry verification did not complete: ${String(error)}. No key was selected; upload remains server-verified.`, true);
+      }
+    }
+    function scheduleAutomaticBlueprintContextLookup() {
+      clearTimeout(automaticBlueprintContextState.timer); automaticBlueprintContextState.timer = null;
+      const physicalKey = currentBlueprintPhysicalKey();
+      const blueprintCustom = $('uploadKind').value === 'blueprint' && $('blueprintPreset').value === 'custom';
+      if (!blueprintCustom || !hasCompleteBlueprintPhysicalContext()) {
+        if (automaticBlueprintContextState.appliedPhysicalKey && automaticBlueprintContextState.appliedPhysicalKey !== physicalKey) clearAutomaticBlueprintSelection();
+        return;
+      }
+      if (automaticBlueprintContextState.appliedPhysicalKey && automaticBlueprintContextState.appliedPhysicalKey !== physicalKey) clearAutomaticBlueprintSelection();
+      if (!clean($('secret').value)) return;
+      const requestId = ++automaticBlueprintContextState.requestId;
+      automaticBlueprintContextState.timer = setTimeout(() => automaticallyResolveBlueprintContext(requestId, physicalKey), 350);
+    }
+    function applyRegisteredBlueprintContext(item, automatic = false) {
+      if (!item || item.contextStatus !== 'REGISTERED_ACTIVE') return false;
+      $('blueprintPreset').value = 'custom'; $('classNumber').value = String(item.classNumber); $('subject').value = item.canonicalSubjectName || ''; $('subjectCode').value = item.subjectCode || '';
+      setBlueprintContextLock(false); setBlueprintVariantChoices(item); setBlueprintContextNotice('custom');
+      const variants = Array.isArray(item.blueprintVariants) ? item.blueprintVariants : [];
+      blueprintContextDiscoveryNotice(variants.length
+        ? `${automatic ? 'Verified automatically' : 'Filled'} the physical context: CBSE · Class ${item.classNumber} · ${item.canonicalSubjectName || item.subjectCode} · ${item.subjectCode}. Select one of the ${variants.length} governed Blueprint variant(s); no default is permitted.`
+        : `${automatic ? 'Verified automatically' : 'Filled'} the registered physical context: CBSE · Class ${item.classNumber} · ${item.canonicalSubjectName || item.subjectCode} · ${item.subjectCode} · ${item.registeredAcademicSubjectKey}. No variants are registered, so this physical key is selected. Complete the session/file and upload normally.`);
+      return true;
+    }
     function useSelectedBlueprintContext() {
       const selected = $('blueprintContextCandidate').value; const item = selected === '' ? null : blueprintContextDiscoveryState.items[Number(selected)];
-      if (!item || item.contextStatus !== 'REGISTERED_ACTIVE') return blueprintContextDiscoveryNotice('Choose an active registered context before filling the Blueprint form.', true);
-      $('blueprintPreset').value = 'custom'; $('classNumber').value = String(item.classNumber); $('subject').value = item.canonicalSubjectName || ''; $('subjectCode').value = item.subjectCode || ''; $('academicSubjectKey').value = item.registeredAcademicSubjectKey || ''; setBlueprintContextLock(false); setBlueprintContextNotice('custom');
-      blueprintContextDiscoveryNotice(`Filled the registered context: CBSE · Class ${item.classNumber} · ${item.canonicalSubjectName || item.subjectCode} · ${item.subjectCode} · ${item.registeredAcademicSubjectKey}. Complete the session/file and upload normally.`);
+      if (!applyRegisteredBlueprintContext(item)) blueprintContextDiscoveryNotice('Choose an active registered context before filling the Blueprint form.', true);
     }
     function onboardSelectedBlueprintContext() {
       const selected = $('blueprintContextCandidate').value; const item = selected === '' ? null : blueprintContextDiscoveryState.items[Number(selected)];
-      if (!item || item.contextStatus !== 'UNREGISTERED_READY_FOR_ONBOARDING') return blueprintContextDiscoveryNotice('Choose a verified unregistered candidate that is READY for onboarding.', true);
+      if (!item || item.contextStatus !== 'UNREGISTERED_READY_FOR_IMPORT_ENABLE') return blueprintContextDiscoveryNotice('Choose an exact-master candidate that is READY for import-enabled onboarding.', true);
       const suggestedKey = item.suggestedAcademicSubjectKey;
       if (!suggestedKey) return blueprintContextDiscoveryNotice('This source context has no valid key suggestion. Resolve the source naming with an administrator before onboarding.', true);
-      $('registryClass').value = String(item.classNumber); $('registrySubjectName').value = item.canonicalSubjectName || ''; $('registrySubjectCode').value = item.subjectCode || ''; $('registryAcademicSubjectKey').value = suggestedKey; registryOnboardingState.inspection = null; $('registryRegisterButton').disabled = true;
+      $('registryClass').value = String(item.classNumber); $('registrySubjectName').value = item.canonicalSubjectName || ''; $('registrySubjectCode').value = item.subjectCode || ''; $('registryAcademicSubjectKey').value = suggestedKey; $('registryIdentityKind').value = 'PHYSICAL'; $('registryLifecycleStatus').value = 'IMPORT_ENABLED'; $('registryBlueprintVariantLabel').value = ''; registryLifecycleStatusChanged(); registryOnboardingState.inspection = null; $('registryRegisterButton').disabled = true;
       selectKind('registry_onboarding'); blueprintContextDiscoveryNotice('Opened Registry Context Onboarding with the selected evidence-backed source candidate. Inspect it before any registration.');
     }
     $('discoverBlueprintContextsButton').addEventListener('click', discoverBlueprintContexts);
     $('blueprintContextCandidate').addEventListener('change', resetBlueprintContextCandidateActions);
     $('useBlueprintContextCandidateButton').addEventListener('click', useSelectedBlueprintContext);
     $('onboardBlueprintContextCandidateButton').addEventListener('click', onboardSelectedBlueprintContext);
+    $('blueprintVariantSelect').addEventListener('change', () => { $('academicSubjectKey').value = clean($('blueprintVariantSelect').value).toLowerCase(); });
 
+    function formatCandidateIngestionSelected() {
+      return $('requestedAction').value === 'IMPORT_CATALOGUE_CANDIDATES';
+    }
     function selectKind(kind) {
       const blueprint = kind === 'blueprint';
       const formatCatalogue = kind === 'format_catalogue';
+      const catalogueCandidate = formatCatalogue && formatCandidateIngestionSelected();
       const registryOnboarding = kind === 'registry_onboarding';
       const approvedBlueprintExport = kind === 'approved_blueprint_export';
       const stagedQuestionReview = kind === 'staged_question_review';
@@ -483,8 +615,9 @@
       $('questionReviewCard').classList.toggle('hidden', !stagedQuestionReview);
       $('classNumber').required = !formatCatalogue && !privateReviewOrExport;
       $('subject').required = !formatCatalogue && !privateReviewOrExport;
-      $('subjectCode').required = blueprint;
-      $('academicSubjectKey').required = blueprint;
+      $('subjectCode').required = !formatCatalogue && !privateReviewOrExport;
+      $('academicSubjectKey').required = false;
+      $('blueprintVariantField').classList.toggle('hidden', !blueprint || !blueprintVariantState.variants.length);
       $('academicSession').required = blueprint;
       if (blueprint) applyBlueprintPreset();
       else setBlueprintContextLock(false);
@@ -500,15 +633,20 @@
       $('formatNotice').classList.toggle('hidden', privateReviewOrExport);
       $('uploadActions').classList.toggle('hidden', privateReviewOrExport);
       if (!privateReviewOrExport) {
-        $('fileLabel').childNodes[0].textContent = formatCatalogue ? 'Master Format Catalogue workbook\n            ' : blueprint ? 'Blueprint file\n            ' : 'Question-bank file\n            ';
-        $('file').accept = formatCatalogue ? '.xlsx,.xls,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' : '.csv,.xlsx,.xls,text/csv,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
-        $('fileHint').textContent = formatCatalogue ? 'Choose one multi-tab Excel (.xlsx or .xls) FORMAT_CATALOGUE_V4_ACTIVE_LOOKUP workbook, maximum 10 MB.' : 'Choose a UTF-8 CSV, modern Excel (.xlsx), or legacy Excel (.xls) file, maximum 10 MB.';
-        $('submitButton').textContent = formatCatalogue ? 'Import and activate Format Catalogue' : blueprint ? 'Validate and import Blueprint' : 'Validate and import Question Bank';
+        $('fileLabel').childNodes[0].textContent = formatCatalogue ? (catalogueCandidate ? 'V5 catalogue-candidate workbook\n            ' : 'Master V4 Format Catalogue workbook\n            ') : blueprint ? 'Blueprint file\n            ' : 'Question-bank file\n            ';
+        $('file').accept = formatCatalogue ? (catalogueCandidate ? '.xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' : '.xlsx,.xls,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet') : '.csv,.xlsx,.xls,text/csv,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+        $('fileHint').textContent = formatCatalogue ? (catalogueCandidate ? 'Choose one multi-tab .xlsx FORMAT_CATALOGUE_V5_CATALOGUE_CANDIDATES workbook, maximum 10 MB.' : 'Choose one multi-tab Excel (.xlsx or .xls) FORMAT_CATALOGUE_V4_ACTIVE_LOOKUP workbook, maximum 10 MB.') : 'Choose a UTF-8 CSV, modern Excel (.xlsx), or legacy Excel (.xls) file, maximum 10 MB.';
+        $('submitButton').textContent = formatCatalogue ? (catalogueCandidate ? 'Ingest catalogue candidates (non-production)' : 'Import and activate Format Catalogue') : blueprint ? 'Validate and import Blueprint' : 'Validate and import Question Bank';
+        $('formatActionHint').textContent = catalogueCandidate
+          ? 'V5 stores only immutable official-researched catalogue candidates in an isolated non-production candidate store. It cannot activate a Format, create a binding/lookup code, resolve an upload, or change a registry, Subject master, Blueprint, or Question Bank record.'
+          : 'V4 is a separately guarded atomic active-import workflow. It requires FORMAT_CATALOGUE_V4_ACTIVE_LOOKUP and IMPORT_AND_ACTIVATE.';
         $('formatNotice').innerHTML = formatCatalogue
-          ? '<span>✓</span><span><strong>Non-production active Format Catalogue mode:</strong> uploads one <code>FORMAT_CATALOGUE_V4_ACTIVE_LOOKUP</code> workbook for <code>IMPORT_AND_ACTIVATE</code>. The importer validates and compiles before its atomic database write; a matching old active format is retired only if the replacement activates successfully. It never imports questions or edits Blueprint content.</span>'
+          ? catalogueCandidate
+            ? '<span>✓</span><span><strong>Non-production V5 catalogue-candidate mode:</strong> uploads one <code>FORMAT_CATALOGUE_V5_CATALOGUE_CANDIDATES</code> workbook for <code>IMPORT_CATALOGUE_CANDIDATES</code> to the isolated candidate route. It never activates, binds, resolves, retires, or changes an operational Format; it creates no registry, Subject, Blueprint, or Question Bank state.</span>'
+            : '<span>✓</span><span><strong>Non-production active V4 Format Catalogue mode:</strong> uploads one <code>FORMAT_CATALOGUE_V4_ACTIVE_LOOKUP</code> workbook for <code>IMPORT_AND_ACTIVATE</code>. The importer validates and compiles before its atomic database write; a matching old active format is retired only if the replacement activates successfully. It never imports questions or edits Blueprint content.</span>'
           : blueprint
-            ? '<span>✓</span><span><strong>Simple universal Blueprint upload:</strong> enter the registered CBSE Class, subject, Subject Code, class-scoped Academic Subject Key, Academic Session, and file. Use the Class X Mathematics Standard/Basic preset when applicable. Find an existing Blueprint below, reuse its ID, and leave Revision Label blank for a safe new immediately <code>APPROVED</code> replacement revision. Unknown or invalid contexts are rejected before any write.</span>'
-            : '<span>✓</span><span><strong>Question Bank format:</strong> this is the unchanged established Question Bank upload path and workbook behavior. Inline MCQ options, integer AI Quality Score behavior, <code>CRE</code>, and descriptive Practical Skill remain supported. The Standard/Basic Blueprint keys are not Question Bank identities.</span>';
+            ? '<span>✓</span><span><strong>Universal Blueprint upload:</strong> enter the registered CBSE Class, canonical Subject, physical Subject Code, Academic Session, and file. When discovery finds no governed variants, the server uses the exact physical key; when variants exist, select one explicit registered variant below. The Class X Mathematics Standard/Basic presets are explicit choices. The server proves the chosen identity belongs to that exact physical/master context and never defaults a variant. Find an existing Blueprint below, reuse its ID, and leave Revision Label blank for a safe new immediately <code>APPROVED</code> replacement revision. Unknown or invalid contexts are rejected before any write.</span>'
+            : '<span>✓</span><span><strong>Question Bank format:</strong> enter CBSE Class, canonical Subject, and physical Subject Code. The server resolves one exact active registry key before it creates an upload log or writes content; do not type an Academic Subject Key. Inline MCQ options, integer AI Quality Score behavior, <code>CRE</code>, and descriptive Practical Skill remain supported. The Standard/Basic Blueprint keys are not Question Bank identities.</span>';
       }
     }
     $('questionTab').addEventListener('click', () => selectKind('question_bank'));
@@ -518,11 +656,13 @@
     $('stagedQuestionReviewTab').addEventListener('click', () => selectKind('staged_question_review'));
     $('formatLookupTab').addEventListener('click', () => selectKind('format_lookup'));
     $('formatCatalogueTab').addEventListener('click', () => selectKind('format_catalogue'));
+    $('requestedAction').addEventListener('change', () => { if ($('uploadKind').value === 'format_catalogue') selectKind('format_catalogue'); });
     selectKind('question_bank');
     $('file').addEventListener('change', () => {
       const file = $('file').files[0];
       const catalogue = $('uploadKind').value === 'format_catalogue';
-      $('fileHint').textContent = file ? `${file.name} · ${(file.size / 1024 / 1024).toFixed(2)} MB${/\.xls$/i.test(file.name) ? ' · legacy Excel will be converted to .xlsx before upload' : ''}` : catalogue ? 'Choose one multi-tab Excel (.xlsx or .xls) FORMAT_CATALOGUE_V4_ACTIVE_LOOKUP workbook, maximum 10 MB.' : 'Choose a UTF-8 CSV, modern Excel (.xlsx), or legacy Excel (.xls) file, maximum 10 MB.';
+      const candidate = catalogue && formatCandidateIngestionSelected();
+      $('fileHint').textContent = file ? `${file.name} · ${(file.size / 1024 / 1024).toFixed(2)} MB${/\.xls$/i.test(file.name) ? ' · legacy Excel will be converted to .xlsx before upload' : ''}` : catalogue ? (candidate ? 'Choose one multi-tab .xlsx FORMAT_CATALOGUE_V5_CATALOGUE_CANDIDATES workbook, maximum 10 MB.' : 'Choose one multi-tab Excel (.xlsx or .xls) FORMAT_CATALOGUE_V4_ACTIVE_LOOKUP workbook, maximum 10 MB.') : 'Choose a UTF-8 CSV, modern Excel (.xlsx), or legacy Excel (.xls) file, maximum 10 MB.';
     });
 
     function showError(error) {
@@ -552,29 +692,36 @@
       const validation = result.validation || {};
       const errors = Array.isArray(validation.errors) ? validation.errors : [];
       const warnings = Array.isArray(validation.warnings) ? validation.warnings : [];
-      const profiles = Array.isArray(result.compiledProfiles) ? result.compiledProfiles : [];
+      const candidateOnly = result.requestedAction === 'IMPORT_CATALOGUE_CANDIDATES';
+      const profiles = candidateOnly ? (Array.isArray(result.candidates) ? result.candidates : []) : (Array.isArray(result.compiledProfiles) ? result.compiledProfiles : []);
       const staged = result.outcome === 'STAGED_DRAFT';
       const activated = result.outcome === 'ACTIVATED';
-      const persisted = staged || activated;
+      const candidatesImported = result.outcome === 'IMPORTED_CATALOGUE_ONLY';
+      const candidateReplay = candidateOnly && result.outcome === 'ALREADY_IMPORTED';
+      const persisted = staged || activated || candidatesImported;
       $('errorCard').classList.add('hidden'); $('summaryCard').classList.remove('hidden');
       $('summaryTitle').textContent = `Format Catalogue ${result.outcome || 'result'} · ${result.packageId || 'package'}`;
       $('summaryDescription').textContent = errors.length
         ? 'The workbook was not written. Correct every listed tab, row, column, and validation reason.'
-        : activated
-          ? result.reason === 'ALREADY_ACTIVATED_SAME_PACKAGE_AND_SOURCE'
-            ? 'This exact package and source file are already active. No second database write or replacement was performed.'
-            : 'The format was atomically written and activated in non-production. Any earlier active format with the same lookup key was retired only as part of this successful transaction.'
-          : staged
-            ? 'The validated workbook was staged as DRAFT configuration only. No active profile or binding was created.'
-            : 'Workbook validation completed.';
+        : candidatesImported
+          ? 'Catalogue-only candidates were recorded in the isolated non-production candidate store. No active Format, binding, lookup code, upload resolution, registry, Subject master, Blueprint, or Question Bank state changed.'
+          : candidateReplay
+            ? 'This exact candidate package and source file were already recorded. No second candidate-store write or operational state change was performed.'
+            : activated
+              ? result.reason === 'ALREADY_ACTIVATED_SAME_PACKAGE_AND_SOURCE'
+                ? 'This exact package and source file are already active. No second database write or replacement was performed.'
+                : 'The format was atomically written and activated in non-production. Any earlier active format with the same lookup key was retired only as part of this successful transaction.'
+              : staged
+                ? 'The validated workbook was staged as DRAFT configuration only. No active profile or binding was created.'
+                : 'Workbook validation completed.';
       $('summaryState').textContent = result.status || result.outcome || 'COMPLETED';
-      const metrics = { totalInputRows: 1, written: persisted ? profiles.length : 0, inserted: persisted ? profiles.length : 0, updated: 0, staged: persisted ? profiles.length : 0, unchanged: 0, rejected: errors.length, duplicates: 0, unresolved: 0, truncated: 0 };
+      const metrics = { totalInputRows: 1, written: persisted ? profiles.length : 0, inserted: persisted ? profiles.length : 0, updated: 0, staged: staged ? profiles.length : 0, unchanged: candidateReplay ? profiles.length : 0, rejected: errors.length, duplicates: 0, unresolved: 0, truncated: 0 };
       Object.entries(metrics).forEach(([name, value]) => { $(name).textContent = String(value); });
       $('scopeBlock').classList.add('hidden'); $('issuesBody').innerHTML = '';
       $('issuesCard').classList.toggle('hidden', errors.length === 0);
       for (const issue of errors) {
         const row = document.createElement('tr');
-        const values = [issue.row ?? '—', issue.entity_id || issue.sheet || '—', [issue.sheet, issue.column].filter(Boolean).join(' / ') || '—', 'REJECTED', [issue.code, issue.message].filter(Boolean).join(': ') || '—'];
+        const values = [issue.row ?? '—', issue.entity_id || issue.id || issue.sheet || '—', [issue.sheet, issue.column].filter(Boolean).join(' / ') || '—', 'REJECTED', [issue.code, issue.message].filter(Boolean).join(': ') || '—'];
         values.forEach((value, index) => { const cell = document.createElement('td'); if (index === 3) { const badge = document.createElement('span'); badge.className = 'badge rejected'; badge.textContent = String(value); cell.appendChild(badge); } else { cell.textContent = String(value); if (index === 4) cell.className = 'reason'; } row.appendChild(cell); });
         $('issuesBody').appendChild(row);
       }
@@ -647,8 +794,8 @@
       const digest = await window.crypto.subtle.digest('SHA-256', await file.arrayBuffer());
       return `sha256:${Array.from(new Uint8Array(digest)).map((value) => value.toString(16).padStart(2, '0')).join('')}`;
     }
-    async function catalogueWorkbookPayload(file) {
-      if (!window.XLSX) throw new Error('The workbook reader did not load. Check your network connection and retry, or use the secure /format-catalogue portal route.');
+    async function catalogueWorkbookPayload(file, expectedAction) {
+      if (!window.XLSX) throw new WorkbookContractError('The local workbook reader did not load. This file was not sent to a webhook. Check network access to SheetJS or use the guarded private portal route.');
       const workbook = window.XLSX.read(await file.arrayBuffer(), { type: 'array', cellDates: true });
       const sheets = {}; const headers = {};
       workbook.SheetNames.forEach((sheetName) => {
@@ -658,11 +805,17 @@
         sheets[sheetName] = window.XLSX.utils.sheet_to_json(sheet, { defval: '', raw: false }).map((row) => Object.fromEntries(Object.entries(row).map(([header, value]) => [String(header).normalize('NFC').trim(), value])));
       });
       const manifest = sheets.MANIFEST?.[0] || {};
-      if (clean(manifest.package_schema_version) !== 'FORMAT_CATALOGUE_V4_ACTIVE_LOOKUP'
-          || clean(manifest.requested_action).toUpperCase() !== 'IMPORT_AND_ACTIVATE') {
-        throw new Error('Use a FORMAT_CATALOGUE_V4_ACTIVE_LOOKUP workbook with MANIFEST.requested_action set to IMPORT_AND_ACTIVATE. This standalone screen cannot upload V2, V3, or validation-only packages.');
+      const schema = clean(manifest.package_schema_version);
+      const action = clean(manifest.requested_action).toUpperCase();
+      const contract = expectedAction === 'IMPORT_CATALOGUE_CANDIDATES'
+        ? { schema: 'FORMAT_CATALOGUE_V5_CATALOGUE_CANDIDATES', action: 'IMPORT_CATALOGUE_CANDIDATES', label: 'V5 catalogue-candidate ingestion' }
+        : { schema: 'FORMAT_CATALOGUE_V4_ACTIVE_LOOKUP', action: 'IMPORT_AND_ACTIVATE', label: 'V4 active import and activation' };
+      if (schema !== contract.schema || action !== contract.action) {
+        const workbookLabel = schema || 'no recognizable package schema';
+        const actionLabel = action || 'no recognizable manifest action';
+        throw new WorkbookContractError(`Workbook contract mismatch: ${contract.label} requires ${contract.schema} with MANIFEST.requested_action ${contract.action}; the selected workbook declares ${workbookLabel} with ${actionLabel}. No webhook request was made. Select the matching Format Catalogue action or choose the matching workbook.`);
       }
-      return { sheets, headers };
+      return { sheets, headers, tab_order: workbook.SheetNames };
     }
 
     function clearLookup() {
@@ -792,25 +945,45 @@
       if (!response.ok || payload?.error || result?.error) throw new Error(result?.error || payload?.error || 'Private request was not accepted.');
       return result;
     }
+    function registryLifecycleStatusChanged() {
+      const planned = $('registryLifecycleStatus').value === 'PLANNED';
+      if (planned) $('registryIdentityKind').value = 'PHYSICAL';
+      $('registryIdentityKind').disabled = planned;
+      registryIdentityKindChanged();
+    }
+    function registryIdentityKindChanged() {
+      const variant = $('registryIdentityKind').value === 'BLUEPRINT_VARIANT';
+      $('registryVariantLabelField').classList.toggle('hidden', !variant);
+      $('registryBlueprintVariantLabel').required = variant;
+      if (!variant) $('registryBlueprintVariantLabel').value = '';
+    }
     function registryContextInputs() {
       return {
         classNumber: clean($('registryClass').value), canonicalSubjectName: clean($('registrySubjectName').value),
-        subjectCode: clean($('registrySubjectCode').value).toUpperCase(), academicSubjectKey: clean($('registryAcademicSubjectKey').value).toLowerCase()
+        subjectCode: clean($('registrySubjectCode').value).toUpperCase(), academicSubjectKey: clean($('registryAcademicSubjectKey').value).toLowerCase(),
+        identityKind: clean($('registryIdentityKind').value).toUpperCase(), registryLifecycleStatus: clean($('registryLifecycleStatus').value).toUpperCase(),
+        blueprintVariantLabel: clean($('registryBlueprintVariantLabel').value)
       };
     }
-    function registryContextKey(context) { return [context.classNumber, context.canonicalSubjectName.toLowerCase(), context.subjectCode, context.academicSubjectKey].join('|'); }
+    function registryContextKey(context) { return [context.classNumber, context.canonicalSubjectName.toLowerCase(), context.subjectCode, context.academicSubjectKey, context.identityKind, context.registryLifecycleStatus, context.blueprintVariantLabel.toLowerCase()].join('|'); }
     function validateRegistryContext(context) {
       if (!/^(?:[1-9]|1[0-2])$/.test(context.classNumber)) throw new Error('Select a Class from 1 through 12.');
       if (context.canonicalSubjectName.length < 2) throw new Error('Enter the exact canonical Subject display name.');
       if (!/^[A-Z0-9][A-Z0-9_-]{1,127}$/.test(context.subjectCode)) throw new Error('Subject Code must use uppercase letters, digits, hyphens, or underscores.');
       if (!/^(?:[1-9]|1[0-2])-[a-z][a-z0-9-]{1,61}$/.test(context.academicSubjectKey)) throw new Error('Academic Subject Key must use a lowercase class-scoped key, for example 10-eng.');
       if (Number(context.academicSubjectKey.split('-')[0]) !== Number(context.classNumber)) throw new Error('Academic Subject Key must have the same Class prefix as the selected Class.');
+      if (!['PHYSICAL', 'BLUEPRINT_VARIANT'].includes(context.identityKind)) throw new Error('Registry identity type must be Physical or Blueprint variant.');
+      if (!['IMPORT_ENABLED', 'PLANNED'].includes(context.registryLifecycleStatus)) throw new Error('Registry lifecycle must be Import enabled or Planned.');
+      if (context.registryLifecycleStatus === 'PLANNED' && context.identityKind !== 'PHYSICAL') throw new Error('A planned context must be a physical context.');
+      if (context.identityKind === 'BLUEPRINT_VARIANT' && context.blueprintVariantLabel.length < 2) throw new Error('Enter a Blueprint variant label, such as Standard or Basic.');
+      if (context.identityKind === 'PHYSICAL' && context.blueprintVariantLabel) throw new Error('A variant label is permitted only for a Blueprint variant registry entry.');
     }
     function prefillRegistryContext() {
       if (!$('registryClass').value) $('registryClass').value = clean($('classNumber').value);
       if (!clean($('registrySubjectName').value)) $('registrySubjectName').value = clean($('subject').value);
       if (!clean($('registrySubjectCode').value)) $('registrySubjectCode').value = clean($('subjectCode').value).toUpperCase();
       if (!clean($('registryAcademicSubjectKey').value)) $('registryAcademicSubjectKey').value = clean($('academicSubjectKey').value).toLowerCase();
+      registryLifecycleStatusChanged();
     }
     function renderRegistryInspection(result) {
       const output = $('registryOnboardingOutput'); output.innerHTML = ''; output.classList.remove('hidden');
@@ -820,16 +993,20 @@
       details.textContent = JSON.stringify({
         requestedContext: result.requestedContext, exactSubjectMasterCount: result.exactSubjectMasterCount,
         exactSubjectMasters: result.exactSubjectMasters, questionBankInventory: result.questionBankInventory,
-        registryCandidates: result.registryCandidates, registrationPolicy: result.registrationPolicy
+        registryCandidates: result.registryCandidates, physicalContextImportEnabled: result.physicalContextImportEnabled, registrationPolicy: result.registrationPolicy
       }, null, 2);
       wrap.appendChild(details); output.appendChild(wrap);
-      const ready = result.readiness === 'READY_TO_REGISTER'; $('registryRegisterButton').disabled = !ready;
-      privateNotice('registryOnboardingMessage', ready
-        ? 'The live inspection is READY_TO_REGISTER. Review the evidence, enter the administrator name/note, then explicitly confirm one registry insertion.'
-        : result.readiness === 'ALREADY_REGISTERED_EXACT'
-          ? 'This exact context is already active. Recheck the Blueprint portal Class, Subject name, Subject Code, and key before retrying the upload.'
-          : `Registration is blocked: ${clean(result.readiness) || 'live context is not ready'}. Review the returned evidence; do not guess or alter source identity.`,
-        !ready && result.readiness !== 'ALREADY_REGISTERED_EXACT');
+      const ready = result.readiness === 'READY_TO_REGISTER' || result.readiness === 'READY_TO_PLAN'; $('registryRegisterButton').disabled = !ready;
+      privateNotice('registryOnboardingMessage', result.readiness === 'READY_TO_REGISTER'
+        ? 'The live inspection is READY_TO_REGISTER. Review the exact Subject-master evidence, enter the administrator name/note, then explicitly confirm one import-enabled registry insertion. Question Bank inventory may still be zero.'
+        : result.readiness === 'READY_TO_PLAN'
+          ? 'The live inspection is READY_TO_PLAN. Review the future physical identity, enter the administrator name/note, then explicitly confirm one planned non-resolvable registry record.'
+          : result.readiness === 'ALREADY_REGISTERED_EXACT'
+            ? 'This exact context is already import-enabled. Recheck the Blueprint portal Class, Subject name, Subject Code, and key before retrying the upload.'
+            : result.readiness === 'ALREADY_PLANNED_EXACT'
+              ? 'This exact context is already planned and remains non-resolvable until its exact Subject master is available.'
+              : `Registration is blocked: ${clean(result.readiness) || 'live context is not ready'}. Review the returned evidence; do not guess or alter source identity.`,
+        !ready && !['ALREADY_REGISTERED_EXACT', 'ALREADY_PLANNED_EXACT'].includes(result.readiness));
     }
     async function inspectRegistryContext() {
       const secret = clean($('secret').value); const context = registryContextInputs();
@@ -848,21 +1025,30 @@
       try {
         if (!secret) throw new Error('Enter the private n8n shared secret above before registering a verified context.');
         validateRegistryContext(context);
-        if (!inspection || inspection.readiness !== 'READY_TO_REGISTER' || registryOnboardingState.contextKey !== registryContextKey(context)) throw new Error('Inspect the unchanged context again and proceed only when the live readiness is READY_TO_REGISTER.');
+        const requiredReadiness = context.registryLifecycleStatus === 'PLANNED' ? 'READY_TO_PLAN' : 'READY_TO_REGISTER';
+        if (!inspection || inspection.readiness !== requiredReadiness || registryOnboardingState.contextKey !== registryContextKey(context)) throw new Error(`Inspect the unchanged context again and proceed only when the live readiness is ${requiredReadiness}.`);
         const requestedBy = clean($('registryRequestedBy').value); const onboardingNote = clean($('registryOnboardingNote').value);
         if (requestedBy.length < 2) throw new Error('Enter the administrator name that must appear in immutable onboarding audit evidence.');
         if (onboardingNote.length < 3) throw new Error('Enter a nonblank onboarding note.');
-        if (!window.confirm(`Register Academic Subject Key ${context.academicSubjectKey} for CBSE Class ${context.classNumber} / ${context.subjectCode}? The server will recheck live Subject, Question Bank, and registry evidence. This does not upload a Blueprint.`)) return;
+        const kindLabel = context.identityKind === 'BLUEPRINT_VARIANT' ? `Blueprint variant ${context.blueprintVariantLabel}` : context.registryLifecycleStatus === 'PLANNED' ? 'planned non-resolvable physical context' : 'import-enabled physical context';
+        const evidenceLabel = context.registryLifecycleStatus === 'PLANNED' ? 'The server will recheck that no Subject master exists and that no registry conflict is present.' : 'The server will recheck the exact live Subject master and registry evidence; Question Bank inventory may be zero.';
+        if (!window.confirm(`Record ${kindLabel} key ${context.academicSubjectKey} for CBSE Class ${context.classNumber} / ${context.subjectCode}? ${evidenceLabel} This does not upload a Blueprint.`)) return;
         const button = $('registryRegisterButton'); const original = button.textContent; button.disabled = true; button.textContent = 'Rechecking and registering…';
         try {
-          const data = new FormData(); data.append('importSecret', secret); Object.entries({ ...context, requestedBy, onboardingNote, expectedReadiness: 'READY_TO_REGISTER', confirmed: 'true' }).forEach(([key, value]) => data.append(key, value));
+          const data = new FormData(); data.append('importSecret', secret); Object.entries({ ...context, requestedBy, onboardingNote, expectedReadiness: inspection.readiness, confirmed: 'true' }).forEach(([key, value]) => data.append(key, value));
           const result = await privateJsonRequest(REGISTRY_CONTEXT_REGISTER_WEBHOOK_URL, data);
           registryOnboardingState.inspection = null; $('registryRegisterButton').disabled = true;
+          if (result.outcome === 'REGISTERED' || result.outcome === 'ALREADY_REGISTERED') {
+            blueprintContextDiscoveryState.items = []; $('blueprintContextCandidate').innerHTML = '<option value="">Find contexts again after registration</option>'; $('blueprintContextCandidate').disabled = true;
+            $('useBlueprintContextCandidateButton').disabled = true; $('onboardBlueprintContextCandidateButton').disabled = true;
+          }
           privateNotice('registryOnboardingMessage', `Registry action ${clean(result.outcome) || 'completed'}${result.reason ? `: ${result.reason}` : ''}. Audit action ID: ${result.onboardingActionId || 'not returned'}. ${result.nextStep || ''}`, result.outcome !== 'REGISTERED' && result.outcome !== 'ALREADY_REGISTERED');
           await inspectRegistryContext();
-        } finally { button.disabled = registryOnboardingState.inspection?.readiness !== 'READY_TO_REGISTER'; button.textContent = original; }
+        } finally { button.disabled = !['READY_TO_REGISTER', 'READY_TO_PLAN'].includes(registryOnboardingState.inspection?.readiness); button.textContent = original; }
       } catch (error) { privateNotice('registryOnboardingMessage', String(error), true); }
     }
+    $('registryIdentityKind').addEventListener('change', registryIdentityKindChanged);
+    $('registryLifecycleStatus').addEventListener('change', registryLifecycleStatusChanged);
     $('registryInspectButton').addEventListener('click', inspectRegistryContext);
     $('registryRegisterButton').addEventListener('click', registerRegistryContext);
 
@@ -1214,6 +1400,8 @@
       event.preventDefault();
       const file = $('file').files[0]; const secret = clean($('secret').value);
       const kind = $('uploadKind').value; const formatCatalogue = kind === 'format_catalogue'; const blueprintUpload = kind === 'blueprint';
+      const formatAction = formatCatalogue ? clean($('requestedAction').value).toUpperCase() : '';
+      const catalogueCandidate = formatCatalogue && formatAction === 'IMPORT_CATALOGUE_CANDIDATES';
       // Blueprint uploads send the operator-selected registered context. The two
       // Class X Mathematics presets merely fill this same complete context.
       const classNumber = clean($('classNumber').value);
@@ -1221,41 +1409,61 @@
       const subjectCode = clean($('subjectCode').value);
       const academicSubjectKey = clean($('academicSubjectKey').value).toLowerCase();
       const academicSession = clean($('academicSession').value);
-      const validQuestionBankContext = /^(?:[1-9]|1[0-2])$/.test(classNumber) && Boolean(subject);
+      const validQuestionBankContext = /^(?:[1-9]|1[0-2])$/.test(classNumber)
+        && Boolean(subject) && /^[A-Za-z0-9][A-Za-z0-9._/-]{0,127}$/.test(subjectCode);
+      const academicSubjectKeyValid = !academicSubjectKey
+        || (/^(?:[1-9]|1[0-2])-[a-z][a-z0-9-]{1,61}$/.test(academicSubjectKey)
+          && Number(academicSubjectKey.split('-')[0]) === Number(classNumber));
+      const variantSelectionRequired = blueprintVariantRequiredForCurrentPhysicalContext();
       const validBlueprintContext = validQuestionBankContext
-        && /^[A-Za-z0-9][A-Za-z0-9._/-]{0,127}$/.test(subjectCode)
-        && /^(?:[1-9]|1[0-2])-[a-z][a-z0-9-]{1,61}$/.test(academicSubjectKey)
-        && Number(academicSubjectKey.split('-')[0]) === Number(classNumber)
+        && academicSubjectKeyValid
+        && (!variantSelectionRequired || blueprintVariantState.variants.some((variant) => clean(variant.academicSubjectKey).toLowerCase() === academicSubjectKey))
         && /^\d{4}-\d{2}$/.test(academicSession);
       const activeContextValid = kind === 'blueprint' ? validBlueprintContext : validQuestionBankContext;
+      /* A discovered verified-but-unregistered physical context must go through
+       * explicit onboarding, never generate a predictable rejected upload batch. */
+      if (blueprintUpload) {
+        const onboardingCandidate = blueprintContextDiscoveryState.items.find((item) =>
+          item.contextStatus === 'UNREGISTERED_READY_FOR_IMPORT_ENABLE'
+          && Number(item.classNumber) === Number(classNumber)
+          && clean(item.subjectCode).toUpperCase() === subjectCode.toUpperCase()
+        );
+        if (onboardingCandidate) {
+          $('onboardBlueprintContextCandidateButton').disabled = false;
+          blueprintContextDiscoveryNotice(`Registration is required before uploading ${onboardingCandidate.canonicalSubjectName || onboardingCandidate.subjectCode}. Select the candidate and use Open selected context for onboarding; this prevents an UNREGISTERED_ACADEMIC_SUBJECT_KEY upload rejection.`, true);
+          window.scrollTo({ top: $('blueprintContextDiscovery').offsetTop - 18, behavior: 'smooth' });
+          return;
+        }
+      }
       if (!file || (!formatCatalogue && (!secret || !activeContextValid))) {
         return showError({ error: formatCatalogue
-          ? 'Select the reviewed V4 .xlsx Format Catalogue workbook.'
+          ? catalogueCandidate ? 'Select the reviewed V5 .xlsx catalogue-candidate workbook.' : 'Select the reviewed V4 .xlsx Format Catalogue workbook.'
           : kind === 'blueprint'
-            ? 'For a Blueprint, enter the shared secret, Class, subject name, Subject Code, Academic Subject Key, Academic Session, and a file.'
-            : 'For a Question Bank upload, enter the shared secret, choose a valid Class 1–12, provide a subject display name, and select a file.' });
+            ? 'For a Blueprint, enter the shared secret, Class, canonical Subject name, Subject Code, Academic Session, and a file. Select an Academic Subject Key only when the discovered physical context has governed variants.'
+            : 'For a Question Bank upload, enter the shared secret, choose a valid Class 1–12, provide the exact canonical Subject name and physical Subject Code, and select a file. The server assigns the only exact active key.' });
       }
-      if (formatCatalogue ? !/\.(xlsx|xls)$/i.test(file.name) : !/\.(csv|xlsx|xls)$/i.test(file.name)) return showError({ error: formatCatalogue ? 'Format Catalogue mode accepts one Excel (.xlsx or .xls) workbook only.' : 'Only .csv, .xlsx, and .xls files are accepted.' });
+      if (formatCatalogue ? (catalogueCandidate ? !/\.xlsx$/i.test(file.name) : !/\.(xlsx|xls)$/i.test(file.name)) : !/\.(csv|xlsx|xls)$/i.test(file.name)) return showError({ error: formatCatalogue ? (catalogueCandidate ? 'V5 catalogue-candidate ingestion accepts one .xlsx workbook only.' : 'V4 Format Catalogue activation accepts one Excel (.xlsx or .xls) workbook only.') : 'Only .csv, .xlsx, and .xls files are accepted.' });
       if (file.size > 10 * 1024 * 1024) return showError({ error: 'The selected file exceeds the 10 MB limit.' });
       const data = new FormData();
       if (!formatCatalogue) data.append('importSecret', secret);
       const submit = $('submitButton'); submit.disabled = true; submit.textContent = formatCatalogue ? 'Checking Format Catalogue…' : 'Checking and importing…';
+      let webhookRequestStarted = false;
       try {
         const uploadFile = await normaliseLegacyExcel(file);
-        if (uploadFile.size > 10 * 1024 * 1024) throw new Error('The converted Excel workbook exceeds the 10 MB upload limit. Save a smaller .xlsx file and retry.');
+        if (uploadFile.size > 10 * 1024 * 1024) throw new WorkbookContractError('The converted Excel workbook exceeds the 10 MB upload limit. Save a smaller .xlsx file and retry.');
         data.append('file', uploadFile);
         if (uploadFile.name !== file.name) data.append('originalFileName', file.name);
-        let webhookUrl = kind === 'question_bank' ? QUESTION_BANK_WEBHOOK_URL : IMPORT_WEBHOOK_URL;
+        let webhookUrl = IMPORT_WEBHOOK_URL;
         if (formatCatalogue) {
-          submit.textContent = 'Validating and activating Format Catalogue…';
-          const cataloguePayload = await catalogueWorkbookPayload(uploadFile);
-          data.append('requestedAction', 'IMPORT_AND_ACTIVATE');
+          submit.textContent = catalogueCandidate ? 'Validating catalogue candidates…' : 'Validating and activating Format Catalogue…';
+          const cataloguePayload = await catalogueWorkbookPayload(uploadFile, formatAction);
+          data.append('requestedAction', formatAction);
           data.append('uploadedBy', clean($('uploadedBy').value));
           data.append('sourceFileSha256', await sha256Prefix(uploadFile));
           data.append('cataloguePayload', JSON.stringify(cataloguePayload));
           data.append('packageIdHint', String(cataloguePayload.sheets.MANIFEST?.[0]?.package_id ?? '').trim());
-          data.append('portalSource', 'mytst-standalone-format-catalogue-uploader');
-          webhookUrl = FORMAT_CATALOGUE_WEBHOOK_URL;
+          data.append('portalSource', catalogueCandidate ? 'mytst-standalone-format-catalogue-candidate-uploader' : 'mytst-standalone-format-catalogue-active-uploader');
+          webhookUrl = catalogueCandidate ? FORMAT_CATALOGUE_CANDIDATE_WEBHOOK_URL : FORMAT_CATALOGUE_ACTIVE_WEBHOOK_URL;
         } else {
           const fields = {
             uploadKind: kind,
@@ -1276,17 +1484,22 @@
         }
         // Keep this cross-origin request header-free. importSecret is already included in FormData.
         // The deployed n8n CORS policy permits multipart Content-Type but not custom x-import-* headers.
+        webhookRequestStarted = true;
         const response = await fetch(webhookUrl, { method: 'POST', body: data });
         const result = await response.json().catch(() => ({ error: `The server returned HTTP ${response.status} without a JSON report.` }));
         if (!response.ok) return showError(result);
         showSummary(result);
       } catch (error) {
-        showError({ error: formatCatalogue ? 'Could not reach the Format Catalogue webhook.' : 'Could not reach the import webhook.', details: String(error) });
+        if (formatCatalogue && (error instanceof WorkbookContractError || !webhookRequestStarted)) {
+          showError({ error: 'Format Catalogue workbook rejected locally — no webhook request was made.', failureKind: 'LOCAL_WORKBOOK_CONTRACT', details: error?.message || String(error) });
+        } else {
+          showError({ error: formatCatalogue ? 'Could not reach the selected Format Catalogue webhook.' : 'Could not reach the import webhook.', details: String(error) });
+        }
       } finally {
-        submit.disabled = false; submit.textContent = formatCatalogue ? 'Import and activate Format Catalogue' : 'Validate and import';
+        submit.disabled = false; submit.textContent = formatCatalogue ? (catalogueCandidate ? 'Ingest catalogue candidates (non-production)' : 'Import and activate Format Catalogue') : 'Validate and import';
       }
     });
   })();
   </script>
-<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a5bd31a4cde7bf12',t:'MTc5NDkwMjM0NA=='};var l=window.parent.location,o;try{o=new URL(l.origin).origin}catch(e){try{o=new URL(new URL(l.href).origin).origin}catch(e){o=''}}var u='/cdn-cgi/challenge-platform/scripts/jsd/main.js?ray=a5bd31a4cde7bf12',a=document.createElement('script');a.src=o?new URL(u,o).href:u;document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a5cce2b0da1c867b',t:'MTc5NTA2Njg4Mg=='};var l=window.parent.location,o;try{o=new URL(l.origin).origin}catch(e){try{o=new URL(new URL(l.href).origin).origin}catch(e){o=''}}var u='/cdn-cgi/challenge-platform/scripts/jsd/main.js?ray=a5cce2b0da1c867b',a=document.createElement('script');a.src=o?new URL(u,o).href:u;document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
