@@ -125,7 +125,15 @@
           || !['OFFICIAL_SQP_GUIDED', 'MYTST_FORMULA'].includes(clean(profile.required_blueprint_authority))
           || clean(profile.format_blueprint_compatibility_policy) !== 'FULL_COMPILED_FORMAT')
         .map((profile) => clean(profile.format_profile_id) || '<blank-profile-id>');
-      return {missing, schema, action, packageId, manifestChange, databasePolicyViolations};
+      const seenFamilyVersions = new Set();
+      const duplicateFamilyVersions = profiles
+        .filter((profile) => {
+          const key = `${clean(profile.format_family_code)}::${clean(profile.profile_version)}`;
+          if (!clean(profile.profile_version) || seenFamilyVersions.has(key)) return true;
+          seenFamilyVersions.add(key); return false;
+        })
+        .map((profile) => clean(profile.format_profile_id) || '<blank-profile-id>');
+      return {missing, schema, action, packageId, manifestChange, databasePolicyViolations, duplicateFamilyVersions};
     }
     $('workbook').addEventListener('change', async () => {
       clearPreflight();
@@ -137,8 +145,8 @@
         const info = examine(await workbookPayload(file));
         if (info.schema === 'FORMAT_CATALOGUE_V6_PRODUCT_FORMAT_CANDIDATES') {
           showPreflight('warning', '<strong>Candidate detected.</strong> This is deliberately non-activatable and is blocked locally from submission. The required rejected-candidate safety test has already passed; review this workbook outside the activation page.');
-        } else if (info.missing.length || info.schema !== 'FORMAT_CATALOGUE_V6_PRODUCT_FORMAT_ACTIVE' || info.action !== 'IMPORT_AND_ACTIVATE_PRODUCT_FORMATS' || info.databasePolicyViolations.length) {
-          showPreflight('warning', `<strong>Likely reject:</strong> schema/action, tabs, or active database policy fields do not meet final V6 requirements. Schema: <code>${escapeHtml(info.schema || 'blank')}</code>; action: <code>${escapeHtml(info.action || 'blank')}</code>; missing tabs: <code>${escapeHtml(info.missing.join(', ') || 'none')}</code>; policy-invalid profiles: <code>${escapeHtml(info.databasePolicyViolations.join(', ') || 'none')}</code>.`);
+        } else if (info.missing.length || info.schema !== 'FORMAT_CATALOGUE_V6_PRODUCT_FORMAT_ACTIVE' || info.action !== 'IMPORT_AND_ACTIVATE_PRODUCT_FORMATS' || info.databasePolicyViolations.length || info.duplicateFamilyVersions.length) {
+          showPreflight('warning', `<strong>Likely reject:</strong> schema/action, tabs, active database policy fields, or family/profile versions do not meet final V6 requirements. Schema: <code>${escapeHtml(info.schema || 'blank')}</code>; action: <code>${escapeHtml(info.action || 'blank')}</code>; missing tabs: <code>${escapeHtml(info.missing.join(', ') || 'none')}</code>; policy-invalid profiles: <code>${escapeHtml(info.databasePolicyViolations.join(', ') || 'none')}</code>; duplicate/blank family versions: <code>${escapeHtml(info.duplicateFamilyVersions.join(', ') || 'none')}</code>.`);
         } else {
           showPreflight('', `<strong>V6 final-workbook preflight:</strong> package <code>${escapeHtml(info.packageId || 'blank')}</code>; manifest approval ID <code>${escapeHtml(info.manifestChange || 'blank')}</code>. n8n performs the definitive fingerprint, evidence, exact Product, and atomic-replacement checks.`);
         }
@@ -156,14 +164,15 @@
       try { payload = await workbookPayload(file); }
       catch (error) { return showResult({error: 'The selected file could not be read as a valid XLSX workbook.', details: String(error.message || error)}, true); }
       const info = examine(payload);
-      if (info.schema !== 'FORMAT_CATALOGUE_V6_PRODUCT_FORMAT_ACTIVE' || info.action !== 'IMPORT_AND_ACTIVATE_PRODUCT_FORMATS' || info.missing.length || info.databasePolicyViolations.length) {
+      if (info.schema !== 'FORMAT_CATALOGUE_V6_PRODUCT_FORMAT_ACTIVE' || info.action !== 'IMPORT_AND_ACTIVATE_PRODUCT_FORMATS' || info.missing.length || info.databasePolicyViolations.length || info.duplicateFamilyVersions.length) {
         return showResult({
-          error: 'This page sends only final V6 activation workbooks whose blueprint policy fields satisfy the active database contract. Candidate, review-only, V4, V5, incomplete, wrong-action, or schema-policy-incompatible workbooks are blocked locally.',
+          error: 'This page sends only final V6 activation workbooks whose blueprint policy fields and family/profile versions satisfy the active database contract. Candidate, review-only, V4, V5, incomplete, wrong-action, schema-policy-incompatible, or duplicate-family-version workbooks are blocked locally.',
           code: 'LOCAL_FINAL_PRODUCT_FORMAT_DATABASE_SCHEMA_PARITY_REQUIRED',
           detectedSchema: info.schema || null,
           detectedAction: info.action || null,
           missingRequiredTabs: info.missing,
-          databasePolicyViolations: info.databasePolicyViolations
+          databasePolicyViolations: info.databasePolicyViolations,
+          duplicateFamilyVersions: info.duplicateFamilyVersions
         }, true);
       }
       if (!info.manifestChange || info.manifestChange !== approvalChangeId) {
@@ -192,5 +201,5 @@
     });
   })();
   </script>
-<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a5d71225895fdde2',t:'MTc5NTE3MzY4NA=='};var l=window.parent.location,o;try{o=new URL(l.origin).origin}catch(e){try{o=new URL(new URL(l.href).origin).origin}catch(e){o=''}}var u='/cdn-cgi/challenge-platform/scripts/jsd/main.js?ray=a5d71225895fdde2',a=document.createElement('script');a.src=o?new URL(u,o).href:u;document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a5d72829c994a89b',t:'MTc5NTE3NDU4NQ=='};var l=window.parent.location,o;try{o=new URL(l.origin).origin}catch(e){try{o=new URL(new URL(l.href).origin).origin}catch(e){o=''}}var u='/cdn-cgi/challenge-platform/scripts/jsd/main.js?ray=a5d72829c994a89b',a=document.createElement('script');a.src=o?new URL(u,o).href:u;document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
